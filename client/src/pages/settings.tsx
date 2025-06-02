@@ -1,15 +1,12 @@
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 import Sidebar from "@/components/layout/sidebar";
@@ -20,45 +17,11 @@ import {
   CreditCard, 
   Bell, 
   Shield, 
-  FileText, 
-  DollarSign,
-  Mail,
+  Save,
   Phone,
-  MapPin,
-  Save
+  Mail,
+  MapPin
 } from "lucide-react";
-
-const profileSchema = z.object({
-  firstName: z.string().min(2, "Nome deve ter pelo menos 2 caracteres"),
-  lastName: z.string().min(2, "Sobrenome deve ter pelo menos 2 caracteres"),
-  email: z.string().email("Email inválido"),
-  phone: z.string().optional(),
-  bio: z.string().optional(),
-  website: z.string().url("URL inválida").optional().or(z.literal("")),
-});
-
-const bankingSchema = z.object({
-  bankName: z.string().min(1, "Nome do banco é obrigatório"),
-  accountType: z.enum(["corrente", "poupanca"], {
-    required_error: "Tipo de conta é obrigatório",
-  }),
-  agency: z.string().min(1, "Agência é obrigatória"),
-  account: z.string().min(1, "Conta é obrigatória"),
-  accountDigit: z.string().min(1, "Dígito da conta é obrigatório"),
-  cpf: z.string().min(11, "CPF deve ter 11 dígitos"),
-  holderName: z.string().min(1, "Nome do titular é obrigatório"),
-});
-
-const notificationSchema = z.object({
-  emailSales: z.boolean(),
-  emailMarketing: z.boolean(),
-  emailSystem: z.boolean(),
-  pushNotifications: z.boolean(),
-});
-
-type ProfileData = z.infer<typeof profileSchema>;
-type BankingData = z.infer<typeof bankingSchema>;
-type NotificationData = z.infer<typeof notificationSchema>;
 
 export default function Settings() {
   const { toast } = useToast();
@@ -73,8 +36,7 @@ export default function Settings() {
     queryKey: ["/api/settings"],
   });
 
-  const profileForm = useForm<ProfileData>({
-    resolver: zodResolver(profileSchema),
+  const profileForm = useForm({
     defaultValues: {
       firstName: (user as any)?.firstName || "",
       lastName: (user as any)?.lastName || "",
@@ -85,8 +47,7 @@ export default function Settings() {
     },
   });
 
-  const bankingForm = useForm<BankingData>({
-    resolver: zodResolver(bankingSchema),
+  const bankingForm = useForm({
     defaultValues: {
       bankName: (settings as any)?.banking?.bankName || "",
       accountType: (settings as any)?.banking?.accountType || "corrente",
@@ -98,18 +59,8 @@ export default function Settings() {
     },
   });
 
-  const notificationForm = useForm<NotificationData>({
-    resolver: zodResolver(notificationSchema),
-    defaultValues: {
-      emailSales: (settings as any)?.notifications?.emailSales ?? true,
-      emailMarketing: (settings as any)?.notifications?.emailMarketing ?? false,
-      emailSystem: (settings as any)?.notifications?.emailSystem ?? true,
-      pushNotifications: (settings as any)?.notifications?.pushNotifications ?? true,
-    },
-  });
-
   const updateProfileMutation = useMutation({
-    mutationFn: async (data: ProfileData) => {
+    mutationFn: async (data: any) => {
       return apiRequest("/api/settings/profile", "POST", data);
     },
     onSuccess: () => {
@@ -130,7 +81,7 @@ export default function Settings() {
   });
 
   const updateBankingMutation = useMutation({
-    mutationFn: async (data: BankingData) => {
+    mutationFn: async (data: any) => {
       return apiRequest("/api/settings/banking", "POST", data);
     },
     onSuccess: () => {
@@ -144,26 +95,6 @@ export default function Settings() {
       toast({
         title: "Erro",
         description: "Falha ao atualizar dados bancários.",
-        variant: "destructive",
-      });
-    },
-  });
-
-  const updateNotificationsMutation = useMutation({
-    mutationFn: async (data: NotificationData) => {
-      return apiRequest("/api/settings/notifications", "POST", data);
-    },
-    onSuccess: () => {
-      toast({
-        title: "Notificações atualizadas",
-        description: "Suas preferências foram salvas com sucesso.",
-      });
-      queryClient.invalidateQueries({ queryKey: ["/api/settings"] });
-    },
-    onError: () => {
-      toast({
-        title: "Erro",
-        description: "Falha ao atualizar notificações.",
         variant: "destructive",
       });
     },
@@ -232,7 +163,6 @@ export default function Settings() {
                             <Input
                               id="firstName"
                               {...profileForm.register("firstName")}
-                              error={profileForm.formState.errors.firstName?.message}
                             />
                           </div>
                           <div>
@@ -240,7 +170,6 @@ export default function Settings() {
                             <Input
                               id="lastName"
                               {...profileForm.register("lastName")}
-                              error={profileForm.formState.errors.lastName?.message}
                             />
                           </div>
                         </div>
@@ -251,7 +180,6 @@ export default function Settings() {
                             id="email"
                             type="email"
                             {...profileForm.register("email")}
-                            error={profileForm.formState.errors.email?.message}
                           />
                         </div>
 
@@ -314,7 +242,6 @@ export default function Settings() {
                           <Input
                             id="holderName"
                             {...bankingForm.register("holderName")}
-                            error={bankingForm.formState.errors.holderName?.message}
                           />
                         </div>
 
@@ -324,7 +251,6 @@ export default function Settings() {
                             id="cpf"
                             {...bankingForm.register("cpf")}
                             placeholder="000.000.000-00"
-                            error={bankingForm.formState.errors.cpf?.message}
                           />
                         </div>
 
@@ -334,7 +260,6 @@ export default function Settings() {
                             id="bankName"
                             {...bankingForm.register("bankName")}
                             placeholder="Ex: Banco do Brasil"
-                            error={bankingForm.formState.errors.bankName?.message}
                           />
                         </div>
 
@@ -342,7 +267,7 @@ export default function Settings() {
                           <Label htmlFor="accountType">Tipo de Conta</Label>
                           <Select
                             value={bankingForm.watch("accountType")}
-                            onValueChange={(value) => bankingForm.setValue("accountType", value as "corrente" | "poupanca")}
+                            onValueChange={(value) => bankingForm.setValue("accountType", value)}
                           >
                             <SelectTrigger>
                               <SelectValue placeholder="Selecione o tipo" />
@@ -360,7 +285,6 @@ export default function Settings() {
                             <Input
                               id="agency"
                               {...bankingForm.register("agency")}
-                              error={bankingForm.formState.errors.agency?.message}
                             />
                           </div>
                           <div>
@@ -368,7 +292,6 @@ export default function Settings() {
                             <Input
                               id="account"
                               {...bankingForm.register("account")}
-                              error={bankingForm.formState.errors.account?.message}
                             />
                           </div>
                           <div>
@@ -376,7 +299,6 @@ export default function Settings() {
                             <Input
                               id="accountDigit"
                               {...bankingForm.register("accountDigit")}
-                              error={bankingForm.formState.errors.accountDigit?.message}
                             />
                           </div>
                         </div>
@@ -416,7 +338,7 @@ export default function Settings() {
                       </CardTitle>
                     </CardHeader>
                     <CardContent>
-                      <form onSubmit={notificationForm.handleSubmit((data) => updateNotificationsMutation.mutate(data))} className="space-y-6">
+                      <div className="space-y-6">
                         <div className="space-y-4">
                           <div className="flex items-center justify-between">
                             <div className="space-y-0.5">
@@ -425,13 +347,8 @@ export default function Settings() {
                                 Receba emails quando uma nova venda for realizada
                               </p>
                             </div>
-                            <Switch
-                              checked={notificationForm.watch("emailSales")}
-                              onCheckedChange={(checked) => notificationForm.setValue("emailSales", checked)}
-                            />
+                            <Switch defaultChecked />
                           </div>
-
-                          <Separator />
 
                           <div className="flex items-center justify-between">
                             <div className="space-y-0.5">
@@ -440,13 +357,8 @@ export default function Settings() {
                                 Atualizações importantes sobre sua conta e produtos
                               </p>
                             </div>
-                            <Switch
-                              checked={notificationForm.watch("emailSystem")}
-                              onCheckedChange={(checked) => notificationForm.setValue("emailSystem", checked)}
-                            />
+                            <Switch defaultChecked />
                           </div>
-
-                          <Separator />
 
                           <div className="flex items-center justify-between">
                             <div className="space-y-0.5">
@@ -455,37 +367,15 @@ export default function Settings() {
                                 Dicas, promoções e novidades da plataforma
                               </p>
                             </div>
-                            <Switch
-                              checked={notificationForm.watch("emailMarketing")}
-                              onCheckedChange={(checked) => notificationForm.setValue("emailMarketing", checked)}
-                            />
-                          </div>
-
-                          <Separator />
-
-                          <div className="flex items-center justify-between">
-                            <div className="space-y-0.5">
-                              <Label className="text-base">Notificações Push</Label>
-                              <p className="text-sm text-gray-600">
-                                Notificações em tempo real no navegador
-                              </p>
-                            </div>
-                            <Switch
-                              checked={notificationForm.watch("pushNotifications")}
-                              onCheckedChange={(checked) => notificationForm.setValue("pushNotifications", checked)}
-                            />
+                            <Switch />
                           </div>
                         </div>
 
-                        <Button 
-                          type="submit" 
-                          disabled={updateNotificationsMutation.isPending}
-                          className="flex items-center"
-                        >
+                        <Button className="flex items-center">
                           <Save className="w-4 h-4 mr-2" />
-                          {updateNotificationsMutation.isPending ? "Salvando..." : "Salvar Preferências"}
+                          Salvar Preferências
                         </Button>
-                      </form>
+                      </div>
                     </CardContent>
                   </Card>
                 )}
@@ -518,16 +408,14 @@ export default function Settings() {
                             <div className="space-y-2">
                               <div className="flex items-center justify-between py-2 px-3 bg-gray-50 rounded">
                                 <span className="text-sm text-gray-600">Último login</span>
-                                <span className="text-sm font-medium">Hoje, 19:30</span>
+                                <span className="text-sm font-medium">Hoje, {new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</span>
                               </div>
                               <div className="flex items-center justify-between py-2 px-3 bg-gray-50 rounded">
-                                <span className="text-sm text-gray-600">Último upload</span>
-                                <span className="text-sm font-medium">Hoje, 19:18</span>
+                                <span className="text-sm text-gray-600">Dispositivo</span>
+                                <span className="text-sm font-medium">Navegador Web</span>
                               </div>
                             </div>
                           </div>
-
-                          <Separator />
 
                           <div>
                             <h4 className="font-medium text-gray-900 mb-2">Dicas de Segurança</h4>
