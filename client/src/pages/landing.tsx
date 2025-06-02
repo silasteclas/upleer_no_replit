@@ -1,12 +1,10 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { BookOpen, Upload, BarChart3, Shield } from "lucide-react";
+import { Link } from "wouter";
 import logoPath from "@assets/Logotipo para site upleer (1).png";
 
 export default function Landing() {
-  const handleLogin = () => {
-    window.location.href = "/api/login";
-  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
@@ -63,13 +61,18 @@ export default function Landing() {
         </div>
 
         <div className="text-center">
-          <Button 
-            onClick={handleLogin} 
-            size="lg" 
-            className="bg-primary hover:bg-blue-600 text-white px-8 py-3 text-lg"
-          >
-            Começar Agora
-          </Button>
+          <div className="flex gap-4 justify-center">
+            <Button asChild size="lg" className="bg-primary hover:bg-blue-600 text-white px-8 py-3 text-lg">
+              <Link to="/login">
+                Entrar
+              </Link>
+            </Button>
+            <Button asChild size="lg" variant="outline" className="px-8 py-3 text-lg">
+              <Link to="/register">
+                Criar Conta
+              </Link>
+            </Button>
+          </div>
           <p className="text-sm text-gray-500 mt-4">
             Grátis para começar • Sem taxas de setup
           </p>
