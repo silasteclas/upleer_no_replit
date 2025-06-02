@@ -71,6 +71,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         title: req.body.title,
         description: req.body.description,
         isbn: req.body.isbn || null,
+        author: req.body.author,
+        coAuthors: req.body.coAuthors || null,
+        genre: req.body.genre,
+        language: req.body.language,
+        targetAudience: req.body.targetAudience || null,
         pdfUrl: `/uploads/${pdfFile.filename}`, // In production: cloud storage URL
         coverImageUrl: coverFile ? `/uploads/${coverFile.filename}` : null,
         pageCount,
