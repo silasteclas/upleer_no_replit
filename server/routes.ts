@@ -1,4 +1,5 @@
 import type { Express } from "express";
+import express from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated } from "./replitAuth";
@@ -161,10 +162,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // File serving
-  app.use('/uploads', isAuthenticated, (req, res, next) => {
-    // In production, you'd want more sophisticated file access control
-    next();
-  });
+  app.use('/uploads', express.static('uploads'));
 
   const httpServer = createServer(app);
   return httpServer;
