@@ -16,7 +16,7 @@ export default function Landing() {
             <img 
               src={logoPath} 
               alt="Upleer" 
-              className="h-16 w-auto object-contain"
+              className="h-20 w-auto object-contain"
             />
           </div>
           <p className="text-xl text-gray-600 max-w-2xl mx-auto">

@@ -25,7 +25,7 @@ export default function Sidebar() {
           <img 
             src={logoPath} 
             alt="Upleer" 
-            className="h-10 w-auto object-contain"
+            className="h-14 w-auto object-contain"
           />
         </div>
         <div className="text-center mt-3">
