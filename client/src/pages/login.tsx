@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
-import { apiRequest } from "@/lib/queryClient";
+import { queryClient } from "@/lib/queryClient";
 import { Link, useLocation } from "wouter";
 import logoPath from "@assets/Logotipo para site upleer (1).png";
 
@@ -45,6 +45,9 @@ export default function Login() {
         throw new Error(error.message);
       }
 
+      // Invalidate auth cache to refresh user state
+      queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
+
       toast({
         title: "Login realizado com sucesso!",
         description: "Redirecionando para o painel...",
@@ -53,7 +56,7 @@ export default function Login() {
       // Redirect to dashboard
       setTimeout(() => {
         setLocation("/");
-      }, 1000);
+      }, 500);
     } catch (error: any) {
       toast({
         title: "Erro no login",
