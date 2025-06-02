@@ -88,6 +88,10 @@ export async function setupAuth(app: Express) {
       }
       
       // Check password
+      if (!user.password) {
+        return res.status(401).json({ message: 'Email ou senha incorretos' });
+      }
+      
       const isValid = await bcrypt.compare(password, user.password);
       if (!isValid) {
         return res.status(401).json({ message: 'Email ou senha incorretos' });

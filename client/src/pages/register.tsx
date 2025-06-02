@@ -44,11 +44,16 @@ export default function Register() {
     setIsLoading(true);
     try {
       const { confirmPassword, ...registerData } = data;
-      await apiRequest("/api/auth/register", {
+      const response = await fetch("/api/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(registerData),
       });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message);
+      }
 
       toast({
         title: "Cadastro realizado com sucesso!",
