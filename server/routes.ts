@@ -227,9 +227,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = req.user.claims.sub;
       const { profileImage, ...otherData } = req.body;
       
+      console.log("=== Profile Update Request ===");
+      console.log("User ID:", userId);
+      console.log("Has profileImage:", !!profileImage);
+      console.log("ProfileImage length:", profileImage ? profileImage.length : 0);
+      console.log("Other data:", otherData);
+      
       // Se uma nova foto foi enviada, atualize o usuário
       if (profileImage) {
-        await storage.updateUserProfileImage(userId, profileImage);
+        console.log("Updating user profile image...");
+        const updatedUser = await storage.updateUserProfileImage(userId, profileImage);
+        console.log("User updated:", updatedUser);
       }
       
       res.json({ message: "Profile updated successfully" });
