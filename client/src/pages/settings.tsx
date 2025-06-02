@@ -77,7 +77,7 @@ export default function Settings() {
 
   const updateProfileMutation = useMutation({
     mutationFn: async (data: any) => {
-      return apiRequest("/api/settings/profile", "POST", data);
+      return apiRequest("POST", "/api/settings/profile", data);
     },
     onSuccess: () => {
       toast({
@@ -98,7 +98,7 @@ export default function Settings() {
 
   const updateBankingMutation = useMutation({
     mutationFn: async (data: any) => {
-      return apiRequest("/api/settings/banking", "POST", data);
+      return apiRequest("POST", "/api/settings/banking", data);
     },
     onSuccess: () => {
       toast({
