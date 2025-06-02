@@ -1,0 +1,77 @@
+Objetivo e Resumo do App
+Este sistema web é projetado para servir como um painel para autores que desejam cadastrar e gerenciar a venda de seus produtos digitais, especificamente apostilas, em formato PDF. A plataforma oferece um ambiente onde os autores podem facilmente fazer upload de seus materiais, definir preços, e acompanhar suas vendas e desempenho através de um painel de controle intuitivo e funcional.
+
+Descrição Completa do App
+O aplicativo tem como principal função facilitar o processo de publicação e comercialização de apostilas digitais. Inicialmente, autores podem registrar suas apostilas, passando por um processo de validação automática que assegura que o arquivo PDF está no tamanho A4 e que o número de páginas está dentro do esperado. Este detalhe é crucial para garantir um produto final padronizado e aceitável para o mercado alvo.
+
+Após a validação bem-sucedida, o autor escolherá o valor desejado para cada venda. Uma precificação automática definirá o preço de custo com base no número de páginas, garantindo transparência na formação do preço final de venda. O sistema ainda cuida do armazenamento eficiente e seguro dos dados, utilizando o Supabase, para garantir que toda a informação do autor e do produto esteja disponível e segura.
+
+Por fim, os autores têm acesso a um dashboard completo que exibe visualizações de vendas, lucro, e outras métricas essenciais que facilitam o acompanhamento do desempenho de seus produtos no mercado. Tudo isso ocorre enquanto o autor aguarda a avaliação do seu material para, então, poder comercializá-lo.
+
+Funcionalidades do App para um MVP
+Cadastro de Apostilas:
+
+Upload de PDF e capa em imagem.
+Validação automática do tamanho do PDF e contagem de páginas.
+Definição de preço com base nas páginas e no ganho desejado pelo autor.
+Gestão do Produto:
+
+Cadastro de título, autor, ISBN e descrição.
+Armazenamento seguro de dados no Supabase.
+Mudança de status do produto para avaliação.
+Painel de Vendas e Dashboard:
+
+Visualização de lista de vendas.
+Gráficos e métricas de desempenho.
+Sistema de Avaliação:
+
+Alteração do status do produto após revisão.
+Telas Necessárias para o App Funcionar Perfeitamente no MVP
+Tela de Login/Registro do Autor:
+
+Entrada com autenticação básica.
+Tela de Upload da Apostila:
+
+Seção de upload para PDF e capa, com validação em tempo real.
+Tela de Informações do Produto:
+
+Formulários para inserir título, ISBN, descrição e definir preço.
+Tela de Listagem de Produtos:
+
+Visualização dos produtos cadastrados para cada autor.
+Tela de Dashboard:
+
+Painéis visuais (gráficos e tabelas) com resumo de vendas e desempenho.
+Tela de Detalhes do Produto:
+
+Exibição de informações detalhadas de cada produto, verificando seu status.
+Possíveis Funcionalidades Futuras
+Integração com Plataformas de Pagamento:
+
+Facilitar as transações e pagamentos diretos via cartão ou PayPal.
+Ferramentas de Marketing:
+
+Funções para promover produtos através de cupons de desconto e ofertas especiais.
+Sistema de Avaliações e Comentários dos Usuários:
+
+Feedback direto de compradores sobre as apostilas.
+Notificações em Tempo Real:
+
+Alerta para os autores sobre mudanças de status, novas vendas e atualizações.
+Recursos de Colaboração:
+
+Permitir que autores trabalhem em conjuntos ou parcerias.
+Próximos Passos
+Especificação Detalhada:
+
+Criar um documento de especificação mais detalhada com fluxos de usuário.
+Design de UI/UX:
+
+Desenvolver wireframes e protótipos para a interface do usuário.
+Escolha de Tecnologia de Frontend:
+
+Considere tecnologias modernas como React com Next.js para melhor performance e experiência de usuário.
+Configuração do Banco de Dados:
+
+Configurar e estruturar o Supabase para atender às necessidades de armazenamento e segurança.
+Se precisar de mais detalhes ou tiver qualquer outra questão, estou à disposição para ajudar!
