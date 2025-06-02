@@ -25,6 +25,11 @@ const productInfoSchema = z.object({
   title: z.string().min(1, "Título é obrigatório"),
   description: z.string().optional(),
   isbn: z.string().optional(),
+  author: z.string().min(1, "Autor é obrigatório"),
+  coAuthors: z.string().optional(),
+  genre: z.string().min(1, "Gênero é obrigatório"),
+  language: z.string().min(1, "Idioma é obrigatório"),
+  targetAudience: z.string().optional(),
 });
 
 // Step 3: Pricing
@@ -55,6 +60,11 @@ export default function UploadModal() {
     title: "",
     description: "",
     isbn: "",
+    author: "",
+    coAuthors: "",
+    genre: "",
+    language: "português",
+    targetAudience: "",
   });
 
   const { toast } = useToast();
@@ -68,7 +78,16 @@ export default function UploadModal() {
 
   const infoForm = useForm<ProductInfoData>({
     resolver: zodResolver(productInfoSchema),
-    defaultValues: productInfo,
+    defaultValues: {
+      title: "",
+      description: "",
+      isbn: "",
+      author: "",
+      coAuthors: "",
+      genre: "",
+      language: "português",
+      targetAudience: "",
+    },
   });
 
   const pricingForm = useForm<PricingData>({
@@ -119,7 +138,16 @@ export default function UploadModal() {
       setPageCount(0);
       setBaseCost(0);
       setSalePrice(0);
-      setProductInfo({ title: "", description: "", isbn: "" });
+      setProductInfo({
+        title: "",
+        description: "",
+        isbn: "",
+        author: "",
+        coAuthors: "",
+        genre: "",
+        language: "português",
+        targetAudience: "",
+      });
       fileForm.reset();
       infoForm.reset();
       pricingForm.reset();
@@ -397,6 +425,93 @@ export default function UploadModal() {
                     placeholder="000-0-00-000000-0"
                   />
                 </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label className="text-sm font-medium text-gray-700 mb-2">Autor</Label>
+                  <Input
+                    {...infoForm.register("author")}
+                    placeholder="Nome do autor principal"
+                    className={infoForm.formState.errors.author ? "border-red-500" : ""}
+                  />
+                  {infoForm.formState.errors.author && (
+                    <p className="text-red-500 text-sm mt-1">
+                      {infoForm.formState.errors.author.message}
+                    </p>
+                  )}
+                </div>
+                <div>
+                  <Label className="text-sm font-medium text-gray-700 mb-2">Co-autores (opcional)</Label>
+                  <Input
+                    {...infoForm.register("coAuthors")}
+                    placeholder="Nomes dos co-autores separados por vírgula"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label className="text-sm font-medium text-gray-700 mb-2">Gênero</Label>
+                  <Select onValueChange={(value) => infoForm.setValue("genre", value)}>
+                    <SelectTrigger className={infoForm.formState.errors.genre ? "border-red-500" : ""}>
+                      <SelectValue placeholder="Selecione o gênero" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="academico">Acadêmico</SelectItem>
+                      <SelectItem value="tecnico">Técnico</SelectItem>
+                      <SelectItem value="profissionalizante">Profissionalizante</SelectItem>
+                      <SelectItem value="concurso">Concurso Público</SelectItem>
+                      <SelectItem value="enem">ENEM/Vestibular</SelectItem>
+                      <SelectItem value="idiomas">Idiomas</SelectItem>
+                      <SelectItem value="informatica">Informática</SelectItem>
+                      <SelectItem value="saude">Saúde</SelectItem>
+                      <SelectItem value="direito">Direito</SelectItem>
+                      <SelectItem value="administracao">Administração</SelectItem>
+                      <SelectItem value="engenharia">Engenharia</SelectItem>
+                      <SelectItem value="educacao">Educação</SelectItem>
+                      <SelectItem value="outros">Outros</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  {infoForm.formState.errors.genre && (
+                    <p className="text-red-500 text-sm mt-1">
+                      {infoForm.formState.errors.genre.message}
+                    </p>
+                  )}
+                </div>
+                <div>
+                  <Label className="text-sm font-medium text-gray-700 mb-2">Idioma</Label>
+                  <Select onValueChange={(value) => infoForm.setValue("language", value)} defaultValue="português">
+                    <SelectTrigger className={infoForm.formState.errors.language ? "border-red-500" : ""}>
+                      <SelectValue placeholder="Selecione o idioma" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="português">Português</SelectItem>
+                      <SelectItem value="inglês">Inglês</SelectItem>
+                      <SelectItem value="espanhol">Espanhol</SelectItem>
+                      <SelectItem value="francês">Francês</SelectItem>
+                      <SelectItem value="alemão">Alemão</SelectItem>
+                      <SelectItem value="italiano">Italiano</SelectItem>
+                      <SelectItem value="outros">Outros</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  {infoForm.formState.errors.language && (
+                    <p className="text-red-500 text-sm mt-1">
+                      {infoForm.formState.errors.language.message}
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              <div>
+                <Label className="text-sm font-medium text-gray-700 mb-2">Público-alvo (palavras-chave)</Label>
+                <Input
+                  {...infoForm.register("targetAudience")}
+                  placeholder="Ex: estudantes, profissionais, concurseiros, vestibulandos"
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  Digite palavras-chave separadas por vírgula para definir seu público-alvo
+                </p>
               </div>
 
               <div>
