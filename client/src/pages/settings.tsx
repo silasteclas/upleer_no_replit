@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useToast } from "@/hooks/use-toast";
 import Sidebar from "@/components/layout/sidebar";
 import Header from "@/components/layout/header";
@@ -18,14 +19,15 @@ import {
   Bell, 
   Shield, 
   Save,
-  Phone,
-  Mail,
-  MapPin
+  Camera,
+  Upload
 } from "lucide-react";
 
 export default function Settings() {
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState("profile");
+  const [profileImage, setProfileImage] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const { data: user } = useQuery({
     queryKey: ["/api/auth/user"],
@@ -43,7 +45,6 @@ export default function Settings() {
       email: (user as any)?.email || "",
       phone: (settings as any)?.phone || "",
       bio: (settings as any)?.bio || "",
-      website: (settings as any)?.website || "",
     },
   });
 
@@ -58,6 +59,21 @@ export default function Settings() {
       holderName: (settings as any)?.banking?.holderName || "",
     },
   });
+
+  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setProfileImage(e.target?.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const triggerImageUpload = () => {
+    fileInputRef.current?.click();
+  };
 
   const updateProfileMutation = useMutation({
     mutationFn: async (data: any) => {
@@ -157,6 +173,51 @@ export default function Settings() {
                     </CardHeader>
                     <CardContent>
                       <form onSubmit={profileForm.handleSubmit((data) => updateProfileMutation.mutate(data))} className="space-y-6">
+                        {/* Foto de Perfil */}
+                        <div className="flex flex-col items-center space-y-4">
+                          <div className="relative">
+                            <Avatar className="w-24 h-24">
+                              <AvatarImage 
+                                src={profileImage || (user as any)?.profileImageUrl} 
+                                alt="Foto de perfil" 
+                              />
+                              <AvatarFallback className="text-lg">
+                                {((user as any)?.firstName?.[0] || '') + ((user as any)?.lastName?.[0] || '')}
+                              </AvatarFallback>
+                            </Avatar>
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              className="absolute -bottom-2 -right-2 rounded-full w-8 h-8 p-0"
+                              onClick={triggerImageUpload}
+                            >
+                              <Camera className="w-4 h-4" />
+                            </Button>
+                          </div>
+                          <div className="text-center">
+                            <Button
+                              type="button"
+                              variant="outline"
+                              onClick={triggerImageUpload}
+                              className="flex items-center"
+                            >
+                              <Upload className="w-4 h-4 mr-2" />
+                              Alterar Foto
+                            </Button>
+                            <p className="text-xs text-gray-500 mt-1">
+                              PNG, JPG até 2MB
+                            </p>
+                          </div>
+                          <input
+                            ref={fileInputRef}
+                            type="file"
+                            accept="image/*"
+                            onChange={handleImageUpload}
+                            className="hidden"
+                          />
+                        </div>
+
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           <div>
                             <Label htmlFor="firstName">Nome</Label>
@@ -189,15 +250,6 @@ export default function Settings() {
                             id="phone"
                             {...profileForm.register("phone")}
                             placeholder="(11) 99999-9999"
-                          />
-                        </div>
-
-                        <div>
-                          <Label htmlFor="website">Website</Label>
-                          <Input
-                            id="website"
-                            {...profileForm.register("website")}
-                            placeholder="https://meusite.com"
                           />
                         </div>
 
