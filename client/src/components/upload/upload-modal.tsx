@@ -496,10 +496,11 @@ export default function UploadModal() {
 
         {/* Step 3: Pricing */}
         {currentStep === 3 && pageCount > 0 && (
-          <div className="space-y-6">
-            <div className="bg-gray-50 rounded-lg p-6">
-              <h4 className="font-medium text-gray-900 mb-4">Precificação Automática</h4>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            {/* Pricing Form */}
+            <div className="space-y-6">
+              <div className="bg-gray-50 rounded-lg p-6">
+                <h4 className="font-medium text-gray-900 mb-4">Precificação Automática</h4>
                 <div className="space-y-4">
                   <div>
                     <p className="text-sm text-gray-600">Arquivo PDF:</p>
@@ -513,10 +514,8 @@ export default function UploadModal() {
                     <p className="text-sm text-gray-600">Custo base:</p>
                     <p className="font-medium">R$ {baseCost.toFixed(2)}</p>
                   </div>
-                </div>
-                
-                <div className="space-y-4">
-                  <div>
+                  
+                  <div className="pt-4 border-t border-gray-200">
                     <Label className="text-sm font-medium text-gray-700 mb-2">Quanto você quer ganhar? (R$)</Label>
                     <div className="flex items-center space-x-2">
                       <span className="text-gray-500">R$</span>
@@ -540,19 +539,108 @@ export default function UploadModal() {
                   </div>
                 </div>
               </div>
+              
+              {/* Product Summary */}
+              <div className="bg-blue-50 rounded-lg p-4">
+                <h5 className="font-medium text-gray-900 mb-2">Resumo do Produto</h5>
+                <div className="text-sm text-gray-700 space-y-1">
+                  <p><strong>Título:</strong> {productInfo.title}</p>
+                  {productInfo.description && (
+                    <p><strong>Descrição:</strong> {productInfo.description}</p>
+                  )}
+                  {productInfo.isbn && (
+                    <p><strong>ISBN:</strong> {productInfo.isbn}</p>
+                  )}
+                </div>
+              </div>
             </div>
-            
-            {/* Product Summary */}
-            <div className="bg-blue-50 rounded-lg p-4">
-              <h5 className="font-medium text-gray-900 mb-2">Resumo do Produto</h5>
-              <div className="text-sm text-gray-700 space-y-1">
-                <p><strong>Título:</strong> {productInfo.title}</p>
-                {productInfo.description && (
-                  <p><strong>Descrição:</strong> {productInfo.description}</p>
-                )}
-                {productInfo.isbn && (
-                  <p><strong>ISBN:</strong> {productInfo.isbn}</p>
-                )}
+
+            {/* Final Book Preview */}
+            <div className="lg:col-span-1">
+              <div className="sticky top-4">
+                <Label className="text-sm font-medium text-gray-700 mb-3 block">Sua Apostila Está Pronta!</Label>
+                <div className="relative max-w-48 mx-auto">
+                  {/* Simple Book Stack */}
+                  <div className="relative">
+                    {/* Shadow pages */}
+                    <div className="absolute inset-0 bg-gray-300 rounded-lg transform translate-x-1 translate-y-1 aspect-[3/4]"></div>
+                    <div className="absolute inset-0 bg-gray-200 rounded-lg transform translate-x-0.5 translate-y-0.5 aspect-[3/4]"></div>
+                    
+                    {/* Main book cover */}
+                    <div className="relative bg-white rounded-lg shadow-xl aspect-[3/4] overflow-hidden group cursor-pointer transform transition-all duration-300 hover:scale-105 hover:-rotate-1">
+                      {coverFile ? (
+                        <div className="h-full relative">
+                          <img
+                            src={URL.createObjectURL(coverFile)}
+                            alt="Capa da apostila"
+                            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
+                          />
+                          {/* Title overlay */}
+                          {productInfo.title && (
+                            <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent p-4">
+                              <h3 className="text-white text-sm font-bold leading-tight break-words">
+                                {productInfo.title}
+                              </h3>
+                            </div>
+                          )}
+                        </div>
+                      ) : (
+                        <div className="h-full bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-800 relative flex flex-col p-6">
+                          {/* Brand area */}
+                          <div className="text-center mb-4">
+                            <div className="inline-block px-3 py-1 bg-white/20 backdrop-blur-sm rounded-full text-white text-xs font-semibold">
+                              UPLEER
+                            </div>
+                          </div>
+                          
+                          {/* Icon area */}
+                          <div className="flex-1 flex items-center justify-center">
+                            <FileText className="w-16 h-16 text-white/30 transition-all duration-300 group-hover:text-white/50 group-hover:scale-110" />
+                          </div>
+                          
+                          {/* Title area */}
+                          <div className="text-center space-y-2">
+                            {productInfo.title ? (
+                              <h3 className="text-white text-sm font-bold leading-tight break-words">
+                                {productInfo.title}
+                              </h3>
+                            ) : (
+                              <h3 className="text-white/70 text-xs italic">
+                                Título da Apostila
+                              </h3>
+                            )}
+                            <div className="text-white/60 text-xs font-medium">
+                              Material de Estudo
+                            </div>
+                            <div className="w-12 h-0.5 bg-white/40 rounded mx-auto"></div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  
+                  {/* Animated info badges */}
+                  <div className="absolute -top-3 -right-3 bg-orange-500 text-white text-xs px-3 py-1.5 rounded-full shadow-lg z-10 font-semibold transform transition-all duration-300 hover:scale-110">
+                    {pageCount} páginas
+                  </div>
+                  
+                  <div className="absolute -bottom-3 -left-3 bg-emerald-600 text-white text-xs px-3 py-1.5 rounded-full shadow-lg z-10 font-semibold transform transition-all duration-300 hover:scale-110">
+                    R$ {salePrice.toFixed(2)}
+                  </div>
+                </div>
+                
+                <div className="mt-8 text-center space-y-3">
+                  <div className="text-sm font-medium text-gray-700">🎉 Parabéns!</div>
+                  <div className="text-xs text-gray-500">
+                    <div>Sua apostila está pronta</div>
+                    <div>para começar a gerar vendas!</div>
+                  </div>
+                  <div className="bg-green-50 border border-green-200 rounded-lg p-3 mt-4">
+                    <div className="text-xs text-green-700 font-medium">
+                      💰 Você receberá R$ {pricingForm.watch("authorEarnings").toFixed(2)} por venda
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
