@@ -21,12 +21,12 @@ function Router() {
 
   return (
     <Switch>
+      {/* Always available routes */}
+      <Route path="/login" component={Login} />
+      <Route path="/register" component={Register} />
+      
       {isLoading || !isAuthenticated ? (
-        <>
-          <Route path="/" component={Landing} />
-          <Route path="/login" component={Login} />
-          <Route path="/register" component={Register} />
-        </>
+        <Route path="/" component={Landing} />
       ) : (
         <>
           <Route path="/" component={Dashboard} />
