@@ -11,16 +11,28 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { isUnauthorizedError } from "@/lib/authUtils";
-import { FileText, Image, CheckCircle } from "lucide-react";
+import { FileText, Image, CheckCircle, ArrowLeft, ArrowRight } from "lucide-react";
 
-const uploadSchema = z.object({
+// Step 1: File upload
+const fileUploadSchema = z.object({
+  files: z.boolean().default(false),
+});
+
+// Step 2: Product information
+const productInfoSchema = z.object({
   title: z.string().min(1, "Título é obrigatório"),
   description: z.string().optional(),
   isbn: z.string().optional(),
+});
+
+// Step 3: Pricing
+const pricingSchema = z.object({
   marginPercent: z.number().min(0).max(1000).default(150),
 });
 
-type UploadFormData = z.infer<typeof uploadSchema>;
+type FileUploadData = z.infer<typeof fileUploadSchema>;
+type ProductInfoData = z.infer<typeof productInfoSchema>;
+type PricingData = z.infer<typeof pricingSchema>;
 
 interface ValidationResult {
   isValid: boolean;
@@ -30,28 +42,40 @@ interface ValidationResult {
 }
 
 export default function UploadModal() {
+  const [currentStep, setCurrentStep] = useState(1);
   const [pdfFile, setPdfFile] = useState<File | null>(null);
   const [coverFile, setCoverFile] = useState<File | null>(null);
   const [validation, setValidation] = useState<ValidationResult | null>(null);
   const [pageCount, setPageCount] = useState(0);
   const [baseCost, setBaseCost] = useState(0);
   const [salePrice, setSalePrice] = useState(0);
+  const [productInfo, setProductInfo] = useState<ProductInfoData>({
+    title: "",
+    description: "",
+    isbn: "",
+  });
 
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  const form = useForm<UploadFormData>({
-    resolver: zodResolver(uploadSchema),
-    defaultValues: {
-      title: "",
-      description: "",
-      isbn: "",
-      marginPercent: 150,
-    },
+  // Forms for each step
+  const fileForm = useForm<FileUploadData>({
+    resolver: zodResolver(fileUploadSchema),
+    defaultValues: { files: false },
+  });
+
+  const infoForm = useForm<ProductInfoData>({
+    resolver: zodResolver(productInfoSchema),
+    defaultValues: productInfo,
+  });
+
+  const pricingForm = useForm<PricingData>({
+    resolver: zodResolver(pricingSchema),
+    defaultValues: { marginPercent: 150 },
   });
 
   const uploadMutation = useMutation({
-    mutationFn: async (data: UploadFormData & { pdf: File; cover?: File }) => {
+    mutationFn: async (data: ProductInfoData & PricingData & { pdf: File; cover?: File }) => {
       const formData = new FormData();
       formData.append("pdf", data.pdf);
       if (data.cover) {
@@ -83,14 +107,18 @@ export default function UploadModal() {
       });
       queryClient.invalidateQueries({ queryKey: ["/api/products"] });
       
-      // Reset form
-      form.reset();
+      // Reset everything
+      setCurrentStep(1);
       setPdfFile(null);
       setCoverFile(null);
       setValidation(null);
       setPageCount(0);
       setBaseCost(0);
       setSalePrice(0);
+      setProductInfo({ title: "", description: "", isbn: "" });
+      fileForm.reset();
+      infoForm.reset();
+      pricingForm.reset();
     },
     onError: (error) => {
       if (isUnauthorizedError(error)) {
@@ -123,7 +151,7 @@ export default function UploadModal() {
       
       setPageCount(simulatedPageCount);
       setBaseCost(calculatedBaseCost);
-      setSalePrice(calculatedBaseCost * (form.getValues("marginPercent") / 100));
+      setSalePrice(calculatedBaseCost * (pricingForm.getValues("marginPercent") / 100));
       
       setValidation({
         isValid: true,
@@ -154,13 +182,46 @@ export default function UploadModal() {
   };
 
   const handleMarginChange = (margin: number) => {
-    form.setValue("marginPercent", margin);
+    pricingForm.setValue("marginPercent", margin);
     if (baseCost > 0) {
       setSalePrice(baseCost * (margin / 100));
     }
   };
 
-  const onSubmit = (data: UploadFormData) => {
+  const handleNextStep = () => {
+    if (currentStep === 1 && (!pdfFile || !validation?.isValid)) {
+      toast({
+        title: "Erro",
+        description: "Por favor, faça upload de um arquivo PDF válido.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    if (currentStep === 2) {
+      const data = infoForm.getValues();
+      if (!data.title) {
+        toast({
+          title: "Erro",
+          description: "Por favor, preencha o título da apostila.",
+          variant: "destructive",
+        });
+        return;
+      }
+      setProductInfo(data);
+    }
+    
+    setCurrentStep(prev => Math.min(prev + 1, 3));
+  };
+
+  const handlePrevStep = () => {
+    setCurrentStep(prev => Math.max(prev - 1, 1));
+  };
+
+  const onSubmit = () => {
+    const infoData = productInfo;
+    const pricingData = pricingForm.getValues();
+
     if (!pdfFile) {
       toast({
         title: "Erro",
@@ -171,155 +232,260 @@ export default function UploadModal() {
     }
 
     uploadMutation.mutate({
-      ...data,
+      ...infoData,
+      ...pricingData,
       pdf: pdfFile,
       cover: coverFile || undefined,
     });
   };
 
+  // Step progress indicator
+  const stepTitles = [
+    "Upload dos Arquivos",
+    "Informações do Produto", 
+    "Precificação"
+  ];
+
   return (
     <Card className="max-w-4xl mx-auto">
       <CardHeader>
         <CardTitle className="text-xl font-semibold text-gray-900">
-          Nova Apostila
+          Nova Apostila - {stepTitles[currentStep - 1]}
         </CardTitle>
+        
+        {/* Progress indicator */}
+        <div className="flex items-center space-x-4 mt-4">
+          {[1, 2, 3].map((step) => (
+            <div key={step} className="flex items-center">
+              <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
+                step <= currentStep 
+                  ? "bg-primary text-white" 
+                  : "bg-gray-200 text-gray-600"
+              }`}>
+                {step}
+              </div>
+              {step < 3 && (
+                <div className={`w-16 h-0.5 mx-2 ${
+                  step < currentStep ? "bg-primary" : "bg-gray-200"
+                }`} />
+              )}
+            </div>
+          ))}
+        </div>
       </CardHeader>
+      
       <CardContent>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-          {/* PDF Upload */}
-          <div className="space-y-4">
-            <Label className="text-sm font-medium text-gray-700">Arquivo PDF</Label>
-            <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-primary transition-colors">
-              <div className="space-y-4">
-                <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto">
-                  <FileText className="text-red-500 text-2xl w-8 h-8" />
+        {/* Step 1: File Upload */}
+        {currentStep === 1 && (
+          <div className="space-y-6">
+            {/* PDF Upload */}
+            <div className="space-y-4">
+              <Label className="text-sm font-medium text-gray-700">Arquivo PDF</Label>
+              <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-primary transition-colors">
+                <div className="space-y-4">
+                  <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto">
+                    <FileText className="text-red-500 text-2xl w-8 h-8" />
+                  </div>
+                  <div>
+                    <p className="text-gray-600">Arraste e solte o arquivo PDF aqui ou</p>
+                    <Label htmlFor="pdf-upload" className="text-primary hover:text-blue-600 font-medium cursor-pointer">
+                      clique para selecionar
+                    </Label>
+                    <Input
+                      id="pdf-upload"
+                      type="file"
+                      accept=".pdf"
+                      onChange={handlePdfUpload}
+                      className="hidden"
+                    />
+                  </div>
+                  <p className="text-xs text-gray-500">Formato A4 • Máximo 50MB • PDF apenas</p>
                 </div>
-                <div>
-                  <p className="text-gray-600">Arraste e solte o arquivo PDF aqui ou</p>
-                  <Label htmlFor="pdf-upload" className="text-primary hover:text-blue-600 font-medium cursor-pointer">
-                    clique para selecionar
-                  </Label>
-                  <Input
-                    id="pdf-upload"
-                    type="file"
-                    accept=".pdf"
-                    onChange={handlePdfUpload}
-                    className="hidden"
-                  />
+              </div>
+              
+              {validation?.isValid && (
+                <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+                  <div className="flex items-center text-green-800">
+                    <CheckCircle className="w-4 h-4 mr-2" />
+                    <span className="text-sm">{validation.message}</span>
+                  </div>
                 </div>
-                <p className="text-xs text-gray-500">Formato A4 • Máximo 50MB • PDF apenas</p>
+              )}
+            </div>
+
+            {/* Cover Upload */}
+            <div className="space-y-4">
+              <Label className="text-sm font-medium text-gray-700">Capa da Apostila (opcional)</Label>
+              <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
+                <div className="space-y-3">
+                  <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto">
+                    <Image className="text-gray-500 text-xl w-6 h-6" />
+                  </div>
+                  <div>
+                    <p className="text-gray-600 text-sm">Selecione uma imagem para a capa</p>
+                    <Label htmlFor="cover-upload" className="text-primary hover:text-blue-600 font-medium text-sm cursor-pointer">
+                      Escolher arquivo
+                    </Label>
+                    <Input
+                      id="cover-upload"
+                      type="file"
+                      accept="image/*"
+                      onChange={handleCoverUpload}
+                      className="hidden"
+                    />
+                  </div>
+                  <p className="text-xs text-gray-500">JPG, PNG • Mínimo 400x600px</p>
+                </div>
+              </div>
+              
+              {coverFile && (
+                <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+                  <div className="flex items-center text-green-800">
+                    <CheckCircle className="w-4 h-4 mr-2" />
+                    <span className="text-sm">Capa selecionada: {coverFile.name}</span>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Step 2: Product Information */}
+        {currentStep === 2 && (
+          <div className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <Label className="text-sm font-medium text-gray-700 mb-2">Título</Label>
+                <Input
+                  {...infoForm.register("title")}
+                  placeholder="Digite o título da apostila"
+                  className={infoForm.formState.errors.title ? "border-red-500" : ""}
+                />
+                {infoForm.formState.errors.title && (
+                  <p className="text-red-500 text-sm mt-1">
+                    {infoForm.formState.errors.title.message}
+                  </p>
+                )}
+              </div>
+              <div>
+                <Label className="text-sm font-medium text-gray-700 mb-2">ISBN (opcional)</Label>
+                <Input
+                  {...infoForm.register("isbn")}
+                  placeholder="000-0-00-000000-0"
+                />
+              </div>
+            </div>
+
+            <div>
+              <Label className="text-sm font-medium text-gray-700 mb-2">Descrição</Label>
+              <Textarea
+                {...infoForm.register("description")}
+                rows={4}
+                placeholder="Descreva o conteúdo da apostila..."
+              />
+            </div>
+          </div>
+        )}
+
+        {/* Step 3: Pricing */}
+        {currentStep === 3 && pageCount > 0 && (
+          <div className="space-y-6">
+            <div className="bg-gray-50 rounded-lg p-6">
+              <h4 className="font-medium text-gray-900 mb-4">Precificação Automática</h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-4">
+                  <div>
+                    <p className="text-sm text-gray-600">Arquivo PDF:</p>
+                    <p className="font-medium">{pdfFile?.name}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-600">Número de páginas:</p>
+                    <p className="font-medium">{pageCount} páginas</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-600">Custo base (R$ 0,50 por página):</p>
+                    <p className="font-medium">R$ {baseCost.toFixed(2)}</p>
+                  </div>
+                </div>
+                
+                <div className="space-y-4">
+                  <div>
+                    <Label className="text-sm font-medium text-gray-700 mb-2">Margem desejada (%)</Label>
+                    <div className="flex items-center space-x-2">
+                      <Input
+                        type="number"
+                        value={pricingForm.watch("marginPercent")}
+                        onChange={(e) => handleMarginChange(Number(e.target.value))}
+                        className="w-24 text-center"
+                        min="0"
+                        max="1000"
+                      />
+                      <span className="text-gray-500">%</span>
+                    </div>
+                    <p className="text-xs text-gray-500 mt-1">
+                      Sugerimos entre 100% e 300%
+                    </p>
+                  </div>
+                  
+                  <div className="pt-4 border-t border-gray-200">
+                    <p className="text-sm text-gray-600">Preço de venda final:</p>
+                    <p className="text-2xl font-bold text-primary">R$ {salePrice.toFixed(2)}</p>
+                  </div>
+                </div>
               </div>
             </div>
             
-            {validation?.isValid && (
-              <div className="bg-green-50 border border-green-200 rounded-lg p-3">
-                <div className="flex items-center text-green-800">
-                  <CheckCircle className="w-4 h-4 mr-2" />
-                  <span className="text-sm">{validation.message}</span>
-                </div>
+            {/* Product Summary */}
+            <div className="bg-blue-50 rounded-lg p-4">
+              <h5 className="font-medium text-gray-900 mb-2">Resumo do Produto</h5>
+              <div className="text-sm text-gray-700 space-y-1">
+                <p><strong>Título:</strong> {productInfo.title}</p>
+                {productInfo.description && (
+                  <p><strong>Descrição:</strong> {productInfo.description}</p>
+                )}
+                {productInfo.isbn && (
+                  <p><strong>ISBN:</strong> {productInfo.isbn}</p>
+                )}
               </div>
+            </div>
+          </div>
+        )}
+
+        {/* Navigation Buttons */}
+        <div className="flex justify-between items-center mt-8 pt-6 border-t border-gray-200">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={handlePrevStep}
+            disabled={currentStep === 1}
+            className="flex items-center"
+          >
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Voltar
+          </Button>
+          
+          <div className="flex space-x-3">
+            {currentStep < 3 ? (
+              <Button
+                type="button"
+                onClick={handleNextStep}
+                className="bg-primary hover:bg-blue-600 text-white flex items-center"
+              >
+                Próximo
+                <ArrowRight className="w-4 h-4 ml-2" />
+              </Button>
+            ) : (
+              <Button
+                type="button"
+                onClick={onSubmit}
+                disabled={uploadMutation.isPending}
+                className="bg-primary hover:bg-blue-600 text-white px-6"
+              >
+                {uploadMutation.isPending ? "Enviando..." : "Enviar para Avaliação"}
+              </Button>
             )}
           </div>
-
-          {/* Cover Upload */}
-          <div className="space-y-4">
-            <Label className="text-sm font-medium text-gray-700">Capa da Apostila</Label>
-            <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
-              <div className="space-y-3">
-                <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto">
-                  <Image className="text-gray-500 text-xl w-6 h-6" />
-                </div>
-                <div>
-                  <p className="text-gray-600 text-sm">Selecione uma imagem para a capa</p>
-                  <Label htmlFor="cover-upload" className="text-primary hover:text-blue-600 font-medium text-sm cursor-pointer">
-                    Escolher arquivo
-                  </Label>
-                  <Input
-                    id="cover-upload"
-                    type="file"
-                    accept="image/*"
-                    onChange={handleCoverUpload}
-                    className="hidden"
-                  />
-                </div>
-                <p className="text-xs text-gray-500">JPG, PNG • Mínimo 400x600px</p>
-              </div>
-            </div>
-          </div>
-
-          {/* Product Information */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <Label className="text-sm font-medium text-gray-700 mb-2">Título</Label>
-              <Input
-                {...form.register("title")}
-                placeholder="Digite o título da apostila"
-                className={form.formState.errors.title ? "border-red-500" : ""}
-              />
-              {form.formState.errors.title && (
-                <p className="text-red-500 text-sm mt-1">
-                  {form.formState.errors.title.message}
-                </p>
-              )}
-            </div>
-            <div>
-              <Label className="text-sm font-medium text-gray-700 mb-2">ISBN (opcional)</Label>
-              <Input
-                {...form.register("isbn")}
-                placeholder="000-0-00-000000-0"
-              />
-            </div>
-          </div>
-
-          <div>
-            <Label className="text-sm font-medium text-gray-700 mb-2">Descrição</Label>
-            <Textarea
-              {...form.register("description")}
-              rows={4}
-              placeholder="Descreva o conteúdo da apostila..."
-            />
-          </div>
-
-          {/* Pricing */}
-          {pageCount > 0 && (
-            <div className="bg-gray-50 rounded-lg p-4">
-              <h4 className="font-medium text-gray-900 mb-3">Precificação</h4>
-              <div className="grid grid-cols-2 gap-4 text-sm">
-                <div>
-                  <p className="text-gray-600">Custo base ({pageCount} páginas):</p>
-                  <p className="font-medium">R$ {baseCost.toFixed(2)}</p>
-                </div>
-                <div>
-                  <p className="text-gray-600">Margem desejada:</p>
-                  <div className="flex items-center space-x-2">
-                    <Input
-                      type="number"
-                      value={form.watch("marginPercent")}
-                      onChange={(e) => handleMarginChange(Number(e.target.value))}
-                      className="w-16 text-center"
-                    />
-                    <span>%</span>
-                  </div>
-                </div>
-                <div className="col-span-2 pt-2 border-t border-gray-200">
-                  <p className="text-gray-600">Preço de venda sugerido:</p>
-                  <p className="text-xl font-bold text-primary">R$ {salePrice.toFixed(2)}</p>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Submit Button */}
-          <div className="flex justify-end space-x-4">
-            <Button
-              type="submit"
-              disabled={uploadMutation.isPending || !pdfFile}
-              className="bg-primary hover:bg-blue-600 text-white px-6"
-            >
-              {uploadMutation.isPending ? "Enviando..." : "Enviar para Avaliação"}
-            </Button>
-          </div>
-        </form>
+        </div>
       </CardContent>
     </Card>
   );
