@@ -19,7 +19,7 @@ export default function Sidebar() {
   ];
 
   return (
-    <aside className="w-64 bg-surface shadow-lg h-full flex flex-col">
+    <aside className="w-64 bg-surface shadow-lg h-screen flex flex-col">
       <div className="p-6 border-b border-gray-200">
         <div className="flex items-center justify-center">
           <img 
@@ -33,8 +33,8 @@ export default function Sidebar() {
         </div>
       </div>
       
-      <nav className="mt-6 flex-1 flex flex-col">
-        <div className="px-4 space-y-2">
+      <nav className="flex-1 flex flex-col">
+        <div className="mt-6 px-4 space-y-2">
           {navItems.map((item) => {
             const Icon = item.icon;
             const isActive = location === item.href;
@@ -54,7 +54,7 @@ export default function Sidebar() {
           })}
         </div>
         
-        <div className="px-4 pb-6 mt-auto">
+        <div className="mt-auto px-4 pb-6 border-t border-gray-200 pt-4">
           <Button 
             variant="ghost" 
             onClick={handleLogout}
