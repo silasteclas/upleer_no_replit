@@ -691,8 +691,26 @@ export default function UploadModal() {
                 <h5 className="font-medium text-gray-900 mb-2">Resumo do Produto</h5>
                 <div className="text-sm text-gray-700 space-y-1">
                   <p><strong>Título:</strong> {productInfo.title}</p>
+                  {productInfo.author && (
+                    <p><strong>Autor:</strong> {productInfo.author}</p>
+                  )}
+                  {productInfo.coAuthors && (
+                    <p><strong>Co-autores:</strong> {productInfo.coAuthors}</p>
+                  )}
+                  {productInfo.genre && (
+                    <p><strong>Gênero:</strong> {productInfo.genre}</p>
+                  )}
+                  {productInfo.language && (
+                    <p><strong>Idioma:</strong> {productInfo.language}</p>
+                  )}
+                  {productInfo.targetAudience && (
+                    <p><strong>Público-alvo:</strong> {productInfo.targetAudience}</p>
+                  )}
                   {productInfo.description && (
-                    <p><strong>Descrição:</strong> {productInfo.description}</p>
+                    <p><strong>Descrição:</strong> {productInfo.description.length > 100 
+                      ? productInfo.description.substring(0, 100) + "..." 
+                      : productInfo.description}
+                    </p>
                   )}
                   {productInfo.isbn && (
                     <p><strong>ISBN:</strong> {productInfo.isbn}</p>
