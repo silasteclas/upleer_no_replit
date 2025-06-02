@@ -65,7 +65,9 @@ export default function Settings() {
     if (file) {
       const reader = new FileReader();
       reader.onload = (e) => {
-        setProfileImage(e.target?.result as string);
+        const imageData = e.target?.result as string;
+        setProfileImage(imageData);
+        console.log("Image loaded, size:", imageData.length);
       };
       reader.readAsDataURL(file);
     }
