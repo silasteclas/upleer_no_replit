@@ -62,9 +62,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const pdfFile = files.pdf[0];
       const coverFile = files.cover?.[0];
       
-      // Simulate page count validation (in real app, use pdf-lib)
-      const pageCount = Math.floor(Math.random() * 50) + 10; // Random for demo
-      const baseCost = pageCount * 0.5; // R$ 0.50 per page
+      // Use page count from frontend (already validated with pdf-lib)
+      const pageCount = parseInt(req.body.pageCount);
+      const baseCost = parseFloat(req.body.baseCost);
       
       const productData = {
         authorId: userId,

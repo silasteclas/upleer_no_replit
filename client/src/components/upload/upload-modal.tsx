@@ -85,6 +85,8 @@ export default function UploadModal() {
       formData.append("title", data.title);
       formData.append("description", data.description || "");
       formData.append("isbn", data.isbn || "");
+      formData.append("pageCount", pageCount.toString());
+      formData.append("baseCost", baseCost.toString());
       formData.append("marginPercent", "150"); // Keep backend compatibility
       formData.append("salePrice", salePrice.toString());
 
