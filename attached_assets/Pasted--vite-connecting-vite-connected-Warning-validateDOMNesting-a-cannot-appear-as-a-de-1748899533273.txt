@@ -1,0 +1,47 @@
+[vite] connecting...
+[vite] connected.
+Warning: validateDOMNesting(...): <a> cannot appear as a descendant of &lt;a&gt;.
+    at a
+    at a
+    at https://bbf3fd2f-5839-4fea-9611-af32c6e20f91-00-2j7vwbakpk3p3.kirk.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=4ed0b905:337:18
+    at div
+    at div
+    at _c3 (https://bbf3fd2f-5839-4fea-9611-af32c6e20f91-00-2j7vwbakpk3p3.kirk.replit.dev/src/components/ui/card.tsx:45:12)
+    at div
+    at _c (https://bbf3fd2f-5839-4fea-9611-af32c6e20f91-00-2j7vwbakpk3p3.kirk.replit.dev/src/components/ui/card.tsx:20:11)
+    at RecentProducts (https://bbf3fd2f-5839-4fea-9611-af32c6e20f91-00-2j7vwbakpk3p3.kirk.replit.dev/src/components/dashboard/recent-products.tsx:27:41)
+    at div
+    at main
+    at div
+    at Dashboard (https://bbf3fd2f-5839-4fea-9611-af32c6e20f91-00-2j7vwbakpk3p3.kirk.replit.dev/src/pages/dashboard.tsx:29:21)
+    at Route (https://bbf3fd2f-5839-4fea-9611-af32c6e20f91-00-2j7vwbakpk3p3.kirk.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=4ed0b905:323:16)
+    at Switch (https://bbf3fd2f-5839-4fea-9611-af32c6e20f91-00-2j7vwbakpk3p3.kirk.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=4ed0b905:379:17)
+    at Router (https://bbf3fd2f-5839-4fea-9611-af32c6e20f91-00-2j7vwbakpk3p3.kirk.replit.dev/src/App.tsx?v=eI9flYl903dVZPqARQD3T:35:42)
+    at Provider (https://bbf3fd2f-5839-4fea-9611-af32c6e20f91-00-2j7vwbakpk3p3.kirk.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-GFOGKHJ2.js?v=4ed0b905:22:15)
+    at TooltipProvider (https://bbf3fd2f-5839-4fea-9611-af32c6e20f91-00-2j7vwbakpk3p3.kirk.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tooltip.js?v=4ed0b905:57:5)
+    at QueryClientProvider (https://bbf3fd2f-5839-4fea-9611-af32c6e20f91-00-2j7vwbakpk3p3.kirk.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@tanstack_react-query.js?v=4ed0b905:2805:3)
+    at App
+at a
+at a
+at https://bbf3fd2f-5839-4fea-9611-af32c6e20f91-00-2j7vwbakpk3p3.kirk.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=4ed0b905:337:18
+at div
+at div
+at _c3 (https://bbf3fd2f-5839-4fea-9611-af32c6e20f91-00-2j7vwbakpk3p3.kirk.replit.dev/src/components/ui/card.tsx:45:12)
+at div
+at _c (https://bbf3fd2f-5839-4fea-9611-af32c6e20f91-00-2j7vwbakpk3p3.kirk.replit.dev/src/components/ui/card.tsx:20:11)
+at RecentProducts (https://bbf3fd2f-5839-4fea-9611-af32c6e20f91-00-2j7vwbakpk3p3.kirk.replit.dev/src/components/dashboard/recent-products.tsx:27:41)
+at div
+at main
+at div
+at Dashboard (https://bbf3fd2f-5839-4fea-9611-af32c6e20f91-00-2j7vwbakpk3p3.kirk.replit.dev/src/pages/dashboard.tsx:29:21)
+at Route (https://bbf3fd2f-5839-4fea-9611-af32c6e20f91-00-2j7vwbakpk3p3.kirk.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=4ed0b905:323:16)
+at Switch (https://bbf3fd2f-5839-4fea-9611-af32c6e20f91-00-2j7vwbakpk3p3.kirk.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=4ed0b905:379:17)
+at Router (https://bbf3fd2f-5839-4fea-9611-af32c6e20f91-00-2j7vwbakpk3p3.kirk.replit.dev/src/App.tsx?v=eI9flYl903dVZPqARQD3T:35:42)
+at Provider (https://bbf3fd2f-5839-4fea-9611-af32c6e20f91-00-2j7vwbakpk3p3.kirk.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-GFOGKHJ2.js?v=4ed0b905:22:15)
+at TooltipProvider (https://bbf3fd2f-5839-4fea-9611-af32c6e20f91-00-2j7vwbakpk3p3.kirk.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tooltip.js?v=4ed0b905:57:5)
+at QueryClientProvider (https://bbf3fd2f-5839-4fea-9611-af32c6e20f91-00-2j7vwbakpk3p3.kirk.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@tanstack_react-query.js?v=4ed0b905:2805:3)
+at App
+at t.value (https://bbf3fd2f-5839-4fea-9611-af32c6e20f91-00-2j7vwbakpk3p3.kirk.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:17465)
+at new t (https://bbf3fd2f-5839-4fea-9611-af32c6e20f91-00-2j7vwbakpk3p3.kirk.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:12630)
+at t.value (https://bbf3fd2f-5839-4fea-9611-af32c6e20f91-00-2j7vwbakpk3p3.kirk.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:32766)
+at https://bbf3fd2f-5839-4fea-9611-af32c6e20f91-00-2j7vwbakpk3p3.kirk.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:34400
