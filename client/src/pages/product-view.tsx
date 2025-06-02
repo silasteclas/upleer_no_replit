@@ -31,7 +31,7 @@ export default function ProductView() {
   }, [isAuthenticated, isLoading, toast]);
 
   const { data: product, isLoading: productLoading } = useQuery<Product>({
-    queryKey: ["/api/products", id],
+    queryKey: [`/api/products/${id}`],
     enabled: !!id && isAuthenticated,
   });
 

@@ -47,7 +47,7 @@ export default function ProductEdit() {
   }, [isAuthenticated, isLoading, toast]);
 
   const { data: product, isLoading: productLoading } = useQuery<Product>({
-    queryKey: ["/api/products", id],
+    queryKey: [`/api/products/${id}`],
     enabled: !!id && isAuthenticated,
   });
 
@@ -64,6 +64,7 @@ export default function ProductEdit() {
   // Update form when product data loads
   useEffect(() => {
     if (product) {
+      console.log("Product data loaded:", product);
       form.reset({
         title: product.title || "",
         description: product.description || "",
@@ -97,7 +98,7 @@ export default function ProductEdit() {
         description: "Produto atualizado com sucesso.",
       });
       queryClient.invalidateQueries({ queryKey: ["/api/products"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/products", id] });
+      queryClient.invalidateQueries({ queryKey: [`/api/products/${id}`] });
       setLocation(`/products/${id}`);
     },
     onError: (error) => {
