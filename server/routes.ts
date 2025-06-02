@@ -31,9 +31,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Auth routes
   app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
-      const user = await storage.getUser(userId);
-      res.json(user);
+      const user = req.user;
+      res.json({
+        id: user.id,
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        profileImageUrl: user.profileImageUrl
+      });
     } catch (error) {
       console.error("Error fetching user:", error);
       res.status(500).json({ message: "Failed to fetch user" });
@@ -46,7 +51,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     { name: 'cover', maxCount: 1 }
   ]), async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       const files = req.files as { [fieldname: string]: Express.Multer.File[] };
       
       if (!files.pdf || !files.pdf[0]) {
@@ -100,7 +105,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get('/api/products', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       const products = await storage.getProductsByAuthor(userId);
       res.json(products);
     } catch (error) {
@@ -111,7 +116,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get('/api/products/:id', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       const productId = parseInt(req.params.id);
       const product = await storage.getProduct(productId);
       
@@ -133,7 +138,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.put('/api/products/:id', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       const productId = parseInt(req.params.id);
       const product = await storage.getProduct(productId);
       
@@ -163,7 +168,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Sales routes
   app.get('/api/sales', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       const sales = await storage.getSalesByAuthor(userId);
       res.json(sales);
     } catch (error) {
@@ -175,7 +180,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Analytics routes
   app.get('/api/analytics/stats', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       const stats = await storage.getAuthorStats(userId);
       res.json(stats);
     } catch (error) {
@@ -186,7 +191,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get('/api/analytics/sales-data', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       const months = parseInt(req.query.months as string) || 6;
       const salesData = await storage.getSalesData(userId, months);
       res.json(salesData);
@@ -199,7 +204,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Settings routes
   app.get('/api/settings', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       // Return empty settings for now since we don't have the schema
       res.json({
         phone: "",
@@ -229,7 +234,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post('/api/settings/profile', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       const { profileImage, firstName, lastName, email, phone, bio } = req.body;
       
       console.log("=== Profile Update Request ===");
@@ -255,7 +260,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post('/api/settings/banking', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       // For now, just return success since we don't have banking settings table
       res.json({ message: "Banking information updated successfully" });
     } catch (error) {
@@ -266,7 +271,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post('/api/settings/notifications', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       // For now, just return success since we don't have notifications settings table
       res.json({ message: "Notification preferences updated successfully" });
     } catch (error) {
