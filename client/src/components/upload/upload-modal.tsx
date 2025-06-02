@@ -249,6 +249,8 @@ export default function UploadModal() {
     
     if (currentStep === 2) {
       const data = infoForm.getValues();
+      
+      // Validar campos obrigatórios
       if (!data.title) {
         toast({
           title: "Erro",
@@ -257,6 +259,34 @@ export default function UploadModal() {
         });
         return;
       }
+      
+      if (!data.author) {
+        toast({
+          title: "Erro",
+          description: "Por favor, preencha o nome do autor.",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      if (!data.genre) {
+        toast({
+          title: "Erro",
+          description: "Por favor, selecione o gênero da apostila.",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      if (!data.language) {
+        toast({
+          title: "Erro",
+          description: "Por favor, selecione o idioma da apostila.",
+          variant: "destructive",
+        });
+        return;
+      }
+      
       setProductInfo(data);
     }
     
