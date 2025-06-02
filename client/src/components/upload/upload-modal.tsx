@@ -372,37 +372,118 @@ export default function UploadModal() {
 
         {/* Step 2: Product Information */}
         {currentStep === 2 && (
-          <div className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <Label className="text-sm font-medium text-gray-700 mb-2">Título</Label>
-                <Input
-                  {...infoForm.register("title")}
-                  placeholder="Digite o título da apostila"
-                  className={infoForm.formState.errors.title ? "border-red-500" : ""}
-                />
-                {infoForm.formState.errors.title && (
-                  <p className="text-red-500 text-sm mt-1">
-                    {infoForm.formState.errors.title.message}
-                  </p>
-                )}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            {/* Form Fields */}
+            <div className="lg:col-span-2 space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label className="text-sm font-medium text-gray-700 mb-2">Título</Label>
+                  <Input
+                    {...infoForm.register("title")}
+                    placeholder="Digite o título da apostila"
+                    className={infoForm.formState.errors.title ? "border-red-500" : ""}
+                  />
+                  {infoForm.formState.errors.title && (
+                    <p className="text-red-500 text-sm mt-1">
+                      {infoForm.formState.errors.title.message}
+                    </p>
+                  )}
+                </div>
+                <div>
+                  <Label className="text-sm font-medium text-gray-700 mb-2">ISBN (opcional)</Label>
+                  <Input
+                    {...infoForm.register("isbn")}
+                    placeholder="000-0-00-000000-0"
+                  />
+                </div>
               </div>
+
               <div>
-                <Label className="text-sm font-medium text-gray-700 mb-2">ISBN (opcional)</Label>
-                <Input
-                  {...infoForm.register("isbn")}
-                  placeholder="000-0-00-000000-0"
+                <Label className="text-sm font-medium text-gray-700 mb-2">Descrição</Label>
+                <Textarea
+                  {...infoForm.register("description")}
+                  rows={4}
+                  placeholder="Descreva o conteúdo da apostila..."
                 />
               </div>
             </div>
 
-            <div>
-              <Label className="text-sm font-medium text-gray-700 mb-2">Descrição</Label>
-              <Textarea
-                {...infoForm.register("description")}
-                rows={4}
-                placeholder="Descreva o conteúdo da apostila..."
-              />
+            {/* Book Preview */}
+            <div className="lg:col-span-1">
+              <div className="sticky top-4">
+                <Label className="text-sm font-medium text-gray-700 mb-3 block">Preview da Apostila</Label>
+                <div className="relative">
+                  {/* Book Stack Effect */}
+                  <div className="relative transform rotate-2">
+                    <div className="absolute inset-0 bg-gray-300 rounded-r-lg shadow-lg transform translate-x-1 translate-y-1"></div>
+                    <div className="absolute inset-0 bg-gray-200 rounded-r-lg shadow-lg transform translate-x-0.5 translate-y-0.5"></div>
+                  </div>
+                  
+                  {/* Main Book */}
+                  <div className="relative bg-white rounded-r-lg shadow-xl overflow-hidden aspect-[3/4] max-w-48 mx-auto transform -rotate-1 transition-all duration-300 hover:rotate-0">
+                    {/* Book Cover */}
+                    <div className="h-full flex flex-col">
+                      {coverFile ? (
+                        <div className="flex-1 relative">
+                          <img
+                            src={URL.createObjectURL(coverFile)}
+                            alt="Capa da apostila"
+                            className="w-full h-full object-cover"
+                          />
+                          {/* Title Overlay */}
+                          {productInfo.title && (
+                            <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-3">
+                              <h3 className="text-white text-sm font-bold leading-tight break-words">
+                                {productInfo.title}
+                              </h3>
+                            </div>
+                          )}
+                        </div>
+                      ) : (
+                        <div className="flex-1 bg-gradient-to-br from-blue-500 to-blue-700 relative flex flex-col justify-between p-4">
+                          <div className="flex-1 flex items-center justify-center">
+                            <FileText className="w-12 h-12 text-white/50" />
+                          </div>
+                          
+                          {/* Title */}
+                          {productInfo.title && (
+                            <div className="text-center">
+                              <h3 className="text-white text-sm font-bold leading-tight break-words">
+                                {productInfo.title}
+                              </h3>
+                            </div>
+                          )}
+                          
+                          {/* Default Title if empty */}
+                          {!productInfo.title && (
+                            <div className="text-center">
+                              <h3 className="text-white/70 text-xs italic">
+                                Título da Apostila
+                              </h3>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                      
+                      {/* Book Spine */}
+                      <div className="h-2 bg-gray-800"></div>
+                    </div>
+                    
+                    {/* Book Binding */}
+                    <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-gray-600 to-gray-800"></div>
+                  </div>
+                  
+                  {/* Page Count Badge */}
+                  <div className="absolute -top-2 -right-2 bg-primary text-white text-xs px-2 py-1 rounded-full shadow-lg">
+                    {pageCount} páginas
+                  </div>
+                </div>
+                
+                <div className="mt-4 text-center text-xs text-gray-500">
+                  <p>Preview em tempo real</p>
+                  <p>da sua apostila</p>
+                </div>
+              </div>
             </div>
           </div>
         )}
