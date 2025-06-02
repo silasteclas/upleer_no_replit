@@ -163,11 +163,21 @@ export default function Products() {
                     </div>
                     
                     <div className="flex space-x-2">
-                      <Button variant="outline" size="sm" className="flex-1">
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="flex-1"
+                        onClick={() => setLocation(`/products/${product.id}`)}
+                      >
                         <Eye className="w-4 h-4 mr-1" />
                         Ver
                       </Button>
-                      <Button variant="outline" size="sm" className="flex-1">
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="flex-1"
+                        onClick={() => setLocation(`/products/${product.id}/edit`)}
+                      >
                         <Edit className="w-4 h-4 mr-1" />
                         Editar
                       </Button>

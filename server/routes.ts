@@ -106,6 +106,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get('/api/products/:id', isAuthenticated, async (req: any, res) => {
     try {
+      const userId = req.user.claims.sub;
       const productId = parseInt(req.params.id);
       const product = await storage.getProduct(productId);
       
@@ -113,8 +114,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Product not found" });
       }
       
-      // Check if user owns the product
-      if (product.authorId !== req.user.claims.sub) {
+      // Check if user owns this product
+      if (product.authorId !== userId) {
         return res.status(403).json({ message: "Access denied" });
       }
       
