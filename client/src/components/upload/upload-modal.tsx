@@ -12,6 +12,7 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import { FileText, Image, CheckCircle, ArrowLeft, ArrowRight } from "lucide-react";
+import { PDFDocument } from "pdf-lib";
 
 // Step 1: File upload
 const fileUploadSchema = z.object({
@@ -140,28 +141,42 @@ export default function UploadModal() {
     },
   });
 
-  const handlePdfUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handlePdfUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file && file.type === "application/pdf") {
       setPdfFile(file);
       
-      // Simulate PDF validation (in real app, you'd use pdf-lib)
-      const simulatedPageCount = Math.floor(Math.random() * 50) + 10;
-      const calculatedBaseCost = simulatedPageCount * 0.5; // R$ 0.50 per page
-      
-      setPageCount(simulatedPageCount);
-      setBaseCost(calculatedBaseCost);
-      // Set initial author earnings to suggest double the base cost
-      const suggestedEarnings = calculatedBaseCost;
-      pricingForm.setValue("authorEarnings", suggestedEarnings);
-      setSalePrice(calculatedBaseCost + suggestedEarnings);
-      
-      setValidation({
-        isValid: true,
-        pageCount: simulatedPageCount,
-        format: "A4",
-        message: `PDF válido • ${simulatedPageCount} páginas • Formato A4`,
-      });
+      try {
+        // Read the PDF file and get actual page count
+        const arrayBuffer = await file.arrayBuffer();
+        const pdfDoc = await PDFDocument.load(arrayBuffer);
+        const actualPageCount = pdfDoc.getPageCount();
+        
+        const calculatedBaseCost = actualPageCount * 0.5; // R$ 0.50 per page
+        
+        setPageCount(actualPageCount);
+        setBaseCost(calculatedBaseCost);
+        // Set initial author earnings to suggest same as base cost
+        const suggestedEarnings = calculatedBaseCost;
+        pricingForm.setValue("authorEarnings", suggestedEarnings);
+        setSalePrice(calculatedBaseCost + suggestedEarnings);
+        
+        setValidation({
+          isValid: true,
+          pageCount: actualPageCount,
+          format: "A4",
+          message: `PDF válido • ${actualPageCount} páginas • Formato A4`,
+        });
+      } catch (error) {
+        console.error("Erro ao processar PDF:", error);
+        toast({
+          title: "Erro de validação",
+          description: "Não foi possível processar o arquivo PDF. Tente novamente.",
+          variant: "destructive",
+        });
+        setPdfFile(null);
+        setValidation(null);
+      }
     } else {
       toast({
         title: "Arquivo inválido",
