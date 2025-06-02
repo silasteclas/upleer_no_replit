@@ -126,6 +126,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.put('/api/products/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const productId = parseInt(req.params.id);
+      const product = await storage.getProduct(productId);
+      
+      if (!product) {
+        return res.status(404).json({ message: "Product not found" });
+      }
+      
+      // Check if user owns this product
+      if (product.authorId !== userId) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+      
+      const updatedProduct = await storage.updateProduct(productId, {
+        title: req.body.title,
+        description: req.body.description,
+        isbn: req.body.isbn,
+        salePrice: req.body.salePrice.toString(),
+      });
+      
+      res.json(updatedProduct);
+    } catch (error) {
+      console.error("Error updating product:", error);
+      res.status(500).json({ message: "Failed to update product" });
+    }
+  });
+
   // Sales routes
   app.get('/api/sales', isAuthenticated, async (req: any, res) => {
     try {

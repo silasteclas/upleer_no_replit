@@ -23,6 +23,7 @@ export interface IStorage {
   createProduct(product: InsertProduct): Promise<Product>;
   getProductsByAuthor(authorId: string): Promise<Product[]>;
   getProduct(id: number): Promise<Product | undefined>;
+  updateProduct(id: number, updates: Partial<InsertProduct>): Promise<Product>;
   updateProductStatus(id: number, status: string): Promise<Product>;
   
   // Sales operations
@@ -90,6 +91,18 @@ export class DatabaseStorage implements IStorage {
       .from(products)
       .where(eq(products.id, id));
     return product;
+  }
+
+  async updateProduct(id: number, updates: Partial<InsertProduct>): Promise<Product> {
+    const [updatedProduct] = await db
+      .update(products)
+      .set({
+        ...updates,
+        updatedAt: new Date(),
+      })
+      .where(eq(products.id, id))
+      .returning();
+    return updatedProduct;
   }
 
   async updateProductStatus(id: number, status: string): Promise<Product> {
