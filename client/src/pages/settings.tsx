@@ -77,7 +77,11 @@ export default function Settings() {
 
   const updateProfileMutation = useMutation({
     mutationFn: async (data: any) => {
-      return apiRequest("POST", "/api/settings/profile", data);
+      const payload = {
+        ...data,
+        profileImage: profileImage
+      };
+      return apiRequest("POST", "/api/settings/profile", payload);
     },
     onSuccess: () => {
       toast({

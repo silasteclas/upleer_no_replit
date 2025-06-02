@@ -18,6 +18,7 @@ export interface IStorage {
   // (IMPORTANT) these user operations are mandatory for Replit Auth.
   getUser(id: string): Promise<User | undefined>;
   upsertUser(user: UpsertUser): Promise<User>;
+  updateUserProfileImage(id: string, profileImageUrl: string): Promise<User>;
   
   // Product operations
   createProduct(product: InsertProduct): Promise<Product>;
@@ -64,6 +65,18 @@ export class DatabaseStorage implements IStorage {
           updatedAt: new Date(),
         },
       })
+      .returning();
+    return user;
+  }
+
+  async updateUserProfileImage(id: string, profileImageUrl: string): Promise<User> {
+    const [user] = await db
+      .update(users)
+      .set({ 
+        profileImageUrl,
+        updatedAt: new Date()
+      })
+      .where(eq(users.id, id))
       .returning();
     return user;
   }

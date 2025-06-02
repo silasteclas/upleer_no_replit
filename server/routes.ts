@@ -225,7 +225,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/settings/profile', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
-      // For now, just return success since we don't have user settings table
+      const { profileImage, ...otherData } = req.body;
+      
+      // Se uma nova foto foi enviada, atualize o usuário
+      if (profileImage) {
+        await storage.updateUserProfileImage(userId, profileImage);
+      }
+      
       res.json({ message: "Profile updated successfully" });
     } catch (error) {
       console.error("Error updating profile:", error);
