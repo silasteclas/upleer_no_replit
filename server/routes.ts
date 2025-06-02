@@ -225,20 +225,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/settings/profile', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
-      const { profileImage, ...otherData } = req.body;
+      const { profileImage, firstName, lastName, email, phone, bio } = req.body;
       
       console.log("=== Profile Update Request ===");
       console.log("User ID:", userId);
-      console.log("Has profileImage:", !!profileImage);
-      console.log("ProfileImage length:", profileImage ? profileImage.length : 0);
-      console.log("Other data:", otherData);
+      console.log("Data to update:", { firstName, lastName, email, phone, bio });
       
-      // Se uma nova foto foi enviada, atualize o usuário
-      if (profileImage) {
-        console.log("Updating user profile image...");
-        const updatedUser = await storage.updateUserProfileImage(userId, profileImage);
-        console.log("User updated:", updatedUser);
-      }
+      // Atualizar dados do perfil do usuário
+      const updatedUser = await storage.updateUserProfile(userId, {
+        firstName,
+        lastName,
+        email,
+        profileImageUrl: profileImage
+      });
+      
+      console.log("User profile updated:", updatedUser);
       
       res.json({ message: "Profile updated successfully" });
     } catch (error) {
