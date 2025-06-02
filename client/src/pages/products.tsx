@@ -120,7 +120,7 @@ export default function Products() {
               </Link>
             </Card>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
               {products.map((product) => (
                 <Card key={product.id} className="overflow-hidden">
                   <div className="aspect-[3/4] bg-gray-100 relative">
@@ -133,53 +133,53 @@ export default function Products() {
                     ) : (
                       <div className="w-full h-full flex items-center justify-center">
                         <div className="text-gray-400 text-center">
-                          <div className="w-16 h-16 bg-gray-200 rounded mx-auto mb-2 flex items-center justify-center">
+                          <div className="w-8 h-8 bg-gray-200 rounded mx-auto mb-1 flex items-center justify-center text-xs">
                             📚
                           </div>
-                          <p className="text-sm">Sem capa</p>
+                          <p className="text-xs">Sem capa</p>
                         </div>
                       </div>
                     )}
                   </div>
                   
-                  <div className="p-4">
+                  <div className="p-3">
                     <div className="flex justify-between items-start mb-2">
-                      <h3 className="font-semibold text-gray-900 truncate flex-1">
+                      <h3 className="font-medium text-gray-900 truncate flex-1 text-sm">
                         {product.title}
                       </h3>
-                      <Badge className={getStatusColor(product.status)}>
+                      <Badge className={`${getStatusColor(product.status)} text-xs ml-1`}>
                         {getStatusText(product.status)}
                       </Badge>
                     </div>
                     
-                    <p className="text-sm text-gray-600 mb-3 line-clamp-2">
+                    <p className="text-xs text-gray-600 mb-2 line-clamp-2">
                       {product.description || "Sem descrição"}
                     </p>
                     
-                    <div className="flex justify-between items-center text-sm text-gray-500 mb-4">
-                      <span>{product.pageCount} páginas</span>
+                    <div className="flex justify-between items-center text-xs text-gray-500 mb-3">
+                      <span>{product.pageCount}p</span>
                       <span className="font-medium text-gray-900">
                         R$ {product.salePrice}
                       </span>
                     </div>
                     
-                    <div className="flex space-x-2">
+                    <div className="flex space-x-1">
                       <Button 
                         variant="outline" 
                         size="sm" 
-                        className="flex-1"
+                        className="flex-1 text-xs px-2 py-1 h-auto"
                         onClick={() => setLocation(`/products/${product.id}`)}
                       >
-                        <Eye className="w-4 h-4 mr-1" />
+                        <Eye className="w-3 h-3 mr-1" />
                         Ver
                       </Button>
                       <Button 
                         variant="outline" 
                         size="sm" 
-                        className="flex-1"
+                        className="flex-1 text-xs px-2 py-1 h-auto"
                         onClick={() => setLocation(`/products/${product.id}/edit`)}
                       >
-                        <Edit className="w-4 h-4 mr-1" />
+                        <Edit className="w-3 h-3 mr-1" />
                         Editar
                       </Button>
                     </div>
