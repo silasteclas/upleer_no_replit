@@ -155,17 +155,59 @@ export default function ProductView() {
                 </div>
               </CardHeader>
               <CardContent className="space-y-4">
-                {product.description && (
-                  <div>
-                    <h3 className="font-medium text-gray-900 mb-2">Descrição</h3>
-                    <p className="text-gray-700">{product.description}</p>
+                {/* Sales Stats */}
+                <div>
+                  <h3 className="font-medium text-gray-900 mb-3">Estatísticas de Vendas</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="text-center p-4 bg-blue-50 rounded-lg">
+                      <div className="text-2xl font-bold text-blue-600">0</div>
+                      <div className="text-sm text-gray-600">Vendas</div>
+                    </div>
+                    <div className="text-center p-4 bg-green-50 rounded-lg">
+                      <div className="text-2xl font-bold text-green-600">R$ 0,00</div>
+                      <div className="text-sm text-gray-600">Receita</div>
+                    </div>
+                    <div className="text-center p-4 bg-purple-50 rounded-lg">
+                      <div className="text-2xl font-bold text-purple-600">0%</div>
+                      <div className="text-sm text-gray-600">Taxa de conversão</div>
+                    </div>
                   </div>
-                )}
+                </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
-                    <h3 className="font-medium text-gray-900 mb-2">Detalhes</h3>
+                    <h3 className="font-medium text-gray-900 mb-3">Informações do Produto</h3>
                     <div className="space-y-2 text-sm">
+                      {product.author && (
+                        <div className="flex justify-between">
+                          <span className="text-gray-600">Autor:</span>
+                          <span className="font-medium">{product.author}</span>
+                        </div>
+                      )}
+                      {product.coAuthors && (
+                        <div className="flex justify-between">
+                          <span className="text-gray-600">Co-autores:</span>
+                          <span className="font-medium">{product.coAuthors}</span>
+                        </div>
+                      )}
+                      {product.genre && (
+                        <div className="flex justify-between">
+                          <span className="text-gray-600">Gênero:</span>
+                          <span className="font-medium">{product.genre}</span>
+                        </div>
+                      )}
+                      {product.language && (
+                        <div className="flex justify-between">
+                          <span className="text-gray-600">Idioma:</span>
+                          <span className="font-medium">{product.language}</span>
+                        </div>
+                      )}
+                      {product.targetAudience && (
+                        <div className="flex justify-between">
+                          <span className="text-gray-600">Público-alvo:</span>
+                          <span className="font-medium">{product.targetAudience}</span>
+                        </div>
+                      )}
                       <div className="flex justify-between">
                         <span className="text-gray-600">Páginas:</span>
                         <span className="font-medium">{product.pageCount}</span>
@@ -176,16 +218,16 @@ export default function ProductView() {
                           <span className="font-medium">{product.isbn}</span>
                         </div>
                       )}
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">Custo base:</span>
-                        <span className="font-medium">R$ {product.baseCost}</span>
-                      </div>
                     </div>
                   </div>
 
                   <div>
-                    <h3 className="font-medium text-gray-900 mb-2">Precificação</h3>
+                    <h3 className="font-medium text-gray-900 mb-3">Precificação</h3>
                     <div className="space-y-2 text-sm">
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Custo base:</span>
+                        <span className="font-medium">R$ {product.baseCost}</span>
+                      </div>
                       <div className="flex justify-between">
                         <span className="text-gray-600">Preço de venda:</span>
                         <span className="font-medium text-lg text-primary">
@@ -201,29 +243,13 @@ export default function ProductView() {
                     </div>
                   </div>
                 </div>
-              </CardContent>
-            </Card>
 
-            {/* Sales Stats */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Estatísticas de Vendas</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div className="text-center p-4 bg-blue-50 rounded-lg">
-                    <div className="text-2xl font-bold text-blue-600">0</div>
-                    <div className="text-sm text-gray-600">Vendas</div>
+                {product.description && (
+                  <div>
+                    <h3 className="font-medium text-gray-900 mb-2">Descrição</h3>
+                    <p className="text-gray-700 leading-relaxed">{product.description}</p>
                   </div>
-                  <div className="text-center p-4 bg-green-50 rounded-lg">
-                    <div className="text-2xl font-bold text-green-600">R$ 0,00</div>
-                    <div className="text-sm text-gray-600">Receita</div>
-                  </div>
-                  <div className="text-center p-4 bg-purple-50 rounded-lg">
-                    <div className="text-2xl font-bold text-purple-600">0%</div>
-                    <div className="text-sm text-gray-600">Taxa de conversão</div>
-                  </div>
-                </div>
+                )}
               </CardContent>
             </Card>
           </div>
