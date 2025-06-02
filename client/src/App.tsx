@@ -9,6 +9,7 @@ import Landing from "@/pages/landing";
 import Dashboard from "@/pages/dashboard";
 import Upload from "@/pages/upload";
 import Products from "@/pages/products";
+import ProductView from "@/pages/product-view";
 
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -22,6 +23,7 @@ function Router() {
           <Route path="/" component={Dashboard} />
           <Route path="/upload" component={Upload} />
           <Route path="/products" component={Products} />
+          <Route path="/products/:id" component={ProductView} />
         </>
       )}
       <Route component={NotFound} />

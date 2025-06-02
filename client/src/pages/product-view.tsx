@@ -7,6 +7,7 @@ import { ArrowLeft, Download, Edit, FileText } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
+import type { Product } from "@shared/schema";
 
 export default function ProductView() {
   const { id } = useParams();
@@ -29,7 +30,7 @@ export default function ProductView() {
     }
   }, [isAuthenticated, isLoading, toast]);
 
-  const { data: product, isLoading: productLoading } = useQuery({
+  const { data: product, isLoading: productLoading } = useQuery<Product>({
     queryKey: ["/api/products", id],
     enabled: !!id && isAuthenticated,
   });
