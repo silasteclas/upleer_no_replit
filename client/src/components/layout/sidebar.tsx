@@ -1,6 +1,7 @@
 import { Link, useLocation } from "wouter";
 import { BookOpen, BarChart3, Upload, Package, Settings, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import logoPath from "@assets/Logotipo para site upleer (1).png";
 
 export default function Sidebar() {
   const [location] = useLocation();
@@ -20,14 +21,15 @@ export default function Sidebar() {
   return (
     <aside className="w-64 bg-surface shadow-lg">
       <div className="p-6 border-b border-gray-200">
-        <div className="flex items-center space-x-3">
-          <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center">
-            <BookOpen className="text-white text-lg" />
-          </div>
-          <div>
-            <h1 className="text-xl font-bold text-gray-900">Upleer</h1>
-            <p className="text-sm text-gray-500">Painel do Autor</p>
-          </div>
+        <div className="flex items-center justify-center">
+          <img 
+            src={logoPath} 
+            alt="Upleer" 
+            className="h-10 w-auto object-contain"
+          />
+        </div>
+        <div className="text-center mt-3">
+          <p className="text-sm text-gray-500">Painel do Autor</p>
         </div>
       </div>
       

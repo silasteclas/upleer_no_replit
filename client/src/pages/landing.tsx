@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { BookOpen, Upload, BarChart3, Shield } from "lucide-react";
+import logoPath from "@assets/Logotipo para site upleer (1).png";
 
 export default function Landing() {
   const handleLogin = () => {
@@ -11,11 +12,12 @@ export default function Landing() {
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
       <div className="container mx-auto px-4 py-16">
         <div className="text-center mb-16">
-          <div className="flex items-center justify-center space-x-3 mb-6">
-            <div className="w-12 h-12 bg-primary rounded-lg flex items-center justify-center">
-              <BookOpen className="text-white text-2xl" />
-            </div>
-            <h1 className="text-4xl font-bold text-gray-900">Upleer</h1>
+          <div className="flex items-center justify-center mb-6">
+            <img 
+              src={logoPath} 
+              alt="Upleer" 
+              className="h-16 w-auto object-contain"
+            />
           </div>
           <p className="text-xl text-gray-600 max-w-2xl mx-auto">
             Plataforma completa para autores publicarem e gerenciarem a venda de suas apostilas digitais
