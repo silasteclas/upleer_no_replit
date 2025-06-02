@@ -65,10 +65,10 @@ export default function ProductEdit() {
   useEffect(() => {
     if (product) {
       form.reset({
-        title: product.title,
+        title: product.title || "",
         description: product.description || "",
         isbn: product.isbn || "",
-        salePrice: parseFloat(product.salePrice),
+        salePrice: parseFloat(product.salePrice || "0"),
       });
     }
   }, [product, form]);
