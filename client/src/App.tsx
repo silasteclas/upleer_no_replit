@@ -1,5 +1,4 @@
 import { Switch, Route } from "wouter";
-import { createContext, useContext, useState, ReactNode } from "react";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
@@ -14,31 +13,6 @@ import ProductView from "@/pages/product-view";
 import ProductEdit from "@/pages/product-edit";
 import Sales from "@/pages/sales";
 import Settings from "@/pages/settings";
-
-interface ProfileContextType {
-  profileImage: string | null;
-  setProfileImage: (image: string | null) => void;
-}
-
-const ProfileContext = createContext<ProfileContextType | undefined>(undefined);
-
-export function useProfile() {
-  const context = useContext(ProfileContext);
-  if (context === undefined) {
-    throw new Error("useProfile deve ser usado dentro de um ProfileProvider");
-  }
-  return context;
-}
-
-function ProfileProvider({ children }: { children: ReactNode }) {
-  const [profileImage, setProfileImage] = useState<string | null>(null);
-
-  return (
-    <ProfileContext.Provider value={{ profileImage, setProfileImage }}>
-      {children}
-    </ProfileContext.Provider>
-  );
-}
 
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -66,12 +40,10 @@ function Router() {
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <ProfileProvider>
-        <TooltipProvider>
-          <Toaster />
-          <Router />
-        </TooltipProvider>
-      </ProfileProvider>
+      <TooltipProvider>
+        <Toaster />
+        <Router />
+      </TooltipProvider>
     </QueryClientProvider>
   );
 }
