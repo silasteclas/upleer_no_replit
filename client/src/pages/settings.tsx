@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useToast } from "@/hooks/use-toast";
+import { useProfile } from "@/App";
 import Sidebar from "@/components/layout/sidebar";
 import Header from "@/components/layout/header";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -26,7 +27,7 @@ import {
 export default function Settings() {
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState("profile");
-  const [profileImage, setProfileImage] = useState<string | null>(null);
+  const { profileImage, setProfileImage } = useProfile();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const { data: user } = useQuery({

@@ -1,4 +1,5 @@
 import { useAuth } from "@/hooks/useAuth";
+import { useProfile } from "@/App";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Bell } from "lucide-react";
@@ -10,6 +11,7 @@ interface HeaderProps {
 
 export default function Header({ title, subtitle }: HeaderProps) {
   const { user } = useAuth();
+  const { profileImage } = useProfile();
 
   const getInitials = (firstName?: string, lastName?: string) => {
     if (!firstName && !lastName) return "U";
@@ -17,10 +19,10 @@ export default function Header({ title, subtitle }: HeaderProps) {
   };
 
   const getDisplayName = () => {
-    if (user?.firstName || user?.lastName) {
-      return `${user.firstName || ""} ${user.lastName || ""}`.trim();
+    if ((user as any)?.firstName || (user as any)?.lastName) {
+      return `${(user as any).firstName || ""} ${(user as any).lastName || ""}`.trim();
     }
-    return user?.email || "Usuário";
+    return (user as any)?.email || "Usuário";
   };
 
   return (
@@ -38,12 +40,12 @@ export default function Header({ title, subtitle }: HeaderProps) {
           <div className="flex items-center space-x-3">
             <Avatar className="w-10 h-10">
               <AvatarImage 
-                src={user?.profileImageUrl || ""} 
+                src={profileImage || (user as any)?.profileImageUrl || ""} 
                 alt="Foto do perfil"
                 className="object-cover"
               />
               <AvatarFallback>
-                {getInitials(user?.firstName, user?.lastName)}
+                {getInitials((user as any)?.firstName, (user as any)?.lastName)}
               </AvatarFallback>
             </Avatar>
             <div>
