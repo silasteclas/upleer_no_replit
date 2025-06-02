@@ -408,104 +408,98 @@ export default function UploadModal() {
               </div>
             </div>
 
-            {/* Spiral Bound Book Preview */}
+            {/* Professional Book Preview */}
             <div className="lg:col-span-1">
               <div className="sticky top-4">
                 <Label className="text-sm font-medium text-gray-700 mb-3 block">Preview da Apostila</Label>
                 <div className="relative max-w-56 mx-auto">
-                  {/* Main Spiral Bound Book */}
-                  <div className="relative bg-white shadow-2xl aspect-[3/4] transform rotate-3 transition-all duration-500 hover:rotate-1 hover:scale-105">
-                    {/* Book Pages Stack */}
-                    <div className="absolute inset-0 bg-white rounded-r-sm"></div>
-                    <div className="absolute inset-0 bg-gray-100 rounded-r-sm transform translate-x-0.5 translate-y-0.5"></div>
-                    <div className="absolute inset-0 bg-gray-200 rounded-r-sm transform translate-x-1 translate-y-1"></div>
+                  {/* Book Stack Effect */}
+                  <div className="relative">
+                    {/* Back pages */}
+                    <div className="absolute inset-0 bg-gray-200 rounded transform translate-x-2 translate-y-2 aspect-[3/4]"></div>
+                    <div className="absolute inset-0 bg-gray-100 rounded transform translate-x-1 translate-y-1 aspect-[3/4]"></div>
                     
-                    {/* Main Cover */}
-                    <div className="relative bg-white rounded-r-sm overflow-hidden h-full shadow-lg">
-                      {coverFile ? (
-                        <div className="h-full relative">
-                          <img
-                            src={URL.createObjectURL(coverFile)}
-                            alt="Capa da apostila"
-                            className="w-full h-full object-cover"
-                          />
-                          {/* Title overlay if image doesn't have clear title space */}
-                          {productInfo.title && (
-                            <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-3">
-                              <h3 className="text-white text-xs font-bold leading-tight break-words">
-                                {productInfo.title}
-                              </h3>
-                            </div>
-                          )}
-                        </div>
-                      ) : (
-                        <div className="h-full bg-gradient-to-br from-blue-500 via-blue-600 to-blue-700 relative flex flex-col p-4">
-                          {/* Logo/Brand area */}
-                          <div className="text-center mb-4">
-                            <div className="inline-block px-2 py-1 bg-white/20 rounded text-white text-xs font-medium">
-                              UPLEER
-                            </div>
-                          </div>
-                          
-                          {/* Main content area */}
-                          <div className="flex-1 flex items-center justify-center">
-                            <FileText className="w-16 h-16 text-white/30" />
-                          </div>
-                          
-                          {/* Title area */}
-                          <div className="text-center mt-4">
-                            {productInfo.title ? (
-                              <h3 className="text-white text-sm font-bold leading-tight break-words mb-2">
-                                {productInfo.title}
-                              </h3>
-                            ) : (
-                              <h3 className="text-white/70 text-xs italic mb-2">
-                                Título da Apostila
-                              </h3>
-                            )}
-                            
-                            {/* Subtitle area */}
-                            <div className="text-white/80 text-xs">
-                              Material de Estudo
-                            </div>
-                          </div>
-                        </div>
-                      )}
+                    {/* Main book */}
+                    <div className="relative bg-white rounded shadow-2xl aspect-[3/4] transform rotate-2 transition-all duration-500 hover:rotate-0 hover:scale-105">
+                      {/* Left binding edge */}
+                      <div className="absolute left-0 top-0 bottom-0 w-4 bg-gray-300 rounded-l border-r-2 border-gray-400"></div>
                       
-                      {/* Spiral Binding Holes */}
-                      <div className="absolute left-0 top-0 bottom-0 w-6 flex flex-col justify-between py-4">
-                        {[...Array(12)].map((_, i) => (
-                          <div key={i} className="w-3 h-3 rounded-full bg-white shadow-inner border border-gray-300 mx-auto"></div>
+                      {/* Binding holes */}
+                      <div className="absolute left-1 top-0 bottom-0 w-2 flex flex-col justify-around py-6">
+                        {[...Array(8)].map((_, i) => (
+                          <div key={i} className="w-1.5 h-1.5 bg-gray-600 rounded-full mx-auto"></div>
                         ))}
                       </div>
-                    </div>
-                    
-                    {/* Spiral Wire */}
-                    <div className="absolute left-0 top-0 bottom-0 w-4 flex flex-col justify-between py-3 -ml-2">
-                      {[...Array(12)].map((_, i) => (
-                        <div key={i} className="relative">
-                          <div className="w-4 h-2 border-2 border-gray-800 rounded-full transform rotate-45"></div>
-                        </div>
-                      ))}
+                      
+                      {/* Main cover area */}
+                      <div className="ml-4 h-full rounded-r overflow-hidden">
+                        {coverFile ? (
+                          <div className="h-full relative">
+                            <img
+                              src={URL.createObjectURL(coverFile)}
+                              alt="Capa da apostila"
+                              className="w-full h-full object-cover"
+                            />
+                            {/* Title overlay */}
+                            {productInfo.title && (
+                              <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-3">
+                                <h3 className="text-white text-sm font-bold leading-tight break-words">
+                                  {productInfo.title}
+                                </h3>
+                              </div>
+                            )}
+                          </div>
+                        ) : (
+                          <div className="h-full bg-gradient-to-br from-blue-500 via-blue-600 to-blue-700 relative flex flex-col p-4">
+                            {/* Brand badge */}
+                            <div className="text-right mb-2">
+                              <div className="inline-block px-2 py-1 bg-white/20 backdrop-blur rounded text-white text-xs font-medium">
+                                UPLEER
+                              </div>
+                            </div>
+                            
+                            {/* Center content */}
+                            <div className="flex-1 flex items-center justify-center">
+                              <div className="text-center">
+                                <FileText className="w-12 h-12 text-white/40 mx-auto mb-3" />
+                                <div className="text-white/60 text-xs">Material de Estudo</div>
+                              </div>
+                            </div>
+                            
+                            {/* Title area */}
+                            <div className="text-center">
+                              {productInfo.title ? (
+                                <h3 className="text-white text-sm font-bold leading-tight break-words mb-2">
+                                  {productInfo.title}
+                                </h3>
+                              ) : (
+                                <h3 className="text-white/70 text-xs italic mb-2">
+                                  Título da Apostila
+                                </h3>
+                              )}
+                              <div className="w-full h-0.5 bg-white/30 rounded"></div>
+                            </div>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
                   
-                  {/* Page Count Badge */}
-                  <div className="absolute -top-2 -right-2 bg-orange-500 text-white text-xs px-2 py-1 rounded-full shadow-lg z-10">
-                    {pageCount} páginas
+                  {/* Info badges */}
+                  <div className="absolute -top-2 -right-2 bg-orange-500 text-white text-xs px-2 py-1 rounded-full shadow-lg z-10 font-medium">
+                    {pageCount} pág.
                   </div>
                   
-                  {/* Quality Badge */}
-                  <div className="absolute -bottom-2 -left-2 bg-green-600 text-white text-xs px-2 py-1 rounded-full shadow-lg z-10">
-                    HD Quality
+                  <div className="absolute -bottom-2 -left-2 bg-green-600 text-white text-xs px-2 py-1 rounded-full shadow-lg z-10 font-medium">
+                    Profissional
                   </div>
                 </div>
                 
                 <div className="mt-6 text-center">
                   <div className="text-xs text-gray-500 space-y-1">
-                    <p className="font-medium">Preview em Tempo Real</p>
+                    <p className="font-medium text-gray-700">Preview em Tempo Real</p>
                     <p>Apostila Encadernada</p>
-                    <p className="text-primary">Formato Profissional</p>
+                    <p className="text-primary font-medium">Qualidade Premium</p>
                   </div>
                 </div>
               </div>
