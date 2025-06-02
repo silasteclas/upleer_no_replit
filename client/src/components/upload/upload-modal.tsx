@@ -27,7 +27,7 @@ const productInfoSchema = z.object({
 
 // Step 3: Pricing
 const pricingSchema = z.object({
-  marginPercent: z.number().min(0).max(1000).default(150),
+  authorEarnings: z.number().min(0).default(0),
 });
 
 type FileUploadData = z.infer<typeof fileUploadSchema>;
@@ -71,7 +71,7 @@ export default function UploadModal() {
 
   const pricingForm = useForm<PricingData>({
     resolver: zodResolver(pricingSchema),
-    defaultValues: { marginPercent: 150 },
+    defaultValues: { authorEarnings: 0 },
   });
 
   const uploadMutation = useMutation({
@@ -84,7 +84,7 @@ export default function UploadModal() {
       formData.append("title", data.title);
       formData.append("description", data.description || "");
       formData.append("isbn", data.isbn || "");
-      formData.append("marginPercent", data.marginPercent.toString());
+      formData.append("marginPercent", "150"); // Keep backend compatibility
       formData.append("salePrice", salePrice.toString());
 
       const response = await fetch("/api/products", {
@@ -151,7 +151,10 @@ export default function UploadModal() {
       
       setPageCount(simulatedPageCount);
       setBaseCost(calculatedBaseCost);
-      setSalePrice(calculatedBaseCost * (pricingForm.getValues("marginPercent") / 100));
+      // Set initial author earnings to suggest double the base cost
+      const suggestedEarnings = calculatedBaseCost;
+      pricingForm.setValue("authorEarnings", suggestedEarnings);
+      setSalePrice(calculatedBaseCost + suggestedEarnings);
       
       setValidation({
         isValid: true,
@@ -181,10 +184,10 @@ export default function UploadModal() {
     }
   };
 
-  const handleMarginChange = (margin: number) => {
-    pricingForm.setValue("marginPercent", margin);
+  const handleEarningsChange = (earnings: number) => {
+    pricingForm.setValue("authorEarnings", earnings);
     if (baseCost > 0) {
-      setSalePrice(baseCost * (margin / 100));
+      setSalePrice(baseCost + earnings);
     }
   };
 
@@ -403,27 +406,27 @@ export default function UploadModal() {
                     <p className="font-medium">{pageCount} páginas</p>
                   </div>
                   <div>
-                    <p className="text-sm text-gray-600">Custo base (R$ 0,50 por página):</p>
+                    <p className="text-sm text-gray-600">Custo base:</p>
                     <p className="font-medium">R$ {baseCost.toFixed(2)}</p>
                   </div>
                 </div>
                 
                 <div className="space-y-4">
                   <div>
-                    <Label className="text-sm font-medium text-gray-700 mb-2">Margem desejada (%)</Label>
+                    <Label className="text-sm font-medium text-gray-700 mb-2">Quanto você quer ganhar? (R$)</Label>
                     <div className="flex items-center space-x-2">
+                      <span className="text-gray-500">R$</span>
                       <Input
                         type="number"
-                        value={pricingForm.watch("marginPercent")}
-                        onChange={(e) => handleMarginChange(Number(e.target.value))}
-                        className="w-24 text-center"
+                        value={pricingForm.watch("authorEarnings")}
+                        onChange={(e) => handleEarningsChange(Number(e.target.value))}
+                        className="w-32 text-center"
                         min="0"
-                        max="1000"
+                        step="0.01"
                       />
-                      <span className="text-gray-500">%</span>
                     </div>
                     <p className="text-xs text-gray-500 mt-1">
-                      Sugerimos entre 100% e 300%
+                      Digite o valor que você deseja receber por venda
                     </p>
                   </div>
                   
