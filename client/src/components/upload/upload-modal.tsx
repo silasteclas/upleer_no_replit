@@ -503,8 +503,8 @@ export default function UploadModal() {
                 <h4 className="font-medium text-gray-900 mb-4">Precificação Automática</h4>
                 <div className="space-y-4">
                   <div>
-                    <p className="text-sm text-gray-600">Arquivo PDF:</p>
-                    <p className="font-medium">{pdfFile?.name}</p>
+                    <p className="text-sm text-gray-600">Produto:</p>
+                    <p className="font-medium">{productInfo.title}</p>
                   </div>
                   <div>
                     <p className="text-sm text-gray-600">Número de páginas:</p>
