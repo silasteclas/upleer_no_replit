@@ -65,23 +65,20 @@ export default function IntegrationForm() {
   useEffect(() => {
     if (integration && isEditing) {
       form.reset({
-        name: integration.name,
+        name: integration.name || "",
         description: integration.description || "",
-        baseUrl: integration.baseUrl,
-        authType: integration.authType,
+        baseUrl: integration.baseUrl || "",
+        authType: integration.authType || "none",
         authConfig: integration.authConfig || {},
         headers: integration.headers || {},
-        isActive: integration.isActive,
+        isActive: integration.isActive ?? true,
       });
     }
   }, [integration, isEditing, form]);
 
   const createMutation = useMutation({
     mutationFn: async (data: IntegrationData) => {
-      return apiRequest("/api/integrations", {
-        method: "POST",
-        body: JSON.stringify(data),
-      });
+      return apiRequest("/api/integrations", "POST", data);
     },
     onSuccess: () => {
       toast({
@@ -102,10 +99,7 @@ export default function IntegrationForm() {
 
   const updateMutation = useMutation({
     mutationFn: async (data: IntegrationData) => {
-      return apiRequest(`/api/integrations/${id}`, {
-        method: "PUT",
-        body: JSON.stringify(data),
-      });
+      return apiRequest(`/api/integrations/${id}`, "PUT", data);
     },
     onSuccess: () => {
       toast({

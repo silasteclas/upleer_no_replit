@@ -38,6 +38,10 @@ function Router() {
           <Route path="/products/:id" component={ProductView} />
           <Route path="/products/:id/edit" component={ProductEdit} />
           <Route path="/sales" component={Sales} />
+          <Route path="/integrations" component={Integrations} />
+          <Route path="/integrations/new" component={IntegrationForm} />
+          <Route path="/integrations/:id/edit" component={IntegrationForm} />
+          <Route path="/integrations/logs" component={IntegrationLogs} />
           <Route path="/settings" component={Settings} />
         </>
       )}
