@@ -79,7 +79,8 @@ export default function IntegrationForm() {
 
   const createMutation = useMutation({
     mutationFn: async (data: IntegrationData) => {
-      return apiRequest("/api/integrations", "POST", data);
+      const response = await apiRequest("/api/integrations", "POST", data);
+      return response.json();
     },
     onSuccess: () => {
       toast({
@@ -100,7 +101,8 @@ export default function IntegrationForm() {
 
   const updateMutation = useMutation({
     mutationFn: async (data: IntegrationData) => {
-      return apiRequest(`/api/integrations/${id}`, "PUT", data);
+      const response = await apiRequest(`/api/integrations/${id}`, "PUT", data);
+      return response.json();
     },
     onSuccess: () => {
       toast({
@@ -121,7 +123,8 @@ export default function IntegrationForm() {
 
   const testMutation = useMutation({
     mutationFn: async (data: IntegrationData) => {
-      return apiRequest("/api/integrations/test", "POST", data);
+      const response = await apiRequest("/api/integrations/test", "POST", data);
+      return response.json();
     },
     onSuccess: (response: any) => {
       toast({
