@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { BookOpen, BarChart3, Upload, Package, Settings, LogOut, Zap } from "lucide-react";
+import { BookOpen, BarChart3, Upload, Package, Settings, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import logoPath from "@assets/Logotipo para site upleer (1).png";
 
@@ -21,7 +21,6 @@ export default function Sidebar() {
     { href: "/upload", icon: Upload, label: "Nova Apostila" },
     { href: "/products", icon: Package, label: "Meus Produtos" },
     { href: "/sales", icon: BarChart3, label: "Vendas" },
-    { href: "/integrations", icon: Zap, label: "Integrações API" },
     { href: "/settings", icon: Settings, label: "Configurações" },
   ];
 
