@@ -42,7 +42,7 @@ export default function IntegrationForm() {
   const { toast } = useToast();
   const isEditing = !!id;
 
-  const { data: integration, isLoading } = useQuery({
+  const { data: integration, isLoading } = useQuery<any>({
     queryKey: [`/api/integrations/${id}`],
     enabled: isEditing,
   });
@@ -64,14 +64,15 @@ export default function IntegrationForm() {
 
   useEffect(() => {
     if (integration && isEditing) {
+      const integrationData = integration as any;
       form.reset({
-        name: integration.name || "",
-        description: integration.description || "",
-        baseUrl: integration.baseUrl || "",
-        authType: integration.authType || "none",
-        authConfig: integration.authConfig || {},
-        headers: integration.headers || {},
-        isActive: integration.isActive ?? true,
+        name: integrationData.name || "",
+        description: integrationData.description || "",
+        baseUrl: integrationData.baseUrl || "",
+        authType: integrationData.authType || "api_key",
+        authConfig: integrationData.authConfig || {},
+        headers: integrationData.headers || {},
+        isActive: integrationData.isActive ?? true,
       });
     }
   }, [integration, isEditing, form]);
@@ -120,12 +121,9 @@ export default function IntegrationForm() {
 
   const testMutation = useMutation({
     mutationFn: async (data: IntegrationData) => {
-      return apiRequest("/api/integrations/test", {
-        method: "POST",
-        body: JSON.stringify(data),
-      });
+      return apiRequest("/api/integrations/test", "POST", data);
     },
-    onSuccess: (response) => {
+    onSuccess: (response: any) => {
       toast({
         title: "Teste realizado com sucesso!",
         description: `Status: ${response.status} - ${response.message}`,
