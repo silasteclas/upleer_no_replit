@@ -1,4 +1,4 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -7,14 +7,9 @@ import Sidebar from "@/components/layout/sidebar";
 import Header from "@/components/layout/header";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { Download, Calendar, DollarSign, Package, User, Plus } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
-import { apiRequest } from "@/lib/queryClient";
+import { Download, Calendar, DollarSign, Package, User } from "lucide-react";
 
 export default function Sales() {
-  const { toast } = useToast();
-  const queryClient = useQueryClient();
-  
   const { data: sales, isLoading } = useQuery({
     queryKey: ["/api/sales"],
   });
@@ -22,29 +17,6 @@ export default function Sales() {
   const { data: user } = useQuery({
     queryKey: ["/api/auth/user"],
     retry: false,
-  });
-
-  const createSampleSalesMutation = useMutation({
-    mutationFn: async () => {
-      const response = await apiRequest("/api/sales/create-samples", "POST");
-      return response.json();
-    },
-    onSuccess: (data) => {
-      toast({
-        title: "Vendas criadas com sucesso!",
-        description: `${data.sales?.length || 0} vendas fictícias foram adicionadas`,
-      });
-      queryClient.invalidateQueries({ queryKey: ["/api/sales"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/analytics/stats"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/analytics/sales-data"] });
-    },
-    onError: (error: any) => {
-      toast({
-        title: "Erro ao criar vendas",
-        description: error.message,
-        variant: "destructive",
-      });
-    },
   });
 
   if (isLoading) {
@@ -88,28 +60,6 @@ export default function Sales() {
         />
         <main className="flex-1 overflow-x-hidden overflow-y-auto bg-gray-50 p-6">
           <div className="max-w-7xl mx-auto">
-            {/* Action Bar */}
-            {(!Array.isArray(sales) || sales.length === 0) && (
-              <div className="mb-6">
-                <Card>
-                  <CardContent className="p-4">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <h3 className="text-lg font-medium text-gray-900">Nenhuma venda encontrada</h3>
-                        <p className="text-sm text-gray-600">Crie vendas fictícias para testar o sistema</p>
-                      </div>
-                      <Button 
-                        onClick={() => createSampleSalesMutation.mutate()}
-                        disabled={createSampleSalesMutation.isPending}
-                      >
-                        <Plus className="w-4 h-4 mr-2" />
-                        {createSampleSalesMutation.isPending ? "Criando..." : "Criar Vendas Fictícias"}
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-            )}
             {/* Stats Cards */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
               <Card>
@@ -181,11 +131,12 @@ export default function Sales() {
                               <div>
                                 <h4 className="font-medium text-gray-900">{sale.product?.title}</h4>
                                 <p className="text-sm text-gray-500">ID da Venda: #{sale.id}</p>
+                                {sale.product?.author && (
+                                  <p className="text-xs text-gray-400">por {sale.product.author}</p>
+                                )}
                               </div>
                               <Badge variant="secondary" className="ml-auto">
-                                {sale.status === 'completed' ? 'Concluída' : 
-                                 sale.status === 'pending' ? 'Pendente' : 
-                                 sale.status === 'cancelled' ? 'Cancelada' : sale.status}
+                                Concluída
                               </Badge>
                             </div>
                             
@@ -197,16 +148,16 @@ export default function Sales() {
                                 </div>
                                 <div className="flex items-center">
                                   <User className="w-4 h-4 mr-1" />
-                                  {sale.customerEmail || 'Cliente'}
+                                  {sale.buyerEmail || 'Cliente'}
                                 </div>
                               </div>
                               
                               <div className="text-right">
                                 <p className="text-lg font-bold text-green-600">
-                                  R$ {sale.amount.toFixed(2)}
+                                  R$ {parseFloat(sale.salePrice).toFixed(2)}
                                 </p>
                                 <p className="text-xs text-gray-500">
-                                  Seu ganho: R$ {sale.authorEarnings?.toFixed(2) || '0.00'}
+                                  Seu ganho: R$ {parseFloat(sale.authorEarnings).toFixed(2)}
                                 </p>
                               </div>
                             </div>

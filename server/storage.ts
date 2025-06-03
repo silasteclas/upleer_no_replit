@@ -188,7 +188,7 @@ export class DatabaseStorage implements IStorage {
     return newSale;
   }
 
-  async getSalesByAuthor(authorId: string): Promise<Sale[]> {
+  async getSalesByAuthor(authorId: string): Promise<(Sale & { product: { title: string; author: string } })[]> {
     return await db
       .select({
         id: sales.id,
@@ -198,6 +198,10 @@ export class DatabaseStorage implements IStorage {
         commission: sales.commission,
         authorEarnings: sales.authorEarnings,
         createdAt: sales.createdAt,
+        product: {
+          title: products.title,
+          author: products.author,
+        }
       })
       .from(sales)
       .innerJoin(products, eq(sales.productId, products.id))
