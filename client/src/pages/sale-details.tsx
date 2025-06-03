@@ -257,22 +257,42 @@ export default function SaleDetails() {
                       }
                     </span>
                   </div>
-
-                  {sale.shippingCarrier && (
-                    <div className="flex justify-between items-center">
-                      <span className="text-gray-600">Transportadora</span>
-                      <span className="font-medium">{sale.shippingCarrier}</span>
-                    </div>
-                  )}
-
-                  {sale.deliveryDays && (
-                    <div className="flex justify-between items-center">
-                      <span className="text-gray-600">Prazo de entrega</span>
-                      <span className="font-medium">{sale.deliveryDays} dias úteis</span>
-                    </div>
-                  )}
                 </CardContent>
               </Card>
+
+              {/* Delivery Information */}
+              {(sale.shippingCarrier || sale.deliveryDays || (sale.shippingCost && parseFloat(sale.shippingCost) > 0)) && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center space-x-2">
+                      <Package className="w-5 h-5" />
+                      <span>Informações de Entrega</span>
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    {sale.shippingCarrier && (
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-600">Transportadora</span>
+                        <span className="font-medium">{sale.shippingCarrier}</span>
+                      </div>
+                    )}
+
+                    {sale.deliveryDays && (
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-600">Prazo de entrega</span>
+                        <span className="font-medium">{sale.deliveryDays} dias úteis</span>
+                      </div>
+                    )}
+
+                    {sale.shippingCost && parseFloat(sale.shippingCost) > 0 && (
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-600">Valor do frete</span>
+                        <span className="font-medium">R$ {parseFloat(sale.shippingCost).toFixed(2)}</span>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              )}
             </div>
 
             {/* Products */}
