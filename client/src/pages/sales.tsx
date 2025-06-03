@@ -168,12 +168,7 @@ export default function Sales() {
                                   </Badge>
                                 </div>
                                 
-                                <div className="flex items-center space-x-2">
-                                  <Truck className="w-4 h-4 text-blue-500" />
-                                  <Badge variant="secondary" className="bg-blue-100 text-blue-700">
-                                    Físico
-                                  </Badge>
-                                </div>
+
                               </div>
                               
                               <div className="text-right">
