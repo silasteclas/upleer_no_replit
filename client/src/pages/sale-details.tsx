@@ -198,14 +198,7 @@ export default function SaleDetails() {
                     </div>
                   </div>
                   
-                  <div className="flex items-start space-x-3">
-                    <MapPin className="w-4 h-4 text-gray-400 mt-1" />
-                    <div className="flex-1">
-                      <div className="text-sm text-gray-600">Método de entrega</div>
-                      <div className="font-medium">Download digital</div>
-                      <div className="text-xs text-gray-500 mt-1">Não requer entrega física</div>
-                    </div>
-                  </div>
+
                 </CardContent>
               </Card>
 
@@ -349,7 +342,7 @@ export default function SaleDetails() {
                     {sale.shippingCost && parseFloat(sale.shippingCost) > 0 ? (
                       <span className="font-medium">R$ {parseFloat(sale.shippingCost).toFixed(2)}</span>
                     ) : (
-                      <span className="font-medium text-blue-600">Grátis (Digital)</span>
+                      <span className="font-medium text-gray-500">A calcular</span>
                     )}
                   </div>
                   
