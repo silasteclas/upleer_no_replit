@@ -16,6 +16,7 @@ import { useLocation, useParams } from "wouter";
 import { ArrowLeft, Save, TestTube } from "lucide-react";
 import Header from "@/components/layout/header";
 import Sidebar from "@/components/layout/sidebar";
+import EndpointTester from "@/components/integrations/endpoint-tester";
 
 const integrationSchema = z.object({
   name: z.string().min(1, "Nome é obrigatório"),
@@ -422,6 +423,15 @@ export default function IntegrationForm() {
                 </Form>
               </CardContent>
             </Card>
+
+            {/* Endpoint Tester - Show when form has valid data */}
+            {form.watch("baseUrl") && form.watch("authType") && (
+              <EndpointTester
+                baseUrl={form.watch("baseUrl")}
+                authType={form.watch("authType")}
+                authConfig={form.watch("authConfig") || {}}
+              />
+            )}
           </div>
         </main>
       </div>
