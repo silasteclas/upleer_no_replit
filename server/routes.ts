@@ -42,6 +42,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         buyerState,
         buyerZipCode,
         salePrice,
+        // Novos campos de pagamento e entrega
+        orderDate,
+        paymentStatus = "pendente",
+        paymentMethod,
+        installments = 1,
+        discountCoupon,
+        discountAmount = "0.00",
+        shippingCost = "0.00",
+        shippingCarrier,
+        deliveryDays,
         source = "webhook"
       } = req.body;
 
@@ -63,7 +73,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const commission = salePriceNum * 0.3; // 30% platform fee
       const authorEarnings = salePriceNum * 0.7; // 70% for author
 
-      // Create sale record
+      // Create sale record with complete information
       const sale = await storage.createSale({
         productId: parseInt(productId),
         buyerEmail,
@@ -76,7 +86,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
         buyerZipCode: buyerZipCode || null,
         salePrice: salePriceNum.toFixed(2),
         commission: commission.toFixed(2),
-        authorEarnings: authorEarnings.toFixed(2)
+        authorEarnings: authorEarnings.toFixed(2),
+        // Novos campos de pagamento e entrega
+        orderDate: orderDate ? new Date(orderDate) : new Date(),
+        paymentStatus,
+        paymentMethod,
+        installments: parseInt(installments) || 1,
+        discountCoupon,
+        discountAmount: parseFloat(discountAmount || "0").toFixed(2),
+        shippingCost: parseFloat(shippingCost || "0").toFixed(2),
+        shippingCarrier,
+        deliveryDays: deliveryDays ? parseInt(deliveryDays) : null
       });
 
       res.status(201).json({ 

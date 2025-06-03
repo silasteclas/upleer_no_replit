@@ -51,7 +51,16 @@ Content-Type: application/json
   "buyerCity": "São Paulo",
   "buyerState": "SP",
   "buyerZipCode": "01234-567",
-  "salePrice": "89.90"
+  "salePrice": "89.90",
+  "orderDate": "2025-06-03T15:30:00Z",
+  "paymentStatus": "aprovado",
+  "paymentMethod": "cartao_credito",
+  "installments": 3,
+  "discountCoupon": "DESCONTO10",
+  "discountAmount": "8.99",
+  "shippingCost": "15.00",
+  "shippingCarrier": "Correios",
+  "deliveryDays": 7
 }
 ```
 

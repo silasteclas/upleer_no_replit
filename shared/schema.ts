@@ -75,6 +75,16 @@ export const sales = pgTable("sales", {
   salePrice: decimal("sale_price", { precision: 10, scale: 2 }).notNull(),
   commission: decimal("commission", { precision: 10, scale: 2 }).notNull(),
   authorEarnings: decimal("author_earnings", { precision: 10, scale: 2 }).notNull(),
+  // Novos campos de pagamento e entrega
+  orderDate: timestamp("order_date"),
+  paymentStatus: varchar("payment_status").default("pendente"), // pendente, aprovado, devolvido
+  paymentMethod: varchar("payment_method"), // cartao_credito, boleto, pix
+  installments: integer("installments").default(1),
+  discountCoupon: varchar("discount_coupon"),
+  discountAmount: decimal("discount_amount", { precision: 10, scale: 2 }).default("0.00"),
+  shippingCost: decimal("shipping_cost", { precision: 10, scale: 2 }).default("0.00"),
+  shippingCarrier: varchar("shipping_carrier"),
+  deliveryDays: integer("delivery_days"),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
