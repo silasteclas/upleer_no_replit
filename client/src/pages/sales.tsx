@@ -148,7 +148,7 @@ export default function Sales() {
                                 </div>
                                 
                                 <div>
-                                  <p className="text-sm font-medium text-gray-900">{sale.buyerEmail}</p>
+                                  <p className="text-sm font-medium text-gray-900">{sale.buyerName || sale.buyerEmail}</p>
                                   <p className="text-xs text-gray-500">Cliente</p>
                                 </div>
                                 
