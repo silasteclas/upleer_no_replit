@@ -209,16 +209,14 @@ export default function ProductView() {
                 <div className="p-4">
                   <div className="flex flex-col space-y-2">
                     <div className="flex space-x-2">
-                      <Button className="flex-1" size="sm">
-                        <Download className="w-4 h-4 mr-2" />
-                        Download PDF
-                      </Button>
                       <Button 
                         variant="outline" 
                         size="sm"
                         onClick={() => setLocation(`/products/${id}/edit`)}
+                        className="flex-1"
                       >
-                        <Edit className="w-4 h-4" />
+                        <Edit className="w-4 h-4 mr-2" />
+                        Editar
                       </Button>
                     </div>
                     <Button 

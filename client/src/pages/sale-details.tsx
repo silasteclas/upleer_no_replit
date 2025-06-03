@@ -303,7 +303,7 @@ export default function SaleDetails() {
                         <h4 className="font-semibold text-gray-900">{sale.product?.title}</h4>
                         <p className="text-sm text-gray-600">por {sale.product?.author}</p>
                         <div className="flex items-center space-x-4 mt-2">
-                          <span className="text-xs bg-gray-100 px-2 py-1 rounded">PDF Digital</span>
+                          <span className="text-xs bg-gray-100 px-2 py-1 rounded">Produto Físico</span>
                           <span className="text-xs text-gray-500">Quantidade: 1</span>
                         </div>
                       </div>
@@ -402,18 +402,7 @@ export default function SaleDetails() {
                     </div>
                   </div>
                   
-                  <div className="flex items-start space-x-4">
-                    <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                      <Download className="w-4 h-4 text-blue-600" />
-                    </div>
-                    <div className="flex-1">
-                      <div className="font-medium">Produto disponível para download</div>
-                      <div className="text-sm text-gray-600">
-                        {format(new Date(sale.createdAt), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
-                      </div>
-                    </div>
-                  </div>
-                  
+
                   <div className="flex items-start space-x-4">
                     <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">
                       <Package className="w-4 h-4 text-purple-600" />
