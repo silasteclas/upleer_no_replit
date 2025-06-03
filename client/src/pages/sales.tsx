@@ -50,7 +50,7 @@ export default function Sales() {
     );
   }
 
-  const totalRevenue = Array.isArray(sales) ? sales.reduce((sum: number, sale: any) => sum + sale.amount, 0) : 0;
+  const totalRevenue = Array.isArray(sales) ? sales.reduce((sum: number, sale: any) => sum + parseFloat(sale.salePrice), 0) : 0;
   const totalSales = Array.isArray(sales) ? sales.length : 0;
 
   return (
