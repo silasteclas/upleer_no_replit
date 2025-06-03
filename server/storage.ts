@@ -45,6 +45,23 @@ export interface IStorage {
     sales: number;
     revenue: number;
   }[]>;
+  
+  // API Integration operations
+  createApiIntegration(integration: InsertApiIntegration): Promise<ApiIntegration>;
+  getApiIntegrations(): Promise<ApiIntegration[]>;
+  getApiIntegration(id: number): Promise<ApiIntegration | undefined>;
+  updateApiIntegration(id: number, updates: Partial<InsertApiIntegration>): Promise<ApiIntegration>;
+  deleteApiIntegration(id: number): Promise<void>;
+  
+  // API Endpoint operations
+  createApiEndpoint(endpoint: InsertApiEndpoint): Promise<ApiEndpoint>;
+  getApiEndpoints(integrationId: number): Promise<ApiEndpoint[]>;
+  updateApiEndpoint(id: number, updates: Partial<InsertApiEndpoint>): Promise<ApiEndpoint>;
+  deleteApiEndpoint(id: number): Promise<void>;
+  
+  // API Logs operations
+  createApiLog(log: Partial<ApiLog>): Promise<ApiLog>;
+  getApiLogs(limit?: number): Promise<ApiLog[]>;
 }
 
 export class DatabaseStorage implements IStorage {

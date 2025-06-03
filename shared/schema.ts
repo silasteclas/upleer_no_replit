@@ -103,9 +103,97 @@ export const insertSaleSchema = createInsertSchema(sales).omit({
   createdAt: true,
 });
 
+// API Integrations table
+export const apiIntegrations = pgTable("api_integrations", {
+  id: serial("id").primaryKey(),
+  name: varchar("name").notNull(),
+  description: text("description"),
+  baseUrl: varchar("base_url").notNull(),
+  authType: varchar("auth_type").notNull(), // 'api_key', 'oauth', 'bearer', 'basic'
+  authConfig: jsonb("auth_config").notNull(), // stores auth credentials securely
+  headers: jsonb("headers"), // default headers
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// API Endpoints table
+export const apiEndpoints = pgTable("api_endpoints", {
+  id: serial("id").primaryKey(),
+  integrationId: integer("integration_id").notNull().references(() => apiIntegrations.id, { onDelete: "cascade" }),
+  name: varchar("name").notNull(),
+  endpoint: varchar("endpoint").notNull(),
+  method: varchar("method").notNull(), // GET, POST, PUT, DELETE, etc.
+  requestBody: jsonb("request_body"), // template for request body
+  responseMapping: jsonb("response_mapping"), // how to map response data
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// API Logs table
+export const apiLogs = pgTable("api_logs", {
+  id: serial("id").primaryKey(),
+  integrationId: integer("integration_id").notNull().references(() => apiIntegrations.id),
+  endpointId: integer("endpoint_id").references(() => apiEndpoints.id),
+  method: varchar("method").notNull(),
+  url: text("url").notNull(),
+  requestHeaders: jsonb("request_headers"),
+  requestBody: jsonb("request_body"),
+  responseStatus: integer("response_status"),
+  responseHeaders: jsonb("response_headers"),
+  responseBody: jsonb("response_body"),
+  responseTime: integer("response_time"), // in milliseconds
+  errorMessage: text("error_message"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Relations for API tables
+export const apiIntegrationsRelations = relations(apiIntegrations, ({ many }) => ({
+  endpoints: many(apiEndpoints),
+  logs: many(apiLogs),
+}));
+
+export const apiEndpointsRelations = relations(apiEndpoints, ({ one, many }) => ({
+  integration: one(apiIntegrations, {
+    fields: [apiEndpoints.integrationId],
+    references: [apiIntegrations.id],
+  }),
+  logs: many(apiLogs),
+}));
+
+export const apiLogsRelations = relations(apiLogs, ({ one }) => ({
+  integration: one(apiIntegrations, {
+    fields: [apiLogs.integrationId],
+    references: [apiIntegrations.id],
+  }),
+  endpoint: one(apiEndpoints, {
+    fields: [apiLogs.endpointId],
+    references: [apiEndpoints.id],
+  }),
+}));
+
+// API schemas
+export const insertApiIntegrationSchema = createInsertSchema(apiIntegrations).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertApiEndpointSchema = createInsertSchema(apiEndpoints).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
 export type UpsertUser = typeof users.$inferInsert;
 export type User = typeof users.$inferSelect;
 export type InsertProduct = z.infer<typeof insertProductSchema>;
 export type Product = typeof products.$inferSelect;
 export type InsertSale = z.infer<typeof insertSaleSchema>;
 export type Sale = typeof sales.$inferSelect;
+export type ApiIntegration = typeof apiIntegrations.$inferSelect;
+export type InsertApiIntegration = z.infer<typeof insertApiIntegrationSchema>;
+export type ApiEndpoint = typeof apiEndpoints.$inferSelect;
+export type InsertApiEndpoint = z.infer<typeof insertApiEndpointSchema>;
+export type ApiLog = typeof apiLogs.$inferSelect;
