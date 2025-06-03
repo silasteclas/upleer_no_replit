@@ -244,7 +244,7 @@ export class DatabaseStorage implements IStorage {
     const [salesStats] = await db
       .select({
         totalSales: count(sales.id),
-        totalRevenue: sum(sales.authorEarnings),
+        totalRevenue: sum(sales.salePrice),
       })
       .from(sales)
       .innerJoin(products, eq(sales.productId, products.id))
