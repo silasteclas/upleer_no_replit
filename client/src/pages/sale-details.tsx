@@ -8,7 +8,7 @@ import Sidebar from "@/components/layout/sidebar";
 import Header from "@/components/layout/header";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { ArrowLeft, Calendar, DollarSign, Package, User, ShoppingBag, Truck, CreditCard, FileText, Download, Mail, MapPin } from "lucide-react";
+import { ArrowLeft, Calendar, DollarSign, Package, User, ShoppingBag, Truck, CreditCard, FileText, Download, Mail, MapPin, Phone, CreditCard as IdCard, Home } from "lucide-react";
 
 export default function SaleDetails() {
   const { id } = useParams();
@@ -148,19 +148,56 @@ export default function SaleDetails() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div className="flex items-center space-x-3">
-                    <Mail className="w-4 h-4 text-gray-400" />
-                    <div>
+                  <div className="flex items-start space-x-3">
+                    <User className="w-4 h-4 text-gray-400 mt-1" />
+                    <div className="flex-1">
+                      <div className="text-sm text-gray-600">Nome completo</div>
+                      <div className="font-medium">João Silva Santos</div>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start space-x-3">
+                    <IdCard className="w-4 h-4 text-gray-400 mt-1" />
+                    <div className="flex-1">
+                      <div className="text-sm text-gray-600">CPF</div>
+                      <div className="font-medium">123.456.789-10</div>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-start space-x-3">
+                    <Mail className="w-4 h-4 text-gray-400 mt-1" />
+                    <div className="flex-1">
                       <div className="text-sm text-gray-600">Email</div>
                       <div className="font-medium">{sale.buyerEmail}</div>
                     </div>
                   </div>
+
+                  <div className="flex items-start space-x-3">
+                    <Phone className="w-4 h-4 text-gray-400 mt-1" />
+                    <div className="flex-1">
+                      <div className="text-sm text-gray-600">Telefone</div>
+                      <div className="font-medium">(11) 99876-5432</div>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start space-x-3">
+                    <Home className="w-4 h-4 text-gray-400 mt-1" />
+                    <div className="flex-1">
+                      <div className="text-sm text-gray-600">Endereço completo</div>
+                      <div className="font-medium">
+                        <div>Rua das Flores, 123 - Apto 45</div>
+                        <div className="text-sm text-gray-500">Jardim das Rosas - São Paulo, SP</div>
+                        <div className="text-sm text-gray-500">CEP: 01234-567</div>
+                      </div>
+                    </div>
+                  </div>
                   
-                  <div className="flex items-center space-x-3">
-                    <MapPin className="w-4 h-4 text-gray-400" />
-                    <div>
+                  <div className="flex items-start space-x-3">
+                    <MapPin className="w-4 h-4 text-gray-400 mt-1" />
+                    <div className="flex-1">
                       <div className="text-sm text-gray-600">Método de entrega</div>
                       <div className="font-medium">Download digital</div>
+                      <div className="text-xs text-gray-500 mt-1">Não requer entrega física</div>
                     </div>
                   </div>
                 </CardContent>
@@ -223,10 +260,6 @@ export default function SaleDetails() {
                       <div className="text-lg font-bold text-gray-900">
                         R$ {parseFloat(sale.salePrice).toFixed(2)}
                       </div>
-                      <Button size="sm" variant="outline" className="mt-2">
-                        <Download className="w-4 h-4 mr-2" />
-                        Download
-                      </Button>
                     </div>
                   </div>
                 </div>

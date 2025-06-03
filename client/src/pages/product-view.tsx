@@ -3,16 +3,36 @@ import { useParams, useLocation } from "wouter";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
 import { ArrowLeft, Download, Edit, FileText, Send, ShoppingCart } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import type { Product } from "@shared/schema";
+
+const purchaseSchema = z.object({
+  buyerName: z.string().min(2, "Nome deve ter pelo menos 2 caracteres"),
+  buyerEmail: z.string().email("Email inválido"),
+  buyerPhone: z.string().min(10, "Telefone deve ter pelo menos 10 dígitos"),
+  buyerCpf: z.string().min(11, "CPF deve ter 11 dígitos"),
+  buyerAddress: z.string().min(5, "Endereço deve ter pelo menos 5 caracteres"),
+  buyerCity: z.string().min(2, "Cidade deve ter pelo menos 2 caracteres"),
+  buyerState: z.string().min(2, "Estado deve ter 2 caracteres"),
+  buyerZipCode: z.string().min(8, "CEP deve ter 8 dígitos"),
+});
+
+type PurchaseData = z.infer<typeof purchaseSchema>;
 
 export default function ProductView() {
   const { id } = useParams();
   const [, setLocation] = useLocation();
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
   const { toast } = useToast();
   const { isAuthenticated, isLoading } = useAuth();
   const queryClient = useQueryClient();
