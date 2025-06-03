@@ -125,7 +125,7 @@ export default function SaleDetails() {
                     <User className="w-8 h-8 text-purple-600 mx-auto mb-2" />
                     <div className="text-sm text-gray-600">Cliente</div>
                     <div className="font-semibold text-gray-900 truncate">
-                      {sale.buyerEmail}
+                      {sale.buyerName ? sale.buyerName.split(' ')[0] : sale.buyerEmail.split('@')[0]}
                     </div>
                   </div>
                   
