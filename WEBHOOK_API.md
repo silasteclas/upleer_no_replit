@@ -126,14 +126,14 @@ Exemplo com venda de R$ 89,90:
 - Taxa da plataforma: R$ 26,97
 - Ganhos do autor: R$ 62,93
 
-## Campos Opcionais vs Obrigatórios
+## Campos Obrigatórios vs Opcionais
 
 **Obrigatórios:**
 - `productId`: ID do produto (número)
 - `buyerEmail`: Email do comprador
 - `salePrice`: Valor da venda (string com decimais)
 
-**Opcionais:**
+**Opcionais - Dados do Cliente:**
 - `buyerName`: Nome completo
 - `buyerPhone`: Telefone
 - `buyerCpf`: CPF
@@ -141,6 +141,21 @@ Exemplo com venda de R$ 89,90:
 - `buyerCity`: Cidade
 - `buyerState`: Estado
 - `buyerZipCode`: CEP
+
+**Opcionais - Dados de Pagamento:**
+- `orderDate`: Data e hora do pedido (ISO 8601, padrão: agora)
+- `paymentStatus`: Status do pagamento (padrão: "pendente")
+  - Valores aceitos: "pendente", "aprovado", "devolvido"
+- `paymentMethod`: Método de pagamento
+  - Valores aceitos: "cartao_credito", "boleto", "pix"
+- `installments`: Número de parcelas (padrão: 1)
+- `discountCoupon`: Código do cupom de desconto
+- `discountAmount`: Valor do desconto (padrão: "0.00")
+
+**Opcionais - Dados de Entrega:**
+- `shippingCost`: Valor do frete (padrão: "0.00")
+- `shippingCarrier`: Transportadora (ex: "Correios", "Jadlog")
+- `deliveryDays`: Prazo de entrega em dias
 
 ## Logs e Monitoramento
 
