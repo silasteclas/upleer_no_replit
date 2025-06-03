@@ -33,6 +33,7 @@ export interface IStorage {
   // Product operations
   createProduct(product: InsertProduct): Promise<Product>;
   getProductsByAuthor(authorId: string): Promise<Product[]>;
+  getAllProducts(): Promise<Product[]>;
   getProduct(id: number): Promise<Product | undefined>;
   updateProduct(id: number, updates: Partial<InsertProduct>): Promise<Product>;
   updateProductStatus(id: number, status: string): Promise<Product>;

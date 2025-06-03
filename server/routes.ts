@@ -3,7 +3,9 @@ import express from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated } from "./auth";
-import { insertProductSchema, insertApiIntegrationSchema, insertApiEndpointSchema } from "@shared/schema";
+import { insertProductSchema, insertApiIntegrationSchema, insertApiEndpointSchema, products } from "@shared/schema";
+import { db } from "./db";
+import { eq } from "drizzle-orm";
 import multer from "multer";
 import path from "path";
 import { z } from "zod";
@@ -27,6 +29,99 @@ const upload = multer({
 export async function registerRoutes(app: Express): Promise<Server> {
   // Auth middleware
   await setupAuth(app);
+
+  // Public webhook endpoint for receiving sales from external sources (N8N)
+  app.post("/api/webhook/sales", async (req, res) => {
+    try {
+      const {
+        productId,
+        buyerName,
+        buyerEmail,
+        buyerPhone,
+        buyerCpf,
+        buyerAddress,
+        buyerCity,
+        buyerState,
+        buyerZipCode,
+        salePrice,
+        source = "webhook"
+      } = req.body;
+
+      // Validate required fields
+      if (!productId || !buyerEmail || !salePrice) {
+        return res.status(400).json({ 
+          message: "Campos obrigatórios: productId, buyerEmail, salePrice" 
+        });
+      }
+
+      // Get product to validate it exists
+      const product = await storage.getProduct(parseInt(productId));
+      if (!product) {
+        return res.status(404).json({ message: "Produto não encontrado" });
+      }
+
+      // Calculate pricing
+      const salePriceNum = parseFloat(salePrice);
+      const commission = salePriceNum * 0.3; // 30% platform fee
+      const authorEarnings = salePriceNum * 0.7; // 70% for author
+
+      // Create sale record
+      const sale = await storage.createSale({
+        productId: parseInt(productId),
+        buyerEmail,
+        buyerName: buyerName || null,
+        buyerPhone: buyerPhone || null,
+        buyerCpf: buyerCpf || null,
+        buyerAddress: buyerAddress || null,
+        buyerCity: buyerCity || null,
+        buyerState: buyerState || null,
+        buyerZipCode: buyerZipCode || null,
+        salePrice: salePriceNum.toFixed(2),
+        commission: commission.toFixed(2),
+        authorEarnings: authorEarnings.toFixed(2)
+      });
+
+      res.status(201).json({ 
+        message: "Venda criada com sucesso via webhook",
+        sale: {
+          id: sale.id,
+          productId: sale.productId,
+          buyerEmail: sale.buyerEmail,
+          salePrice: sale.salePrice,
+          source
+        }
+      });
+
+    } catch (error) {
+      console.error("Erro no webhook de vendas:", error);
+      res.status(500).json({ message: "Erro interno do servidor" });
+    }
+  });
+
+  // Public endpoint to list products for webhook integration
+  app.get("/api/webhook/products", async (req, res) => {
+    try {
+      // Get all products from storage (we'll filter approved ones in storage if needed)
+      const allProducts = await storage.getAllProducts();
+      
+      // Filter only approved products for webhook
+      const approvedProducts = allProducts.filter(product => product.status === "approved");
+      
+      // Return simplified product data for webhook integration
+      const webhookProducts = approvedProducts.map(product => ({
+        id: product.id,
+        title: product.title,
+        author: product.author,
+        salePrice: product.salePrice,
+        status: product.status
+      }));
+
+      res.json(webhookProducts);
+    } catch (error) {
+      console.error("Erro ao listar produtos para webhook:", error);
+      res.status(500).json({ message: "Erro interno do servidor" });
+    }
+  });
 
   // Auth routes
   app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {

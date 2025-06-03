@@ -288,11 +288,28 @@ export default function SaleDetails() {
                   </div>
                   
                   <div className="flex justify-between items-center">
-                    <span className="text-gray-600">Taxa da plataforma (30%)</span>
-                    <span className="font-medium text-red-600">- R$ {parseFloat(sale.commission).toFixed(2)}</span>
+                    <span className="text-gray-600">Frete</span>
+                    <span className="font-medium text-blue-600">Grátis (Digital)</span>
+                  </div>
+                  
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-600">Cupom de desconto</span>
+                    <span className="font-medium text-gray-500">Não aplicado</span>
                   </div>
                   
                   <Separator />
+                  
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-600 font-medium">Total da venda</span>
+                    <span className="font-bold">R$ {parseFloat(sale.salePrice).toFixed(2)}</span>
+                  </div>
+                  
+                  <Separator />
+                  
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-600">Taxa da plataforma (30%)</span>
+                    <span className="font-medium text-red-600">- R$ {parseFloat(sale.commission).toFixed(2)}</span>
+                  </div>
                   
                   <div className="flex justify-between items-center text-lg font-bold">
                     <span>Seus ganhos</span>
