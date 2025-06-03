@@ -249,7 +249,7 @@ export default function SaleDetails() {
                   )}
                   
                   <div className="flex justify-between items-center">
-                    <span className="text-gray-600">Data do pedido</span>
+                    <span className="text-gray-600">Data do pagamento</span>
                     <span className="font-medium">
                       {sale.orderDate ? 
                         format(new Date(sale.orderDate), "dd/MM/yyyy HH:mm", { locale: ptBR }) :
