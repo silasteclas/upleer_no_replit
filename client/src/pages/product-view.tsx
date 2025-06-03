@@ -3,7 +3,7 @@ import { useParams, useLocation } from "wouter";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Download, Edit, FileText, Send } from "lucide-react";
+import { ArrowLeft, Download, Edit, FileText, Send, ShoppingCart } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
@@ -50,6 +50,26 @@ export default function ProductView() {
     onError: (error: any) => {
       toast({
         title: "Erro ao enviar webhook",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const simulatePurchaseMutation = useMutation({
+    mutationFn: async () => {
+      const response = await apiRequest(`/api/products/${id}/simulate-purchase`, "POST");
+      return response.json();
+    },
+    onSuccess: (data) => {
+      toast({
+        title: "Compra simulada com sucesso!",
+        description: "Uma nova venda foi criada no sistema",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Erro ao simular compra",
         description: error.message,
         variant: "destructive",
       });
@@ -169,6 +189,16 @@ export default function ProductView() {
                     >
                       <Send className="w-4 h-4 mr-2" />
                       {webhookMutation.isPending ? "Enviando..." : "Enviar para N8N"}
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => simulatePurchaseMutation.mutate()}
+                      disabled={simulatePurchaseMutation.isPending}
+                      className="w-full"
+                    >
+                      <ShoppingCart className="w-4 h-4 mr-2" />
+                      {simulatePurchaseMutation.isPending ? "Processando..." : "Simular Compra"}
                     </Button>
                   </div>
                 </div>

@@ -165,6 +165,61 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Simulate purchase for a product
+  app.post("/api/products/:id/simulate-purchase", isAuthenticated, async (req: any, res) => {
+    try {
+      const productId = parseInt(req.params.id);
+      const userId = req.user.id;
+      
+      const product = await storage.getProduct(productId);
+      if (!product) {
+        return res.status(404).json({ message: "Produto não encontrado" });
+      }
+
+      // Verify that the user owns this product
+      if (product.authorId !== userId) {
+        return res.status(403).json({ message: "Acesso negado" });
+      }
+
+      // Generate random buyer email
+      const buyerEmails = [
+        "cliente1@email.com",
+        "comprador@gmail.com", 
+        "usuario.teste@hotmail.com",
+        "cliente.exemplo@yahoo.com",
+        "compra.teste@outlook.com"
+      ];
+      const randomEmail = buyerEmails[Math.floor(Math.random() * buyerEmails.length)];
+
+      // Calculate pricing
+      const salePrice = parseFloat(product.salePrice.toString());
+      const commission = salePrice * 0.3; // 30% platform fee
+      const authorEarnings = salePrice * 0.7; // 70% for author
+      
+      // Create sale record
+      const sale = await storage.createSale({
+        productId: product.id,
+        buyerEmail: randomEmail,
+        salePrice: salePrice.toFixed(2),
+        commission: commission.toFixed(2),
+        authorEarnings: authorEarnings.toFixed(2)
+      });
+
+      res.json({ 
+        success: true, 
+        message: "Compra simulada com sucesso",
+        sale: sale
+      });
+    } catch (error) {
+      console.error("Erro ao simular compra:", error);
+      res.status(500).json({ 
+        success: false, 
+        message: "Erro ao simular compra",
+        error: error instanceof Error ? error.message : "Erro desconhecido"
+      });
+    }
+  });
+
   // Sales routes
   app.get('/api/sales', isAuthenticated, async (req: any, res) => {
     try {
