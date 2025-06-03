@@ -3,7 +3,7 @@ import express from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated } from "./auth";
-import { insertProductSchema } from "@shared/schema";
+import { insertProductSchema, insertApiIntegrationSchema, insertApiEndpointSchema } from "@shared/schema";
 import multer from "multer";
 import path from "path";
 import { z } from "zod";
@@ -282,6 +282,156 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // File serving
   app.use('/uploads', express.static('uploads'));
+
+  // API Integrations routes
+  app.get('/api/integrations', isAuthenticated, async (req, res) => {
+    try {
+      const integrations = await storage.getApiIntegrations();
+      res.json(integrations);
+    } catch (error) {
+      console.error("Error fetching integrations:", error);
+      res.status(500).json({ message: "Failed to fetch integrations" });
+    }
+  });
+
+  app.post('/api/integrations', isAuthenticated, async (req, res) => {
+    try {
+      const validatedData = insertApiIntegrationSchema.parse(req.body);
+      const integration = await storage.createApiIntegration(validatedData);
+      res.json(integration);
+    } catch (error) {
+      console.error("Error creating integration:", error);
+      res.status(400).json({ message: "Invalid integration data" });
+    }
+  });
+
+  app.get('/api/integrations/:id', isAuthenticated, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const integration = await storage.getApiIntegration(id);
+      if (!integration) {
+        return res.status(404).json({ message: "Integration not found" });
+      }
+      res.json(integration);
+    } catch (error) {
+      console.error("Error fetching integration:", error);
+      res.status(500).json({ message: "Failed to fetch integration" });
+    }
+  });
+
+  app.put('/api/integrations/:id', isAuthenticated, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const validatedData = insertApiIntegrationSchema.partial().parse(req.body);
+      const integration = await storage.updateApiIntegration(id, validatedData);
+      res.json(integration);
+    } catch (error) {
+      console.error("Error updating integration:", error);
+      res.status(400).json({ message: "Invalid integration data" });
+    }
+  });
+
+  app.delete('/api/integrations/:id', isAuthenticated, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      await storage.deleteApiIntegration(id);
+      res.json({ message: "Integration deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting integration:", error);
+      res.status(500).json({ message: "Failed to delete integration" });
+    }
+  });
+
+  app.post('/api/integrations/test', isAuthenticated, async (req, res) => {
+    try {
+      const { baseUrl, authType, authConfig } = req.body;
+      
+      // Simple test request to the base URL
+      const testUrl = baseUrl.endsWith('/') ? baseUrl : baseUrl + '/';
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+      };
+
+      // Add authentication headers based on type
+      if (authType === 'api_key' && authConfig.apiKey) {
+        headers['X-API-Key'] = authConfig.apiKey;
+      } else if (authType === 'bearer' && authConfig.token) {
+        headers['Authorization'] = `Bearer ${authConfig.token}`;
+      } else if (authType === 'basic' && authConfig.username && authConfig.password) {
+        const credentials = Buffer.from(`${authConfig.username}:${authConfig.password}`).toString('base64');
+        headers['Authorization'] = `Basic ${credentials}`;
+      }
+
+      const startTime = Date.now();
+      const response = await fetch(testUrl, {
+        method: 'GET',
+        headers,
+      });
+      const responseTime = Date.now() - startTime;
+
+      // Log the test
+      await storage.createApiLog({
+        integrationId: 0, // Test integration
+        method: 'GET',
+        url: testUrl,
+        requestHeaders: headers,
+        responseStatus: response.status,
+        responseTime,
+        errorMessage: response.ok ? undefined : `HTTP ${response.status}`,
+      });
+
+      res.json({
+        status: response.status,
+        message: response.ok ? 'Connection successful' : 'Connection failed',
+        responseTime,
+      });
+    } catch (error: any) {
+      res.status(500).json({
+        status: 0,
+        message: error.message || 'Connection test failed',
+        responseTime: 0,
+      });
+    }
+  });
+
+  // API Logs routes
+  app.get('/api/integrations/logs', isAuthenticated, async (req, res) => {
+    try {
+      const limit = parseInt(req.query.limit as string) || 100;
+      const logs = await storage.getApiLogs(limit);
+      res.json(logs);
+    } catch (error) {
+      console.error("Error fetching logs:", error);
+      res.status(500).json({ message: "Failed to fetch logs" });
+    }
+  });
+
+  // API Endpoints routes
+  app.get('/api/integrations/:id/endpoints', isAuthenticated, async (req, res) => {
+    try {
+      const integrationId = parseInt(req.params.id);
+      const endpoints = await storage.getApiEndpoints(integrationId);
+      res.json(endpoints);
+    } catch (error) {
+      console.error("Error fetching endpoints:", error);
+      res.status(500).json({ message: "Failed to fetch endpoints" });
+    }
+  });
+
+  app.post('/api/integrations/:id/endpoints', isAuthenticated, async (req, res) => {
+    try {
+      const integrationId = parseInt(req.params.id);
+      const validatedData = insertApiEndpointSchema.parse({
+        ...req.body,
+        integrationId,
+      });
+      const endpoint = await storage.createApiEndpoint(validatedData);
+      res.json(endpoint);
+    } catch (error) {
+      console.error("Error creating endpoint:", error);
+      res.status(400).json({ message: "Invalid endpoint data" });
+    }
+  });
 
   const httpServer = createServer(app);
   return httpServer;

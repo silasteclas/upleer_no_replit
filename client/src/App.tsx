@@ -15,6 +15,9 @@ import ProductView from "@/pages/product-view";
 import ProductEdit from "@/pages/product-edit";
 import Sales from "@/pages/sales";
 import Settings from "@/pages/settings";
+import Integrations from "@/pages/integrations";
+import IntegrationForm from "@/pages/integration-form";
+import IntegrationLogs from "@/pages/integration-logs";
 
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();

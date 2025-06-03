@@ -2,12 +2,20 @@ import {
   users,
   products,
   sales,
+  apiIntegrations,
+  apiEndpoints,
+  apiLogs,
   type User,
   type UpsertUser,
   type Product,
   type InsertProduct,
   type Sale,
   type InsertSale,
+  type ApiIntegration,
+  type InsertApiIntegration,
+  type ApiEndpoint,
+  type InsertApiEndpoint,
+  type ApiLog,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and, sum, count } from "drizzle-orm";
@@ -257,6 +265,116 @@ export class DatabaseStorage implements IStorage {
       sales: item.sales || 0,
       revenue: Number(item.revenue) || 0,
     }));
+  }
+
+  // API Integration operations
+  async createApiIntegration(integration: InsertApiIntegration): Promise<ApiIntegration> {
+    const [result] = await db
+      .insert(apiIntegrations)
+      .values(integration)
+      .returning();
+    return result;
+  }
+
+  async getApiIntegrations(): Promise<ApiIntegration[]> {
+    return await db.select().from(apiIntegrations).orderBy(desc(apiIntegrations.createdAt));
+  }
+
+  async getApiIntegration(id: number): Promise<ApiIntegration | undefined> {
+    const [integration] = await db
+      .select()
+      .from(apiIntegrations)
+      .where(eq(apiIntegrations.id, id));
+    return integration;
+  }
+
+  async updateApiIntegration(id: number, updates: Partial<InsertApiIntegration>): Promise<ApiIntegration> {
+    const [updated] = await db
+      .update(apiIntegrations)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(apiIntegrations.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteApiIntegration(id: number): Promise<void> {
+    await db.delete(apiIntegrations).where(eq(apiIntegrations.id, id));
+  }
+
+  // API Endpoint operations
+  async createApiEndpoint(endpoint: InsertApiEndpoint): Promise<ApiEndpoint> {
+    const [result] = await db
+      .insert(apiEndpoints)
+      .values(endpoint)
+      .returning();
+    return result;
+  }
+
+  async getApiEndpoints(integrationId: number): Promise<ApiEndpoint[]> {
+    return await db
+      .select()
+      .from(apiEndpoints)
+      .where(eq(apiEndpoints.integrationId, integrationId))
+      .orderBy(desc(apiEndpoints.createdAt));
+  }
+
+  async updateApiEndpoint(id: number, updates: Partial<InsertApiEndpoint>): Promise<ApiEndpoint> {
+    const [updated] = await db
+      .update(apiEndpoints)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(apiEndpoints.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteApiEndpoint(id: number): Promise<void> {
+    await db.delete(apiEndpoints).where(eq(apiEndpoints.id, id));
+  }
+
+  // API Logs operations
+  async createApiLog(log: Partial<ApiLog>): Promise<ApiLog> {
+    const [result] = await db
+      .insert(apiLogs)
+      .values(log as any)
+      .returning();
+    return result;
+  }
+
+  async getApiLogs(limit: number = 100): Promise<ApiLog[]> {
+    const logs = await db
+      .select({
+        id: apiLogs.id,
+        integrationId: apiLogs.integrationId,
+        endpointId: apiLogs.endpointId,
+        method: apiLogs.method,
+        url: apiLogs.url,
+        responseStatus: apiLogs.responseStatus,
+        responseTime: apiLogs.responseTime,
+        errorMessage: apiLogs.errorMessage,
+        createdAt: apiLogs.createdAt,
+      })
+      .from(apiLogs)
+      .orderBy(desc(apiLogs.createdAt))
+      .limit(limit);
+
+    // Get integration names separately
+    const logsWithIntegrations = await Promise.all(
+      logs.map(async (log) => {
+        const [integration] = await db
+          .select({ name: apiIntegrations.name })
+          .from(apiIntegrations)
+          .where(eq(apiIntegrations.id, log.integrationId));
+        
+        return {
+          ...log,
+          integration: {
+            name: integration?.name || 'Unknown'
+          }
+        };
+      })
+    );
+
+    return logsWithIntegrations as any;
   }
 }
 
