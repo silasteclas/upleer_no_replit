@@ -93,10 +93,6 @@ export default function SaleDetails() {
                       <CreditCard className="w-3 h-3 mr-1" />
                       Pago
                     </Badge>
-                    <Badge variant="secondary" className="bg-blue-100 text-blue-700">
-                      <Truck className="w-3 h-3 mr-1" />
-                      Digital
-                    </Badge>
                   </div>
                 </CardTitle>
               </CardHeader>
