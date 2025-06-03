@@ -169,7 +169,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/products/:id/simulate-purchase", isAuthenticated, async (req: any, res) => {
     try {
       const productId = parseInt(req.params.id);
-      const userId = req.user.id;
+      const userId = req.user.claims.sub;
       
       const product = await storage.getProduct(productId);
       if (!product) {
@@ -223,7 +223,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Sales routes
   app.get('/api/sales', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.id;
+      const userId = req.user.claims.sub;
       const sales = await storage.getSalesByAuthor(userId);
       res.json(sales);
     } catch (error) {
