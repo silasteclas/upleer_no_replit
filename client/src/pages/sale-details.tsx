@@ -66,7 +66,7 @@ export default function SaleDetails() {
       <Sidebar />
       <div className="flex-1 flex flex-col overflow-hidden">
         <Header 
-          title={`Pedido #${sale.id.toString().padStart(6, '0')}`}
+          title={`Pedido #${sale.id.toString().padStart(5, '0')}`}
           subtitle="Detalhes completos do pedido"
         />
         <main className="flex-1 overflow-x-hidden overflow-y-auto bg-gray-50 p-6">

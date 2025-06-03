@@ -141,7 +141,7 @@ export default function Sales() {
                               
                               <div className="flex items-center space-x-6">
                                 <div>
-                                  <p className="font-semibold text-gray-900">Pedido #{sale.id.toString().padStart(6, '0')}</p>
+                                  <p className="font-semibold text-gray-900">Pedido #{sale.id.toString().padStart(5, '0')}</p>
                                   <p className="text-sm text-gray-500">
                                     {format(new Date(sale.createdAt), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
                                   </p>
