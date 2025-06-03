@@ -220,20 +220,57 @@ export default function SaleDetails() {
                 <CardContent className="space-y-4">
                   <div className="flex justify-between items-center">
                     <span className="text-gray-600">Status</span>
-                    <Badge className="bg-green-100 text-green-700">Aprovado</Badge>
+                    <Badge className={`${
+                      sale.paymentStatus === 'aprovado' ? 'bg-green-100 text-green-700' :
+                      sale.paymentStatus === 'devolvido' ? 'bg-red-100 text-red-700' :
+                      'bg-yellow-100 text-yellow-700'
+                    }`}>
+                      {sale.paymentStatus === 'aprovado' ? 'Aprovado' :
+                       sale.paymentStatus === 'devolvido' ? 'Devolvido' :
+                       'Pendente'}
+                    </Badge>
                   </div>
                   
                   <div className="flex justify-between items-center">
                     <span className="text-gray-600">Método</span>
-                    <span className="font-medium">Simulação</span>
-                  </div>
-                  
-                  <div className="flex justify-between items-center">
-                    <span className="text-gray-600">Data do pagamento</span>
                     <span className="font-medium">
-                      {format(new Date(sale.createdAt), "dd/MM/yyyy HH:mm", { locale: ptBR })}
+                      {sale.paymentMethod === 'cartao_credito' ? 'Cartão de Crédito' :
+                       sale.paymentMethod === 'boleto' ? 'Boleto' :
+                       sale.paymentMethod === 'pix' ? 'PIX' :
+                       'Simulação'}
                     </span>
                   </div>
+
+                  {sale.paymentMethod === 'cartao_credito' && sale.installments > 1 && (
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-600">Parcelas</span>
+                      <span className="font-medium">{sale.installments}x de R$ {(parseFloat(sale.salePrice) / sale.installments).toFixed(2)}</span>
+                    </div>
+                  )}
+                  
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-600">Data do pedido</span>
+                    <span className="font-medium">
+                      {sale.orderDate ? 
+                        format(new Date(sale.orderDate), "dd/MM/yyyy HH:mm", { locale: ptBR }) :
+                        format(new Date(sale.createdAt), "dd/MM/yyyy HH:mm", { locale: ptBR })
+                      }
+                    </span>
+                  </div>
+
+                  {sale.shippingCarrier && (
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-600">Transportadora</span>
+                      <span className="font-medium">{sale.shippingCarrier}</span>
+                    </div>
+                  )}
+
+                  {sale.deliveryDays && (
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-600">Prazo de entrega</span>
+                      <span className="font-medium">{sale.deliveryDays} dias úteis</span>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             </div>
@@ -289,12 +326,23 @@ export default function SaleDetails() {
                   
                   <div className="flex justify-between items-center">
                     <span className="text-gray-600">Frete</span>
-                    <span className="font-medium text-blue-600">Grátis (Digital)</span>
+                    {sale.shippingCost && parseFloat(sale.shippingCost) > 0 ? (
+                      <span className="font-medium">R$ {parseFloat(sale.shippingCost).toFixed(2)}</span>
+                    ) : (
+                      <span className="font-medium text-blue-600">Grátis (Digital)</span>
+                    )}
                   </div>
                   
                   <div className="flex justify-between items-center">
                     <span className="text-gray-600">Cupom de desconto</span>
-                    <span className="font-medium text-gray-500">Não aplicado</span>
+                    {sale.discountCoupon ? (
+                      <div className="text-right">
+                        <div className="font-medium text-green-600">{sale.discountCoupon}</div>
+                        <div className="text-sm text-green-600">- R$ {parseFloat(sale.discountAmount || "0").toFixed(2)}</div>
+                      </div>
+                    ) : (
+                      <span className="font-medium text-gray-500">Não aplicado</span>
+                    )}
                   </div>
                   
                   <Separator />
