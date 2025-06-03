@@ -151,6 +151,13 @@ export class DatabaseStorage implements IStorage {
       .orderBy(desc(products.createdAt));
   }
 
+  async getAllProducts(): Promise<Product[]> {
+    return await db
+      .select()
+      .from(products)
+      .orderBy(desc(products.createdAt));
+  }
+
   async getProduct(id: number): Promise<Product | undefined> {
     const [product] = await db
       .select()

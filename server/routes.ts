@@ -27,10 +27,8 @@ const upload = multer({
 });
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Auth middleware
-  await setupAuth(app);
-
-  // Public webhook endpoint for receiving sales from external sources (N8N)
+  // Public webhook endpoints (before auth middleware to avoid session issues)
+  // Webhook endpoint for receiving sales from external sources (N8N)
   app.post("/api/webhook/sales", async (req, res) => {
     try {
       const {
@@ -101,14 +99,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Public endpoint to list products for webhook integration
   app.get("/api/webhook/products", async (req, res) => {
     try {
-      // Get all products from storage (we'll filter approved ones in storage if needed)
-      const allProducts = await storage.getAllProducts();
+      // Use direct database access to avoid storage method issues
+      const allProducts = await db.select().from(products);
       
       // Filter only approved products for webhook
-      const approvedProducts = allProducts.filter(product => product.status === "approved");
+      const approvedProducts = allProducts.filter((product: any) => product.status === "approved");
       
       // Return simplified product data for webhook integration
-      const webhookProducts = approvedProducts.map(product => ({
+      const webhookProducts = approvedProducts.map((product: any) => ({
         id: product.id,
         title: product.title,
         author: product.author,
@@ -119,9 +117,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(webhookProducts);
     } catch (error) {
       console.error("Erro ao listar produtos para webhook:", error);
-      res.status(500).json({ message: "Erro interno do servidor" });
+      res.status(500).json({ message: "Erro interno do servidor", error: (error as Error).message });
     }
   });
+
+  // Setup auth middleware after public endpoints
+  await setupAuth(app);
 
   // Auth routes
   app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
