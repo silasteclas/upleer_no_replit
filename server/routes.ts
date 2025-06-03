@@ -283,6 +283,61 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // File serving
   app.use('/uploads', express.static('uploads'));
 
+  // Create sample sales data
+  app.post('/api/sales/create-samples', isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req.user as any).claims.sub;
+      
+      // Get user's products to create sales for
+      const products = await storage.getProductsByAuthor(userId);
+      
+      if (products.length === 0) {
+        return res.status(400).json({ message: "Nenhum produto encontrado para criar vendas" });
+      }
+
+      const sampleSales = [];
+      const now = new Date();
+      
+      // Create sales for the last 6 months
+      for (let i = 0; i < 12; i++) {
+        const product = products[Math.floor(Math.random() * products.length)];
+        
+        // Random date in the last 6 months
+        const randomDays = Math.floor(Math.random() * 180);
+        const saleDate = new Date(now.getTime() - (randomDays * 24 * 60 * 60 * 1000));
+        
+        // Create sale record
+        const salePrice = parseFloat(product.salePrice.toString());
+        const commission = salePrice * 0.3; // 30% platform fee
+        const authorEarnings = salePrice * 0.7; // 70% for author
+        
+        const sale = await storage.createSale({
+          productId: product.id,
+          buyerEmail: `cliente${i + 1}@email.com`,
+          salePrice: salePrice.toFixed(2),
+          commission: commission.toFixed(2),
+          authorEarnings: authorEarnings.toFixed(2)
+        });
+        
+        sampleSales.push(sale);
+      }
+
+      res.json({ 
+        success: true, 
+        message: `${sampleSales.length} vendas fictícias criadas com sucesso`,
+        sales: sampleSales 
+      });
+
+    } catch (error: any) {
+      console.error("Erro ao criar vendas fictícias:", error);
+      res.status(500).json({ 
+        success: false,
+        message: "Erro ao criar vendas fictícias",
+        error: error.message 
+      });
+    }
+  });
+
   // Webhook N8N integration
   app.post('/api/products/:id/send-webhook', isAuthenticated, async (req, res) => {
     try {
