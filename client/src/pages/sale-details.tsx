@@ -152,7 +152,7 @@ export default function SaleDetails() {
                     <User className="w-4 h-4 text-gray-400 mt-1" />
                     <div className="flex-1">
                       <div className="text-sm text-gray-600">Nome completo</div>
-                      <div className="font-medium">João Silva Santos</div>
+                      <div className="font-medium">{sale.buyerName || "Não informado"}</div>
                     </div>
                   </div>
 
@@ -160,7 +160,7 @@ export default function SaleDetails() {
                     <IdCard className="w-4 h-4 text-gray-400 mt-1" />
                     <div className="flex-1">
                       <div className="text-sm text-gray-600">CPF</div>
-                      <div className="font-medium">123.456.789-10</div>
+                      <div className="font-medium">{sale.buyerCpf || "Não informado"}</div>
                     </div>
                   </div>
                   
@@ -168,7 +168,7 @@ export default function SaleDetails() {
                     <Mail className="w-4 h-4 text-gray-400 mt-1" />
                     <div className="flex-1">
                       <div className="text-sm text-gray-600">Email</div>
-                      <div className="font-medium">{sale.buyerEmail}</div>
+                      <div className="font-medium">{sale.buyerEmail || "Não informado"}</div>
                     </div>
                   </div>
 
@@ -176,7 +176,7 @@ export default function SaleDetails() {
                     <Phone className="w-4 h-4 text-gray-400 mt-1" />
                     <div className="flex-1">
                       <div className="text-sm text-gray-600">Telefone</div>
-                      <div className="font-medium">(11) 99876-5432</div>
+                      <div className="font-medium">{sale.buyerPhone || "Não informado"}</div>
                     </div>
                   </div>
 
@@ -185,9 +185,15 @@ export default function SaleDetails() {
                     <div className="flex-1">
                       <div className="text-sm text-gray-600">Endereço completo</div>
                       <div className="font-medium">
-                        <div>Rua das Flores, 123 - Apto 45</div>
-                        <div className="text-sm text-gray-500">Jardim das Rosas - São Paulo, SP</div>
-                        <div className="text-sm text-gray-500">CEP: 01234-567</div>
+                        {sale.buyerAddress ? (
+                          <>
+                            <div>{sale.buyerAddress}</div>
+                            <div className="text-sm text-gray-500">{sale.buyerCity} - {sale.buyerState}</div>
+                            <div className="text-sm text-gray-500">CEP: {sale.buyerZipCode}</div>
+                          </>
+                        ) : (
+                          "Não informado"
+                        )}
                       </div>
                     </div>
                   </div>

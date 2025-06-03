@@ -77,9 +77,23 @@ export default function ProductView() {
     },
   });
 
+  const form = useForm<PurchaseData>({
+    resolver: zodResolver(purchaseSchema),
+    defaultValues: {
+      buyerName: "",
+      buyerEmail: "",
+      buyerPhone: "",
+      buyerCpf: "",
+      buyerAddress: "",
+      buyerCity: "",
+      buyerState: "",
+      buyerZipCode: "",
+    },
+  });
+
   const simulatePurchaseMutation = useMutation({
-    mutationFn: async () => {
-      const response = await apiRequest(`/api/products/${id}/simulate-purchase`, "POST");
+    mutationFn: async (data: PurchaseData) => {
+      const response = await apiRequest(`/api/products/${id}/simulate-purchase`, "POST", data);
       return response.json();
     },
     onSuccess: (data) => {
@@ -87,6 +101,8 @@ export default function ProductView() {
         title: "Compra simulada com sucesso!",
         description: "Uma nova venda foi criada no sistema",
       });
+      setIsDialogOpen(false);
+      form.reset();
       // Invalidate relevant queries to refresh data
       queryClient.invalidateQueries({ queryKey: ["/api/sales"] });
       queryClient.invalidateQueries({ queryKey: ["/api/analytics/stats"] });
@@ -215,16 +231,149 @@ export default function ProductView() {
                       <Send className="w-4 h-4 mr-2" />
                       {webhookMutation.isPending ? "Enviando..." : "Enviar para N8N"}
                     </Button>
-                    <Button 
-                      variant="outline" 
-                      size="sm"
-                      onClick={() => simulatePurchaseMutation.mutate()}
-                      disabled={simulatePurchaseMutation.isPending}
-                      className="w-full"
-                    >
-                      <ShoppingCart className="w-4 h-4 mr-2" />
-                      {simulatePurchaseMutation.isPending ? "Processando..." : "Simular Compra"}
-                    </Button>
+                    <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+                      <DialogTrigger asChild>
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          className="w-full"
+                        >
+                          <ShoppingCart className="w-4 h-4 mr-2" />
+                          Simular Compra
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+                        <DialogHeader>
+                          <DialogTitle>Informações do Cliente - Simulação de Compra</DialogTitle>
+                        </DialogHeader>
+                        <Form {...form}>
+                          <form onSubmit={form.handleSubmit((data) => simulatePurchaseMutation.mutate(data))} className="space-y-4">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                              <FormField
+                                control={form.control}
+                                name="buyerName"
+                                render={({ field }) => (
+                                  <FormItem>
+                                    <FormLabel>Nome completo</FormLabel>
+                                    <FormControl>
+                                      <Input placeholder="João Silva Santos" {...field} />
+                                    </FormControl>
+                                    <FormMessage />
+                                  </FormItem>
+                                )}
+                              />
+                              
+                              <FormField
+                                control={form.control}
+                                name="buyerEmail"
+                                render={({ field }) => (
+                                  <FormItem>
+                                    <FormLabel>Email</FormLabel>
+                                    <FormControl>
+                                      <Input placeholder="joao@email.com" type="email" {...field} />
+                                    </FormControl>
+                                    <FormMessage />
+                                  </FormItem>
+                                )}
+                              />
+                              
+                              <FormField
+                                control={form.control}
+                                name="buyerPhone"
+                                render={({ field }) => (
+                                  <FormItem>
+                                    <FormLabel>Telefone</FormLabel>
+                                    <FormControl>
+                                      <Input placeholder="(11) 99999-9999" {...field} />
+                                    </FormControl>
+                                    <FormMessage />
+                                  </FormItem>
+                                )}
+                              />
+                              
+                              <FormField
+                                control={form.control}
+                                name="buyerCpf"
+                                render={({ field }) => (
+                                  <FormItem>
+                                    <FormLabel>CPF</FormLabel>
+                                    <FormControl>
+                                      <Input placeholder="123.456.789-10" {...field} />
+                                    </FormControl>
+                                    <FormMessage />
+                                  </FormItem>
+                                )}
+                              />
+                              
+                              <FormField
+                                control={form.control}
+                                name="buyerAddress"
+                                render={({ field }) => (
+                                  <FormItem>
+                                    <FormLabel>Endereço</FormLabel>
+                                    <FormControl>
+                                      <Input placeholder="Rua das Flores, 123" {...field} />
+                                    </FormControl>
+                                    <FormMessage />
+                                  </FormItem>
+                                )}
+                              />
+                              
+                              <FormField
+                                control={form.control}
+                                name="buyerCity"
+                                render={({ field }) => (
+                                  <FormItem>
+                                    <FormLabel>Cidade</FormLabel>
+                                    <FormControl>
+                                      <Input placeholder="São Paulo" {...field} />
+                                    </FormControl>
+                                    <FormMessage />
+                                  </FormItem>
+                                )}
+                              />
+                              
+                              <FormField
+                                control={form.control}
+                                name="buyerState"
+                                render={({ field }) => (
+                                  <FormItem>
+                                    <FormLabel>Estado</FormLabel>
+                                    <FormControl>
+                                      <Input placeholder="SP" {...field} />
+                                    </FormControl>
+                                    <FormMessage />
+                                  </FormItem>
+                                )}
+                              />
+                              
+                              <FormField
+                                control={form.control}
+                                name="buyerZipCode"
+                                render={({ field }) => (
+                                  <FormItem>
+                                    <FormLabel>CEP</FormLabel>
+                                    <FormControl>
+                                      <Input placeholder="01234-567" {...field} />
+                                    </FormControl>
+                                    <FormMessage />
+                                  </FormItem>
+                                )}
+                              />
+                            </div>
+                            
+                            <div className="flex justify-end space-x-2 pt-4">
+                              <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
+                                Cancelar
+                              </Button>
+                              <Button type="submit" disabled={simulatePurchaseMutation.isPending}>
+                                {simulatePurchaseMutation.isPending ? "Processando..." : "Simular Compra"}
+                              </Button>
+                            </div>
+                          </form>
+                        </Form>
+                      </DialogContent>
+                    </Dialog>
                   </div>
                 </div>
               </CardContent>

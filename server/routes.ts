@@ -170,6 +170,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const productId = parseInt(req.params.id);
       const userId = req.user.id;
+      const {
+        buyerName,
+        buyerEmail,
+        buyerPhone,
+        buyerCpf,
+        buyerAddress,
+        buyerCity,
+        buyerState,
+        buyerZipCode
+      } = req.body;
       
       const product = await storage.getProduct(productId);
       if (!product) {
@@ -181,25 +191,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "Acesso negado" });
       }
 
-      // Generate random buyer email
-      const buyerEmails = [
-        "cliente1@email.com",
-        "comprador@gmail.com", 
-        "usuario.teste@hotmail.com",
-        "cliente.exemplo@yahoo.com",
-        "compra.teste@outlook.com"
-      ];
-      const randomEmail = buyerEmails[Math.floor(Math.random() * buyerEmails.length)];
-
       // Calculate pricing
       const salePrice = parseFloat(product.salePrice.toString());
       const commission = salePrice * 0.3; // 30% platform fee
       const authorEarnings = salePrice * 0.7; // 70% for author
       
-      // Create sale record
+      // Create sale record with complete customer information
       const sale = await storage.createSale({
         productId: product.id,
-        buyerEmail: randomEmail,
+        buyerEmail,
+        buyerName,
+        buyerPhone,
+        buyerCpf,
+        buyerAddress,
+        buyerCity,
+        buyerState,
+        buyerZipCode,
         salePrice: salePrice.toFixed(2),
         commission: commission.toFixed(2),
         authorEarnings: authorEarnings.toFixed(2)
