@@ -283,6 +283,85 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // File serving
   app.use('/uploads', express.static('uploads'));
 
+  // Webhook N8N integration
+  app.post('/api/products/:id/send-webhook', isAuthenticated, async (req, res) => {
+    try {
+      const productId = parseInt(req.params.id);
+      const product = await storage.getProduct(productId);
+      
+      if (!product) {
+        return res.status(404).json({ message: "Produto não encontrado" });
+      }
+
+      // Get product author info
+      const author = await storage.getUser(product.authorId);
+      
+      // Prepare webhook data
+      const webhookData = {
+        product: {
+          id: product.id,
+          title: product.title,
+          author: product.author,
+          coAuthors: product.coAuthors,
+          genre: product.genre,
+          language: product.language,
+          targetAudience: product.targetAudience,
+          description: product.description,
+          isbn: product.isbn,
+          pageCount: product.pageCount,
+          baseCost: product.baseCost,
+          authorEarnings: (product as any).authorEarnings || 0,
+          salePrice: product.salePrice,
+          status: product.status,
+          coverImageUrl: (product as any).coverImageUrl || null,
+          pdfPath: (product as any).pdfPath || null,
+          createdAt: product.createdAt,
+          updatedAt: product.updatedAt
+        },
+        authorInfo: {
+          id: author?.id,
+          email: author?.email,
+          firstName: author?.firstName,
+          lastName: author?.lastName
+        },
+        timestamp: new Date().toISOString(),
+        event: 'product_data_sync'
+      };
+
+      // Send to N8N webhook
+      const webhookUrl = 'https://auton8n.upleer.com.br/webhook-test/5b04bf83-a7d2-4eec-9d85-dfa14f2e3e00';
+      
+      const response = await fetch(webhookUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(webhookData)
+      });
+
+      if (!response.ok) {
+        throw new Error(`Webhook failed with status: ${response.status}`);
+      }
+
+      const responseText = await response.text();
+      
+      res.json({ 
+        success: true, 
+        message: "Dados enviados para webhook N8N com sucesso",
+        webhookResponse: responseText,
+        status: response.status
+      });
+
+    } catch (error: any) {
+      console.error("Erro ao enviar webhook:", error);
+      res.status(500).json({ 
+        success: false,
+        message: "Erro ao enviar dados para webhook",
+        error: error.message 
+      });
+    }
+  });
+
   // API Integrations routes
   app.get('/api/integrations', isAuthenticated, async (req, res) => {
     try {

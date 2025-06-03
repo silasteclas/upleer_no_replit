@@ -1,12 +1,13 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { useParams, useLocation } from "wouter";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Download, Edit, FileText } from "lucide-react";
+import { ArrowLeft, Download, Edit, FileText, Send } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { apiRequest } from "@/lib/queryClient";
 import type { Product } from "@shared/schema";
 
 export default function ProductView() {
@@ -33,6 +34,26 @@ export default function ProductView() {
   const { data: product, isLoading: productLoading } = useQuery<Product>({
     queryKey: [`/api/products/${id}`],
     enabled: !!id && isAuthenticated,
+  });
+
+  const webhookMutation = useMutation({
+    mutationFn: async () => {
+      const response = await apiRequest(`/api/products/${id}/send-webhook`, "POST");
+      return response.json();
+    },
+    onSuccess: (data) => {
+      toast({
+        title: "Webhook enviado com sucesso!",
+        description: "Dados do produto enviados para N8N",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Erro ao enviar webhook",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
   });
 
   if (isLoading || productLoading) {
@@ -125,17 +146,29 @@ export default function ProductView() {
                   )}
                 </div>
                 <div className="p-4">
-                  <div className="flex space-x-2">
-                    <Button className="flex-1" size="sm">
-                      <Download className="w-4 h-4 mr-2" />
-                      Download PDF
-                    </Button>
+                  <div className="flex flex-col space-y-2">
+                    <div className="flex space-x-2">
+                      <Button className="flex-1" size="sm">
+                        <Download className="w-4 h-4 mr-2" />
+                        Download PDF
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => setLocation(`/products/${id}/edit`)}
+                      >
+                        <Edit className="w-4 h-4" />
+                      </Button>
+                    </div>
                     <Button 
-                      variant="outline" 
+                      variant="secondary" 
                       size="sm"
-                      onClick={() => setLocation(`/products/${id}/edit`)}
+                      onClick={() => webhookMutation.mutate()}
+                      disabled={webhookMutation.isPending}
+                      className="w-full"
                     >
-                      <Edit className="w-4 h-4" />
+                      <Send className="w-4 h-4 mr-2" />
+                      {webhookMutation.isPending ? "Enviando..." : "Enviar para N8N"}
                     </Button>
                   </div>
                 </div>
