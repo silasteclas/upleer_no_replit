@@ -62,15 +62,11 @@ export default function Landing() {
 
         <div className="text-center">
           <div className="flex gap-4 justify-center">
-            <Button asChild size="lg" className="bg-primary hover:bg-blue-600 text-white px-8 py-3 text-lg">
-              <Link to="/login">
-                Entrar
-              </Link>
+            <Button size="lg" className="bg-primary hover:bg-blue-600 text-white px-8 py-3 text-lg" onClick={() => window.location.href = '/api/login'}>
+              Entrar
             </Button>
-            <Button asChild size="lg" variant="outline" className="px-8 py-3 text-lg">
-              <Link to="/register">
-                Criar Conta
-              </Link>
+            <Button size="lg" variant="outline" className="px-8 py-3 text-lg" onClick={() => window.location.href = '/api/login'}>
+              Criar Conta
             </Button>
           </div>
           <p className="text-sm text-gray-500 mt-4">
