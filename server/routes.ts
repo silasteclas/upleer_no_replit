@@ -28,6 +28,65 @@ const upload = multer({
 });
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Check if running on public domain
+  const isPublicDomain = (req: any) => {
+    const hostname = req.get('host') || req.hostname;
+    return hostname === 'prompt-flow-adm64.replit.app' || hostname.includes('replit.app');
+  };
+
+  // Public API routes for the public domain (no auth required)
+  app.get('/api/stats', async (req, res) => {
+    if (!isPublicDomain(req)) {
+      return res.status(404).json({ message: 'Not found' });
+    }
+    
+    try {
+      const stats = await storage.getAuthorStats('demo-user');
+      res.json(stats);
+    } catch (error) {
+      res.json({ totalSales: 0, totalRevenue: 0, activeProducts: 0, pendingProducts: 0 });
+    }
+  });
+
+  app.get('/api/products', async (req, res) => {
+    if (!isPublicDomain(req)) {
+      return res.status(404).json({ message: 'Not found' });
+    }
+    
+    try {
+      const products = await storage.getAllProducts();
+      res.json(products);
+    } catch (error) {
+      res.json([]);
+    }
+  });
+
+  app.get('/api/sales', async (req, res) => {
+    if (!isPublicDomain(req)) {
+      return res.status(404).json({ message: 'Not found' });
+    }
+    
+    try {
+      const sales = await storage.getSalesByAuthor('demo-user');
+      res.json(sales);
+    } catch (error) {
+      res.json([]);
+    }
+  });
+
+  app.get('/api/integrations', async (req, res) => {
+    if (!isPublicDomain(req)) {
+      return res.status(404).json({ message: 'Not found' });
+    }
+    
+    try {
+      const integrations = await storage.getApiIntegrations();
+      res.json(integrations);
+    } catch (error) {
+      res.json([]);
+    }
+  });
+
   // Public webhook endpoints (before auth middleware to avoid session issues)
   // Webhook endpoint for receiving sales from external sources (N8N)
   app.post("/api/webhook/sales", async (req, res) => {
@@ -142,12 +201,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Setup session config for fallback auth
-  const { createSessionConfig } = await import("./session-config");
-  app.use(createSessionConfig());
+  // For non-public domains only, setup auth
+  const hostname = process.env.REPLIT_DOMAINS || '';
+  const isDevEnvironment = !hostname.includes('prompt-flow-adm64.replit.app');
+  
+  if (isDevEnvironment) {
+    // Setup session config for fallback auth
+    const { createSessionConfig } = await import("./session-config");
+    app.use(createSessionConfig());
 
-  // Setup auth middleware after public endpoints
-  await setupAuth(app);
+    // Setup auth middleware after public endpoints
+    await setupAuth(app);
+  }
 
   // Simple auth system for all domains
   const { simpleLogin, simpleUserCheck } = await import("./simple-auth");
