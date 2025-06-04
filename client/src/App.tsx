@@ -22,6 +22,7 @@ import IntegrationLogs from "@/pages/integration-logs";
 import PublicLogin from "@/pages/public-login";
 import SimpleDashboard from "@/pages/simple-dashboard";
 import PublicApp from "@/pages/public-app";
+import UpleerDemo from "@/pages/upleer-demo";
 
 function Router() {
   const isPublicDomain = window.location.hostname === "prompt-flow-adm64.replit.app" || 
@@ -30,7 +31,7 @@ function Router() {
 
   // For public domain, skip auth system entirely
   if (isPublicDomain) {
-    return <PublicApp />;
+    return <UpleerDemo />;
   }
 
   // For development domain, use full auth system
