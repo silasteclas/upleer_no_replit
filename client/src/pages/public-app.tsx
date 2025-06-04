@@ -6,7 +6,10 @@ import { Label } from "@/components/ui/label";
 import logoPath from "@assets/Logotipo para site upleer (1).png";
 
 export default function PublicApp() {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(() => {
+    // Check localStorage for existing login state
+    return localStorage.getItem('upleer_logged_in') === 'true';
+  });
   const [credentials, setCredentials] = useState({ email: "", password: "" });
   const [isLoading, setIsLoading] = useState(false);
 
@@ -18,6 +21,7 @@ export default function PublicApp() {
       if (credentials.email === "admin@upleer.com" && credentials.password === "admin123") {
         // Simulate successful login
         setTimeout(() => {
+          localStorage.setItem('upleer_logged_in', 'true');
           setIsLoggedIn(true);
           setIsLoading(false);
         }, 1000);
@@ -32,6 +36,7 @@ export default function PublicApp() {
   };
 
   const handleLogout = () => {
+    localStorage.removeItem('upleer_logged_in');
     setIsLoggedIn(false);
     setCredentials({ email: "", password: "" });
   };
