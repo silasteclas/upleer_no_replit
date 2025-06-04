@@ -75,10 +75,8 @@ export default function RecentProducts() {
           <CardTitle className="text-lg font-semibold text-gray-900">
             Produtos Recentes
           </CardTitle>
-          <Link href="/products">
-            <a className="text-primary hover:text-blue-600 text-sm font-medium">
-              Ver todos
-            </a>
+          <Link href="/products" className="text-primary hover:text-blue-600 text-sm font-medium">
+            Ver todos
           </Link>
         </div>
       </CardHeader>
