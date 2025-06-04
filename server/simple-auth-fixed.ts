@@ -12,8 +12,11 @@ export const simpleAuthFixed: RequestHandler = async (req, res, next) => {
     }
   }
   
-  // Return 401 for API routes
-  if (req.path.startsWith('/api/') && req.path !== '/api/auth/user' && req.path !== '/api/simple-login') {
+  // Return 401 for API routes (except public endpoints)
+  const publicEndpoints = ['/api/auth/user', '/api/simple-login', '/api/webhook/'];
+  const isPublicEndpoint = publicEndpoints.some(endpoint => req.path.startsWith(endpoint));
+  
+  if (req.path.startsWith('/api/') && !isPublicEndpoint) {
     return res.status(401).json({ message: "Unauthorized" });
   }
   
