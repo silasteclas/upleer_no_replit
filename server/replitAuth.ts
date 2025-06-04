@@ -117,23 +117,31 @@ export async function setupAuth(app: Express) {
   });
 
   app.get("/api/callback", (req, res, next) => {
-    console.log(`[AUTH] Callback for hostname: ${req.hostname}`);
+    console.log(`[AUTH] Callback received for hostname: ${req.hostname}`);
+    console.log(`[AUTH] Session ID: ${req.sessionID}`);
+    console.log(`[AUTH] Query params:`, req.query);
+    
     passport.authenticate(`replitauth:${req.hostname}`, (err: any, user: any, info: any) => {
+      console.log(`[AUTH] Authentication result - Error:`, err, 'User:', !!user, 'Info:', info);
+      
       if (err) {
         console.log(`[AUTH] Error during authentication:`, err);
         return res.redirect("/api/login");
       }
       if (!user) {
-        console.log(`[AUTH] No user found during authentication`);
+        console.log(`[AUTH] No user found during authentication, info:`, info);
         return res.redirect("/api/login");
       }
       
+      console.log(`[AUTH] User object:`, JSON.stringify(user, null, 2));
+      
       req.logIn(user, (err) => {
         if (err) {
-          console.log(`[AUTH] Error during login:`, err);
+          console.log(`[AUTH] Error during req.logIn:`, err);
           return res.redirect("/api/login");
         }
         console.log(`[AUTH] User successfully logged in for ${req.hostname}`);
+        console.log(`[AUTH] Session after login:`, req.session);
         return res.redirect("/");
       });
     })(req, res, next);
