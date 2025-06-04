@@ -38,8 +38,20 @@ export const fallbackLogin: RequestHandler = async (req, res) => {
         id: user.id,
         email: user.email,
         firstName: user.firstName,
-        lastName: user.lastName
+        lastName: user.lastName,
+        profileImageUrl: user.profileImageUrl
       };
+
+      console.log(`[FALLBACK] Session set for user:`, (req.session as any).user);
+      
+      // Save session explicitly
+      req.session.save((err) => {
+        if (err) {
+          console.error(`[FALLBACK] Session save error:`, err);
+        } else {
+          console.log(`[FALLBACK] Session saved successfully`);
+        }
+      });
 
       return res.json({
         message: "Login realizado com sucesso!",

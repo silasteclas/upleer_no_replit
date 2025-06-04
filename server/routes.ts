@@ -151,10 +151,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Auth routes with fallback support  
   app.get('/api/auth/user', async (req: any, res) => {
-    // Check if we're on public domain and use fallback auth
-    if (req.hostname === "upleer.replit.app") {
+    console.log(`[AUTH] User check for hostname: ${req.hostname}`);
+    console.log(`[AUTH] Session data:`, req.session);
+    
+    // Check if we're on public domain or localhost and use fallback auth
+    if (req.hostname === "upleer.replit.app" || req.hostname === "127.0.0.1" || req.hostname.includes("replit.app")) {
       if ((req.session as any)?.user) {
         const user = (req.session as any).user;
+        console.log(`[AUTH] Fallback user found:`, user);
         return res.json({
           id: user.id,
           email: user.email,
@@ -163,6 +167,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           profileImageUrl: user.profileImageUrl || null
         });
       }
+      console.log(`[AUTH] No fallback session found`);
       return res.status(401).json({ message: "Unauthorized" });
     }
     

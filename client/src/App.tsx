@@ -23,7 +23,9 @@ import PublicLogin from "@/pages/public-login";
 
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
-  const isPublicDomain = window.location.hostname === "upleer.replit.app";
+  const isPublicDomain = window.location.hostname === "upleer.replit.app" || 
+                        window.location.hostname === "127.0.0.1" || 
+                        window.location.hostname.includes("replit.app");
 
   return (
     <Switch>
