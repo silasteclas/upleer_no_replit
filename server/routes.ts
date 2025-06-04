@@ -27,7 +27,8 @@ const upload = multer({
 });
 
 export async function registerRoutes(app: Express): Promise<Server> {
-
+  // Serve static files from uploads directory
+  app.use('/uploads', express.static('uploads'));
 
   // Public webhook endpoints (before auth middleware to avoid session issues)
   // Webhook endpoint for receiving sales from external sources (N8N)
