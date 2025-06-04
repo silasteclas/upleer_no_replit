@@ -107,7 +107,7 @@ function Sidebar() {
     { icon: Upload, label: "Upload", path: "/upload" },
     { icon: Package, label: "Produtos", path: "/products" },
     { icon: ShoppingCart, label: "Vendas", path: "/sales" },
-    { icon: Integration, label: "Integrações", path: "/integrations" },
+    { icon: Zap, label: "Integrações", path: "/integrations" },
     { icon: Settings, label: "Configurações", path: "/settings" },
   ];
 
