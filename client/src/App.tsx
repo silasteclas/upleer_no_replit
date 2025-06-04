@@ -24,10 +24,17 @@ import SimpleDashboard from "@/pages/simple-dashboard";
 import PublicApp from "@/pages/public-app";
 
 function Router() {
-  const { isAuthenticated, isLoading, user } = useAuth();
   const isPublicDomain = window.location.hostname === "prompt-flow-adm64.replit.app" || 
                         window.location.hostname === "127.0.0.1" || 
                         window.location.hostname.includes("replit.app");
+
+  // For public domain, skip auth system entirely
+  if (isPublicDomain) {
+    return <PublicApp />;
+  }
+
+  // For development domain, use full auth system
+  const { isAuthenticated, isLoading, user } = useAuth();
 
   // Debug logs for authentication state
   console.log("Auth State:", { isAuthenticated, isLoading, user, hostname: window.location.hostname });
@@ -69,7 +76,7 @@ function Router() {
       ) : (
         /* Public routes - show if not authenticated */
         <>
-          <Route path="/" component={isPublicDomain ? PublicLogin : Landing} />
+          <Route path="/" component={isPublicDomain ? PublicApp : Landing} />
         </>
       )}
       
