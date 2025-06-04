@@ -29,16 +29,8 @@ function Router() {
                         window.location.hostname === "127.0.0.1" || 
                         window.location.hostname.includes("replit.app");
 
-  // For public domain, use simplified auth but full system
+  // For public domain, return full system directly
   if (isPublicDomain) {
-    // Simple auth check for public domain
-    const isLoggedIn = localStorage.getItem('upleer_public_auth') === 'true';
-    
-    if (!isLoggedIn) {
-      return <PublicLogin />;
-    }
-    
-    // Return full system for authenticated users
     return (
       <Switch>
         <Route path="/" component={Dashboard} />
