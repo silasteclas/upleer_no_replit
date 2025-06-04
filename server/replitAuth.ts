@@ -40,6 +40,7 @@ export function getSession() {
       httpOnly: true,
       secure: true,
       maxAge: sessionTtl,
+      sameSite: 'lax',
     },
   });
 }
@@ -114,6 +115,7 @@ export async function setupAuth(app: Express) {
   });
 
   app.get("/api/callback", (req, res, next) => {
+    console.log(`[AUTH] Callback for hostname: ${req.hostname}`);
     passport.authenticate(`replitauth:${req.hostname}`, {
       successReturnToOrRedirect: "/",
       failureRedirect: "/api/login",
