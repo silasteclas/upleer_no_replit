@@ -76,6 +76,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.use('/uploads', express.static('uploads'));
 
   // Public webhook endpoints (before auth middleware to avoid session issues)
+  
   // Webhook endpoint for receiving sales from external sources (N8N)
   app.post("/api/webhook/sales", async (req, res) => {
     try {
@@ -186,6 +187,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Erro ao listar produtos para webhook:", error);
       res.status(500).json({ message: "Erro interno do servidor", error: (error as Error).message });
+    }
+  });
+
+  // Public endpoint for updating product status (no authentication required)
+  app.patch("/api/webhook/products/:id/status", async (req, res) => {
+    try {
+      const productId = parseInt(req.params.id);
+      const { status } = req.body;
+      
+      // Validate status
+      const validStatuses = ['pending', 'published', 'rejected', 'archived'];
+      if (!status || !validStatuses.includes(status)) {
+        return res.status(400).json({ 
+          message: "Status inválido. Use: pending, published, rejected, ou archived" 
+        });
+      }
+      
+      const product = await storage.getProduct(productId);
+      
+      if (!product) {
+        return res.status(404).json({ message: "Produto não encontrado" });
+      }
+      
+      const updatedProduct = await storage.updateProductStatus(productId, status);
+      
+      console.log(`[WEBHOOK-STATUS] Product ${productId} status changed from ${product.status} to ${status}`);
+      
+      res.json({
+        message: `Status do produto alterado para ${status}`,
+        product: updatedProduct
+      });
+    } catch (error) {
+      console.error("Error updating product status:", error);
+      res.status(500).json({ message: "Falha ao atualizar status do produto" });
     }
   });
 
@@ -336,6 +371,46 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error updating product:", error);
       res.status(500).json({ message: "Failed to update product" });
+    }
+  });
+
+  // Update product status (e.g., from pending to published)
+  app.patch('/api/products/:id/status', async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const productId = parseInt(req.params.id);
+      const { status } = req.body;
+      
+      // Validate status
+      const validStatuses = ['pending', 'published', 'rejected', 'archived'];
+      if (!status || !validStatuses.includes(status)) {
+        return res.status(400).json({ 
+          message: "Status inválido. Use: pending, published, rejected, ou archived" 
+        });
+      }
+      
+      const product = await storage.getProduct(productId);
+      
+      if (!product) {
+        return res.status(404).json({ message: "Produto não encontrado" });
+      }
+      
+      // Check if user owns this product
+      if (product.authorId !== userId) {
+        return res.status(403).json({ message: "Acesso negado" });
+      }
+      
+      const updatedProduct = await storage.updateProductStatus(productId, status);
+      
+      console.log(`[STATUS] Product ${productId} status changed from ${product.status} to ${status}`);
+      
+      res.json({
+        message: `Status do produto alterado para ${status}`,
+        product: updatedProduct
+      });
+    } catch (error) {
+      console.error("Error updating product status:", error);
+      res.status(500).json({ message: "Falha ao atualizar status do produto" });
     }
   });
 
