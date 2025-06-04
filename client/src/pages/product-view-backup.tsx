@@ -15,6 +15,8 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import type { Product } from "@shared/schema";
+import Sidebar from "@/components/layout/sidebar";
+import Header from "@/components/layout/header";
 
 const purchaseSchema = z.object({
   buyerName: z.string().min(2, "Nome deve ter pelo menos 2 caracteres"),
@@ -170,18 +172,22 @@ export default function ProductView() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <main className="max-w-4xl mx-auto p-6">
-        <div className="mb-6">
-          <Button
-            variant="outline"
-            onClick={() => setLocation("/products")}
-            className="mb-4"
-          >
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Voltar para Produtos
-          </Button>
-        </div>
+    <div className="min-h-screen bg-gray-50 flex">
+      <Sidebar />
+      <div className="flex-1 flex flex-col">
+        <Header title="Detalhes do Produto" subtitle="Visualizar informações do produto" />
+        <main className="flex-1 p-6">
+          <div className="max-w-4xl mx-auto">
+            <div className="mb-6">
+              <Button
+                variant="outline"
+                onClick={() => setLocation("/products")}
+                className="mb-4"
+              >
+                <ArrowLeft className="w-4 h-4 mr-2" />
+                Voltar para Produtos
+              </Button>
+            </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Product Image */}
@@ -489,7 +495,9 @@ export default function ProductView() {
             </Card>
           </div>
         </div>
-      </main>
+          </div>
+        </main>
+      </div>
     </div>
   );
 }

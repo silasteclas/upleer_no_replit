@@ -122,7 +122,11 @@ export default function Products() {
           ) : (
             <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-3">
               {products.map((product) => (
-                <Card key={product.id} className="overflow-hidden">
+                <Card 
+                  key={product.id} 
+                  className="overflow-hidden cursor-pointer hover:shadow-md transition-shadow"
+                  onClick={() => setLocation(`/products/${product.id}`)}
+                >
                   <div className="aspect-[3/4] bg-gray-100 relative">
                     {product.coverImageUrl ? (
                       <img
@@ -159,21 +163,15 @@ export default function Products() {
                       </span>
                     </div>
                     
-                    <div className="flex flex-col space-y-1">
+                    <div className="flex justify-center">
                       <Button 
                         variant="outline" 
                         size="sm" 
-                        className="w-full text-xs px-1 py-1 h-6"
-                        onClick={() => setLocation(`/products/${product.id}`)}
-                      >
-                        <Eye className="w-3 h-3 mr-1" />
-                        Ver
-                      </Button>
-                      <Button 
-                        variant="outline" 
-                        size="sm" 
-                        className="w-full text-xs px-1 py-1 h-6"
-                        onClick={() => setLocation(`/products/${product.id}/edit`)}
+                        className="text-xs px-2 py-1 h-6"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setLocation(`/products/${product.id}/edit`);
+                        }}
                       >
                         <Edit className="w-3 h-3 mr-1" />
                         Editar
