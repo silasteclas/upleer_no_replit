@@ -22,10 +22,13 @@ import IntegrationLogs from "@/pages/integration-logs";
 import PublicLogin from "@/pages/public-login";
 
 function Router() {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading, user } = useAuth();
   const isPublicDomain = window.location.hostname === "prompt-flow-adm64.replit.app" || 
                         window.location.hostname === "127.0.0.1" || 
                         window.location.hostname.includes("replit.app");
+
+  // Debug logs for authentication state
+  console.log("Auth State:", { isAuthenticated, isLoading, user, hostname: window.location.hostname });
 
   return (
     <Switch>

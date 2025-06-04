@@ -51,7 +51,10 @@ export default function PublicLogin() {
         variant: "default",
       });
       queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
-      setLocation("/");
+      // Add delay to ensure auth state is updated before redirect
+      setTimeout(() => {
+        window.location.href = "/";
+      }, 500);
     },
     onError: (error: any) => {
       toast({

@@ -142,6 +142,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Setup session config for fallback auth
+  const { createSessionConfig } = await import("./session-config");
+  app.use(createSessionConfig());
+
   // Setup auth middleware after public endpoints
   await setupAuth(app);
 
