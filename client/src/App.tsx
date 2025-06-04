@@ -31,29 +31,7 @@ function Router() {
 
   // For public domain, use simple auth system
   if (isPublicDomain) {
-    const isLoggedIn = localStorage.getItem('upleer_public_auth') === 'true';
-    
-    if (!isLoggedIn) {
-      return <PublicLogin />;
-    }
-    
-    return (
-      <Switch>
-        <Route path="/" component={Dashboard} />
-        <Route path="/upload" component={Upload} />
-        <Route path="/products" component={Products} />
-        <Route path="/products/:id" component={ProductView} />
-        <Route path="/products/:id/edit" component={ProductEdit} />
-        <Route path="/sales" component={Sales} />
-        <Route path="/sales/:id" component={SaleDetails} />
-        <Route path="/integrations" component={Integrations} />
-        <Route path="/integrations/new" component={IntegrationForm} />
-        <Route path="/integrations/:id/edit" component={IntegrationForm} />
-        <Route path="/integrations/logs" component={IntegrationLogs} />
-        <Route path="/settings" component={Settings} />
-        <Route component={NotFound} />
-      </Switch>
-    );
+    return <PublicApp />;
   }
 
   // For development domain, use full auth system
