@@ -152,7 +152,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Auth routes with fallback support  
   app.get('/api/auth/user', async (req: any, res) => {
     // Check if we're on public domain and use fallback auth
-    if (req.hostname === "prompt-flow-adm64.replit.app") {
+    if (req.hostname === "upleer.replit.app") {
       if ((req.session as any)?.user) {
         const user = (req.session as any).user;
         return res.json({

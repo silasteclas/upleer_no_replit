@@ -23,7 +23,7 @@ import PublicLogin from "@/pages/public-login";
 
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
-  const isPublicDomain = window.location.hostname === "prompt-flow-adm64.replit.app";
+  const isPublicDomain = window.location.hostname === "upleer.replit.app";
 
   return (
     <Switch>
