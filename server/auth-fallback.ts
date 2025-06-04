@@ -10,12 +10,15 @@ const loginSchema = {
 
 export const fallbackLogin: RequestHandler = async (req, res) => {
   try {
+    console.log(`[FALLBACK] Login attempt with:`, req.body);
     const { email, password } = req.body;
     
     if (!email || !password) {
+      console.log(`[FALLBACK] Missing credentials`);
       return res.status(400).json({ message: "Email e senha são obrigatórios" });
     }
 
+    console.log(`[FALLBACK] Checking credentials: ${email} / ${password}`);
     // For demo purposes, use a simple admin account
     if (email === "admin@upleer.com" && password === "admin123") {
       // Create or get admin user

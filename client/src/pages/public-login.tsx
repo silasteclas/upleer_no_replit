@@ -20,18 +20,29 @@ export default function PublicLogin() {
 
   const loginMutation = useMutation({
     mutationFn: async (data: { email: string; password: string }) => {
+      console.log("Tentando login com:", data);
+      
       const response = await fetch("/api/auth/fallback-login", {
         method: "POST",
         body: JSON.stringify(data),
-        headers: { "Content-Type": "application/json" }
+        headers: { 
+          "Content-Type": "application/json",
+          "Accept": "application/json"
+        },
+        credentials: "include"
       });
       
+      console.log("Response status:", response.status);
+      
       if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || "Erro de autenticação");
+        const error = await response.json().catch(() => ({ message: "Erro de conexão" }));
+        console.error("Login error:", error);
+        throw new Error(error.message || "Credenciais inválidas");
       }
       
-      return response.json();
+      const result = await response.json();
+      console.log("Login successful:", result);
+      return result;
     },
     onSuccess: () => {
       toast({
