@@ -31,8 +31,9 @@ export default function PublicLogin() {
         variant: "default",
       });
       
+      // Force page reload to trigger auth check
       setTimeout(() => {
-        window.location.href = '/';
+        window.location.reload();
       }, 500);
     } else {
       toast({
