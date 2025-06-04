@@ -20,6 +20,8 @@ import Integrations from "@/pages/integrations";
 import IntegrationForm from "@/pages/integration-form";
 import IntegrationLogs from "@/pages/integration-logs";
 import PublicLogin from "@/pages/public-login";
+import SimpleDashboard from "@/pages/simple-dashboard";
+import PublicApp from "@/pages/public-app";
 
 function Router() {
   const { isAuthenticated, isLoading, user } = useAuth();
@@ -30,15 +32,26 @@ function Router() {
   // Debug logs for authentication state
   console.log("Auth State:", { isAuthenticated, isLoading, user, hostname: window.location.hostname });
 
+  // If loading, show loading state
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-lg">Carregando...</div>
+      </div>
+    );
+  }
+
   return (
     <Switch>
-      {/* Domain-specific login routes */}
+      {/* Login routes */}
       <Route path="/login" component={isPublicDomain ? PublicLogin : Login} />
       <Route path="/register" component={Register} />
       
-      {isLoading || !isAuthenticated ? (
-        <Route path="/" component={Landing} />
-      ) : (
+      {/* Simple dashboard for public domain */}
+      {isPublicDomain && <Route path="/dashboard" component={SimpleDashboard} />}
+      
+      {/* Protected routes - only show if authenticated */}
+      {isAuthenticated ? (
         <>
           <Route path="/" component={Dashboard} />
           <Route path="/upload" component={Upload} />
@@ -53,7 +66,13 @@ function Router() {
           <Route path="/integrations/logs" component={IntegrationLogs} />
           <Route path="/settings" component={Settings} />
         </>
+      ) : (
+        /* Public routes - show if not authenticated */
+        <>
+          <Route path="/" component={isPublicDomain ? PublicLogin : Landing} />
+        </>
       )}
+      
       <Route component={NotFound} />
     </Switch>
   );
