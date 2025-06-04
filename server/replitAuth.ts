@@ -107,6 +107,8 @@ export async function setupAuth(app: Express) {
     console.log(`[AUTH] Login attempt for hostname: ${req.hostname}`);
     console.log(`[AUTH] Available domains: ${process.env.REPLIT_DOMAINS}`);
     console.log(`[AUTH] Strategy name: replitauth:${req.hostname}`);
+    console.log(`[AUTH] Session ID: ${req.sessionID}`);
+    console.log(`[AUTH] User agent: ${req.get('User-Agent')}`);
     
     passport.authenticate(`replitauth:${req.hostname}`, {
       prompt: "login consent",
@@ -116,9 +118,24 @@ export async function setupAuth(app: Express) {
 
   app.get("/api/callback", (req, res, next) => {
     console.log(`[AUTH] Callback for hostname: ${req.hostname}`);
-    passport.authenticate(`replitauth:${req.hostname}`, {
-      successReturnToOrRedirect: "/",
-      failureRedirect: "/api/login",
+    passport.authenticate(`replitauth:${req.hostname}`, (err: any, user: any, info: any) => {
+      if (err) {
+        console.log(`[AUTH] Error during authentication:`, err);
+        return res.redirect("/api/login");
+      }
+      if (!user) {
+        console.log(`[AUTH] No user found during authentication`);
+        return res.redirect("/api/login");
+      }
+      
+      req.logIn(user, (err) => {
+        if (err) {
+          console.log(`[AUTH] Error during login:`, err);
+          return res.redirect("/api/login");
+        }
+        console.log(`[AUTH] User successfully logged in for ${req.hostname}`);
+        return res.redirect("/");
+      });
     })(req, res, next);
   });
 
