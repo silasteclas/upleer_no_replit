@@ -4,7 +4,7 @@ import { setupVite, serveStatic, log } from "./vite";
 
 // Set correct domains for the renamed project
 if (!process.env.REPLIT_DOMAINS || process.env.REPLIT_DOMAINS.includes("prompt-flow-adm64")) {
-  process.env.REPLIT_DOMAINS = `${process.env.REPLIT_SLUG || 'bbf3fd2f-5839-4fea-9611-af32c6e20f91-00-2j7vwbakpk3p3'}.kirk.replit.dev,upleer.replit.app`;
+  process.env.REPLIT_DOMAINS = `${process.env.REPLIT_SLUG || 'bbf3fd2f-5839-4fea-9611-af32c6e20f91-00-2j7vwbakpk3p3'}.kirk.replit.dev,prompt-flow-adm64.replit.app`;
   console.log(`[CONFIG] Updated REPLIT_DOMAINS to: ${process.env.REPLIT_DOMAINS}`);
 }
 

@@ -155,7 +155,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     console.log(`[AUTH] Session data:`, req.session);
     
     // Check if we're on public domain or localhost and use fallback auth
-    if (req.hostname === "upleer.replit.app" || req.hostname === "127.0.0.1" || req.hostname.includes("replit.app")) {
+    if (req.hostname === "prompt-flow-adm64.replit.app" || req.hostname === "127.0.0.1" || req.hostname.includes("replit.app")) {
       if ((req.session as any)?.user) {
         const user = (req.session as any).user;
         console.log(`[AUTH] Fallback user found:`, user);
