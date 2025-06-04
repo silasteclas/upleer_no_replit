@@ -86,6 +86,7 @@ export async function setupAuth(app: Express) {
 
   for (const domain of process.env
     .REPLIT_DOMAINS!.split(",")) {
+    console.log(`[AUTH] Registering strategy for domain: ${domain}`);
     const strategy = new Strategy(
       {
         name: `replitauth:${domain}`,
@@ -102,6 +103,10 @@ export async function setupAuth(app: Express) {
   passport.deserializeUser((user: Express.User, cb) => cb(null, user));
 
   app.get("/api/login", (req, res, next) => {
+    console.log(`[AUTH] Login attempt for hostname: ${req.hostname}`);
+    console.log(`[AUTH] Available domains: ${process.env.REPLIT_DOMAINS}`);
+    console.log(`[AUTH] Strategy name: replitauth:${req.hostname}`);
+    
     passport.authenticate(`replitauth:${req.hostname}`, {
       prompt: "login consent",
       scope: ["openid", "email", "profile", "offline_access"],
