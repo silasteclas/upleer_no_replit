@@ -1,7 +1,7 @@
 import { useAuth } from "@/hooks/useAuth";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Bell } from "lucide-react";
+import { Bell, LogOut } from "lucide-react";
 
 interface HeaderProps {
   title: string;
@@ -10,6 +10,20 @@ interface HeaderProps {
 
 export default function Header({ title, subtitle }: HeaderProps) {
   const { user } = useAuth();
+  
+  const handleLogout = () => {
+    // Check if we're on public domain
+    const isPublicDomain = window.location.hostname === "prompt-flow-adm64.replit.app" || 
+                          window.location.hostname.includes("replit.app");
+    
+    if (isPublicDomain) {
+      localStorage.removeItem('upleer_public_auth');
+      localStorage.removeItem('upleer_user');
+      window.location.reload();
+    } else {
+      window.location.href = '/api/logout';
+    }
+  };
 
   const getInitials = (firstName?: string, lastName?: string) => {
     if (!firstName && !lastName) return "U";
@@ -34,6 +48,9 @@ export default function Header({ title, subtitle }: HeaderProps) {
           <Button variant="ghost" size="sm" className="relative">
             <Bell className="w-5 h-5" />
             <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full"></span>
+          </Button>
+          <Button variant="ghost" size="sm" onClick={handleLogout} className="text-red-600 hover:text-red-700">
+            <LogOut className="w-5 h-5" />
           </Button>
           <div className="flex items-center space-x-3">
             <Avatar className="w-10 h-10">
