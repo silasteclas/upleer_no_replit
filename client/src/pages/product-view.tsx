@@ -203,16 +203,6 @@ export default function ProductView() {
                           <Edit className="w-4 h-4 mr-2" />
                           Editar Produto
                         </Button>
-                        {product.pdfUrl && (
-                          <Button 
-                            variant="outline" 
-                            className="w-full"
-                            onClick={() => window.open(product.pdfUrl, '_blank')}
-                          >
-                            <Download className="w-4 h-4 mr-2" />
-                            Download PDF
-                          </Button>
-                        )}
                         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                           <DialogTrigger asChild>
                             <Button className="w-full">
