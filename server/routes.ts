@@ -2,8 +2,7 @@ import type { Express } from "express";
 import express from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { setupAuth, isAuthenticated } from "./replitAuth";
-import { fallbackLogin, fallbackAuth, fallbackLogout } from "./auth-fallback";
+import { simpleAuthFixed, simpleLoginFixed, simpleUserCheckFixed, simpleLogoutFixed } from "./simple-auth-fixed";
 import { insertProductSchema, insertApiIntegrationSchema, insertApiEndpointSchema, products } from "@shared/schema";
 import { db } from "./db";
 import { eq } from "drizzle-orm";
@@ -148,13 +147,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
   const { createSessionConfig } = await import("./session-config");
   app.use(createSessionConfig());
 
-  // Setup auth middleware after public endpoints
-  await setupAuth(app);
+  // Setup simple auth instead of complex Replit auth
+  app.use(simpleAuthFixed);
+
+  // Auth routes
+  app.post('/api/simple-login', simpleLoginFixed);
+  app.get('/api/auth/user', simpleUserCheckFixed);
+  app.post('/api/logout', simpleLogoutFixed);
 
   // Stats endpoint
-  app.get('/api/stats', isAuthenticated, async (req: any, res) => {
+  app.get('/api/stats', async (req: any, res) => {
     try {
-      const userId = req.user?.claims?.sub || req.user?.id;
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
       const stats = await storage.getAuthorStats(userId);
       res.json(stats);
     } catch (error) {
@@ -164,7 +171,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Product routes
-  app.post('/api/products', isAuthenticated, upload.fields([
+  app.post('/api/products', upload.fields([
     { name: 'pdf', maxCount: 1 },
     { name: 'cover', maxCount: 1 }
   ]), async (req: any, res) => {
@@ -221,7 +228,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get('/api/products', isAuthenticated, async (req: any, res) => {
+  app.get('/api/products', async (req: any, res) => {
     try {
       const userId = req.user?.claims?.sub || req.user?.id;
       const products = await storage.getProductsByAuthor(userId);
@@ -232,7 +239,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get('/api/products/:id', isAuthenticated, async (req: any, res) => {
+  app.get('/api/products/:id', async (req: any, res) => {
     try {
       const userId = req.user.id;
       const productId = parseInt(req.params.id);
@@ -254,7 +261,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put('/api/products/:id', isAuthenticated, async (req: any, res) => {
+  app.put('/api/products/:id', async (req: any, res) => {
     try {
       const userId = req.user.id;
       const productId = parseInt(req.params.id);
@@ -284,7 +291,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Simulate purchase for a product
-  app.post("/api/products/:id/simulate-purchase", isAuthenticated, async (req: any, res) => {
+  app.post("/api/products/:id/simulate-purchase", async (req: any, res) => {
     try {
       const productId = parseInt(req.params.id);
       const userId = req.user.id;
@@ -346,7 +353,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Sales routes
-  app.get('/api/sales', isAuthenticated, async (req: any, res) => {
+  app.get('/api/sales', async (req: any, res) => {
     try {
       const userId = req.user?.claims?.sub || req.user?.id;
       const sales = await storage.getSalesByAuthor(userId);
@@ -358,7 +365,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Analytics routes
-  app.get('/api/analytics/stats', isAuthenticated, async (req: any, res) => {
+  app.get('/api/analytics/stats', async (req: any, res) => {
     try {
       const userId = req.user.id;
       const stats = await storage.getAuthorStats(userId);
@@ -369,7 +376,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get('/api/analytics/sales-data', isAuthenticated, async (req: any, res) => {
+  app.get('/api/analytics/sales-data', async (req: any, res) => {
     try {
       const userId = req.user.id;
       const months = parseInt(req.query.months as string) || 6;
@@ -382,7 +389,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Settings routes
-  app.get('/api/settings', isAuthenticated, async (req: any, res) => {
+  app.get('/api/settings', async (req: any, res) => {
     try {
       const userId = req.user.id;
       // Return empty settings for now since we don't have the schema
@@ -412,7 +419,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post('/api/settings/profile', isAuthenticated, async (req: any, res) => {
+  app.post('/api/settings/profile', async (req: any, res) => {
     try {
       const userId = req.user.id;
       const { profileImage, firstName, lastName, email, phone, bio } = req.body;
@@ -438,7 +445,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post('/api/settings/banking', isAuthenticated, async (req: any, res) => {
+  app.post('/api/settings/banking', async (req: any, res) => {
     try {
       const userId = req.user.id;
       // For now, just return success since we don't have banking settings table
@@ -449,7 +456,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post('/api/settings/notifications', isAuthenticated, async (req: any, res) => {
+  app.post('/api/settings/notifications', async (req: any, res) => {
     try {
       const userId = req.user.id;
       // For now, just return success since we don't have notifications settings table
@@ -464,7 +471,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.use('/uploads', express.static('uploads'));
 
   // Create sample sales data
-  app.post('/api/sales/create-samples', isAuthenticated, async (req, res) => {
+  app.post('/api/sales/create-samples', async (req, res) => {
     try {
       const userId = (req.user as any).claims.sub;
       
@@ -519,7 +526,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Webhook N8N integration
-  app.post('/api/products/:id/send-webhook', isAuthenticated, async (req, res) => {
+  app.post('/api/products/:id/send-webhook', async (req, res) => {
     try {
       const productId = parseInt(req.params.id);
       const product = await storage.getProduct(productId);
@@ -598,7 +605,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // API Integrations routes
-  app.get('/api/integrations', isAuthenticated, async (req, res) => {
+  app.get('/api/integrations', async (req, res) => {
     try {
       const integrations = await storage.getApiIntegrations();
       res.json(integrations);
@@ -608,7 +615,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post('/api/integrations', isAuthenticated, async (req, res) => {
+  app.post('/api/integrations', async (req, res) => {
     try {
       const validatedData = insertApiIntegrationSchema.parse(req.body);
       const integration = await storage.createApiIntegration(validatedData);
@@ -619,7 +626,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get('/api/integrations/:id', isAuthenticated, async (req, res) => {
+  app.get('/api/integrations/:id', async (req, res) => {
     try {
       const id = parseInt(req.params.id);
       const integration = await storage.getApiIntegration(id);
@@ -633,7 +640,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put('/api/integrations/:id', isAuthenticated, async (req, res) => {
+  app.put('/api/integrations/:id', async (req, res) => {
     try {
       const id = parseInt(req.params.id);
       const validatedData = insertApiIntegrationSchema.partial().parse(req.body);
@@ -645,7 +652,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete('/api/integrations/:id', isAuthenticated, async (req, res) => {
+  app.delete('/api/integrations/:id', async (req, res) => {
     try {
       const id = parseInt(req.params.id);
       await storage.deleteApiIntegration(id);
@@ -656,7 +663,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post('/api/integrations/test', isAuthenticated, async (req, res) => {
+  app.post('/api/integrations/test', async (req, res) => {
     try {
       const { baseUrl, authType, authConfig } = req.body;
       
@@ -709,7 +716,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // API Logs routes
-  app.get('/api/integrations/logs', isAuthenticated, async (req, res) => {
+  app.get('/api/integrations/logs', async (req, res) => {
     try {
       const limit = parseInt(req.query.limit as string) || 100;
       const logs = await storage.getApiLogs(limit);
@@ -721,7 +728,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // API Endpoints routes
-  app.get('/api/integrations/:id/endpoints', isAuthenticated, async (req, res) => {
+  app.get('/api/integrations/:id/endpoints', async (req, res) => {
     try {
       const integrationId = parseInt(req.params.id);
       const endpoints = await storage.getApiEndpoints(integrationId);
@@ -732,7 +739,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post('/api/integrations/:id/endpoints', isAuthenticated, async (req, res) => {
+  app.post('/api/integrations/:id/endpoints', async (req, res) => {
     try {
       const integrationId = parseInt(req.params.id);
       const validatedData = insertApiEndpointSchema.parse({
