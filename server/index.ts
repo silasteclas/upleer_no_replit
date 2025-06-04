@@ -9,6 +9,10 @@ app.use(express.urlencoded({ extended: false }));
 app.use((req, res, next) => {
   const start = Date.now();
   const path = req.path;
+  
+  // Log all requests to identify routing issues
+  console.log(`[REQUEST] ${req.method} ${req.path} from ${req.hostname}`);
+  
   let capturedJsonResponse: Record<string, any> | undefined = undefined;
 
   const originalResJson = res.json;
