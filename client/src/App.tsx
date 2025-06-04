@@ -19,14 +19,16 @@ import Settings from "@/pages/settings";
 import Integrations from "@/pages/integrations";
 import IntegrationForm from "@/pages/integration-form";
 import IntegrationLogs from "@/pages/integration-logs";
+import PublicLogin from "@/pages/public-login";
 
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
+  const isPublicDomain = window.location.hostname === "prompt-flow-adm64.replit.app";
 
   return (
     <Switch>
-      {/* Always available routes */}
-      <Route path="/login" component={Login} />
+      {/* Domain-specific login routes */}
+      <Route path="/login" component={isPublicDomain ? PublicLogin : Login} />
       <Route path="/register" component={Register} />
       
       {isLoading || !isAuthenticated ? (
