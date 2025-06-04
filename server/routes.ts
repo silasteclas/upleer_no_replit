@@ -3,12 +3,57 @@ import express from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { simpleAuthFixed, simpleLoginFixed, simpleUserCheckFixed, simpleLogoutFixed } from "./simple-auth-fixed";
-import { insertProductSchema, insertApiIntegrationSchema, insertApiEndpointSchema, products } from "@shared/schema";
+import { insertProductSchema, insertApiIntegrationSchema, insertApiEndpointSchema, products, type Product } from "@shared/schema";
 import { db } from "./db";
 import { eq } from "drizzle-orm";
 import multer from "multer";
 import path from "path";
 import { z } from "zod";
+
+// Function to send product data to external webhook
+async function sendProductToWebhook(product: Product) {
+  const webhookUrl = "https://auton8n.upleer.com.br/webhook-test/5b04bf83-a7d2-4eec-9d85-dfa14f2e3e00";
+  
+  try {
+    const webhookData = {
+      id: product.id,
+      title: product.title,
+      description: product.description,
+      isbn: product.isbn,
+      author: product.author,
+      coAuthors: product.coAuthors,
+      genre: product.genre,
+      language: product.language,
+      targetAudience: product.targetAudience,
+      pageCount: product.pageCount,
+      baseCost: product.baseCost,
+      salePrice: product.salePrice,
+      marginPercent: product.marginPercent,
+      status: product.status,
+      authorId: product.authorId,
+      pdfUrl: product.pdfUrl,
+      coverImageUrl: product.coverImageUrl,
+      createdAt: product.createdAt,
+      updatedAt: product.updatedAt
+    };
+
+    const response = await fetch(webhookUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(webhookData)
+    });
+
+    if (response.ok) {
+      console.log(`[WEBHOOK] Product ${product.id} sent successfully to webhook`);
+    } else {
+      console.error(`[WEBHOOK] Failed to send product ${product.id}:`, response.status, response.statusText);
+    }
+  } catch (error) {
+    console.error(`[WEBHOOK] Error sending product ${product.id} to webhook:`, error);
+  }
+}
 
 const upload = multer({
   dest: "uploads/",
@@ -218,6 +263,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const validatedData = insertProductSchema.parse(productData);
       const product = await storage.createProduct(validatedData);
+      
+      // Send product data to webhook
+      await sendProductToWebhook(product);
       
       res.json(product);
     } catch (error) {
