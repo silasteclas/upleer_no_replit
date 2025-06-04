@@ -14,10 +14,13 @@ if (!process.env.REPLIT_DOMAINS) {
 
 const getOidcConfig = memoize(
   async () => {
-    return await client.discovery(
+    console.log(`[AUTH] Getting OIDC config for ${process.env.REPL_ID}`);
+    const config = await client.discovery(
       new URL(process.env.ISSUER_URL ?? "https://replit.com/oidc"),
       process.env.REPL_ID!
     );
+    console.log(`[AUTH] OIDC config obtained successfully`);
+    return config;
   },
   { maxAge: 3600 * 1000 }
 );
@@ -83,10 +86,24 @@ export async function setupAuth(app: Express) {
     tokens: client.TokenEndpointResponse & client.TokenEndpointResponseHelpers,
     verified: passport.AuthenticateCallback
   ) => {
-    const user = {};
-    updateUserSession(user, tokens);
-    await upsertUser(tokens.claims());
-    verified(null, user);
+    try {
+      console.log(`[AUTH] Verify function called with tokens`);
+      const claims = tokens.claims();
+      console.log(`[AUTH] User claims:`, JSON.stringify(claims, null, 2));
+      
+      const user = {};
+      updateUserSession(user, tokens);
+      console.log(`[AUTH] User session updated:`, JSON.stringify(user, null, 2));
+      
+      await upsertUser(claims);
+      console.log(`[AUTH] User upserted successfully`);
+      
+      verified(null, user);
+      console.log(`[AUTH] Verification completed successfully`);
+    } catch (error) {
+      console.error(`[AUTH] Error in verify function:`, error);
+      verified(error);
+    }
   };
 
   for (const domain of process.env
@@ -121,17 +138,44 @@ export async function setupAuth(app: Express) {
   });
 
   app.get("/api/callback", (req, res, next) => {
-    console.log(`[AUTH] Callback received for hostname: ${req.hostname}`);
+    console.log(`[AUTH] ===== CALLBACK RECEIVED =====`);
+    console.log(`[AUTH] Hostname: ${req.hostname}`);
     console.log(`[AUTH] Session ID: ${req.sessionID}`);
-    console.log(`[AUTH] Query params:`, req.query);
-    console.log(`[AUTH] Headers:`, req.headers);
+    console.log(`[AUTH] Query params:`, JSON.stringify(req.query, null, 2));
+    console.log(`[AUTH] Cookies:`, req.headers.cookie);
+    console.log(`[AUTH] User-Agent:`, req.get('User-Agent'));
     
     const strategyName = `replitauth:${req.hostname}`;
     console.log(`[AUTH] Using strategy: ${strategyName}`);
     
-    passport.authenticate(strategyName, {
-      failureRedirect: "/api/login",
-      successRedirect: "/"
+    passport.authenticate(strategyName, (err: any, user: any, info: any) => {
+      console.log(`[AUTH] Passport authenticate callback executed`);
+      console.log(`[AUTH] Error:`, err);
+      console.log(`[AUTH] User:`, user ? 'USER_OBJECT_PRESENT' : 'NO_USER');
+      console.log(`[AUTH] Info:`, info);
+      
+      if (err) {
+        console.error(`[AUTH] Authentication error:`, err);
+        return res.redirect("/api/login?error=auth_failed");
+      }
+      
+      if (!user) {
+        console.log(`[AUTH] No user returned from authentication`);
+        return res.redirect("/api/login?error=no_user");
+      }
+      
+      req.logIn(user, (loginErr) => {
+        if (loginErr) {
+          console.error(`[AUTH] Login error:`, loginErr);
+          return res.redirect("/api/login?error=login_failed");
+        }
+        
+        console.log(`[AUTH] User successfully logged in`);
+        console.log(`[AUTH] Session after login:`, req.session);
+        console.log(`[AUTH] User in session:`, req.user);
+        
+        return res.redirect("/");
+      });
     })(req, res, next);
   });
 
