@@ -29,9 +29,33 @@ function Router() {
                         window.location.hostname === "127.0.0.1" || 
                         window.location.hostname.includes("replit.app");
 
-  // For public domain, skip auth system entirely
+  // For public domain, use simplified auth but full system
   if (isPublicDomain) {
-    return <UpleerDemo />;
+    // Simple auth check for public domain
+    const isLoggedIn = localStorage.getItem('upleer_public_auth') === 'true';
+    
+    if (!isLoggedIn) {
+      return <PublicLogin />;
+    }
+    
+    // Return full system for authenticated users
+    return (
+      <Switch>
+        <Route path="/" component={Dashboard} />
+        <Route path="/upload" component={Upload} />
+        <Route path="/products" component={Products} />
+        <Route path="/products/:id" component={ProductView} />
+        <Route path="/products/:id/edit" component={ProductEdit} />
+        <Route path="/sales" component={Sales} />
+        <Route path="/sales/:id" component={SaleDetails} />
+        <Route path="/integrations" component={Integrations} />
+        <Route path="/integrations/new" component={IntegrationForm} />
+        <Route path="/integrations/:id/edit" component={IntegrationForm} />
+        <Route path="/integrations/logs" component={IntegrationLogs} />
+        <Route path="/settings" component={Settings} />
+        <Route component={NotFound} />
+      </Switch>
+    );
   }
 
   // For development domain, use full auth system

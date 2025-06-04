@@ -1,73 +1,46 @@
 import { useState } from "react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useLocation } from "wouter";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { apiRequest } from "@/lib/queryClient";
 import logoPath from "@assets/Logotipo para site upleer (1).png";
 
 export default function PublicLogin() {
-  const [, setLocation] = useLocation();
   const { toast } = useToast();
-  const queryClient = useQueryClient();
   const [credentials, setCredentials] = useState({
     email: "",
     password: ""
   });
 
-  const loginMutation = useMutation({
-    mutationFn: async (data: { email: string; password: string }) => {
-      console.log("Tentando login com:", data);
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (credentials.email === "admin@upleer.com" && credentials.password === "admin123") {
+      localStorage.setItem('upleer_public_auth', 'true');
+      localStorage.setItem('upleer_user', JSON.stringify({
+        id: 'admin',
+        email: 'admin@upleer.com',
+        firstName: 'Admin',
+        lastName: 'Upleer'
+      }));
       
-      const response = await fetch("/api/auth/fallback-login", {
-        method: "POST",
-        body: JSON.stringify(data),
-        headers: { 
-          "Content-Type": "application/json",
-          "Accept": "application/json"
-        },
-        credentials: "include"
-      });
-      
-      console.log("Response status:", response.status);
-      
-      if (!response.ok) {
-        const error = await response.json().catch(() => ({ message: "Erro de conexão" }));
-        console.error("Login error:", error);
-        throw new Error(error.message || "Credenciais inválidas");
-      }
-      
-      const result = await response.json();
-      console.log("Login successful:", result);
-      return result;
-    },
-    onSuccess: () => {
       toast({
         title: "Sucesso",
         description: "Login realizado com sucesso!",
         variant: "default",
       });
-      queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
-      // Redirect to simple dashboard instead of home
+      
       setTimeout(() => {
-        window.location.href = "/dashboard";
+        window.location.href = '/';
       }, 500);
-    },
-    onError: (error: any) => {
+    } else {
       toast({
         title: "Erro",
-        description: error.message || "Credenciais inválidas",
+        description: "Credenciais inválidas. Use: admin@upleer.com / admin123",
         variant: "destructive",
       });
-    },
-  });
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    loginMutation.mutate(credentials);
+    }
   };
 
   return (
@@ -111,9 +84,8 @@ export default function PublicLogin() {
             <Button 
               type="submit" 
               className="w-full bg-primary hover:bg-blue-600"
-              disabled={loginMutation.isPending}
             >
-              {loginMutation.isPending ? "Entrando..." : "Entrar"}
+              Entrar
             </Button>
           </form>
           
