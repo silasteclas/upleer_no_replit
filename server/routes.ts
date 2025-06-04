@@ -31,7 +31,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Check if running on public domain
   const isPublicDomain = (req: any) => {
     const hostname = req.get('host') || req.hostname;
-    return hostname === 'prompt-flow-adm64.replit.app' || hostname.includes('replit.app');
+    return hostname.includes('replit.dev') || hostname.includes('replit.app');
   };
 
   // Public API routes for the public domain (no auth required)

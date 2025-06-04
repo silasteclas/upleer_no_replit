@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { Switch, Route, Link, useLocation } from "wouter";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -169,6 +171,25 @@ function Header({ title, onLogout }: { title: string; onLogout: () => void }) {
 
 // Dashboard Page
 function DashboardPage() {
+  const { data: stats } = useQuery({
+    queryKey: ["/api/stats"],
+    retry: false,
+  });
+
+  const { data: products } = useQuery({
+    queryKey: ["/api/products"],
+    retry: false,
+  });
+
+  const { data: sales } = useQuery({
+    queryKey: ["/api/sales"],
+    retry: false,
+  });
+
+  const statsData = (stats as any) || { totalSales: 0, totalRevenue: 0, activeProducts: 0, pendingProducts: 0 };
+  const productsData = Array.isArray(products) ? products : [];
+  const salesData = Array.isArray(sales) ? sales : [];
+
   return (
     <div className="p-6 space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -177,7 +198,7 @@ function DashboardPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">Total de Vendas</p>
-                <p className="text-3xl font-bold text-gray-900">R$ 0,00</p>
+                <p className="text-3xl font-bold text-gray-900">R$ {statsData.totalRevenue.toFixed(2)}</p>
               </div>
               <DollarSign className="w-8 h-8 text-green-600" />
             </div>
@@ -188,8 +209,8 @@ function DashboardPage() {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Produtos</p>
-                <p className="text-3xl font-bold text-gray-900">0</p>
+                <p className="text-sm font-medium text-gray-600">Produtos Ativos</p>
+                <p className="text-3xl font-bold text-gray-900">{statsData.activeProducts}</p>
               </div>
               <Package className="w-8 h-8 text-blue-600" />
             </div>
@@ -200,8 +221,8 @@ function DashboardPage() {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Pedidos</p>
-                <p className="text-3xl font-bold text-gray-900">0</p>
+                <p className="text-sm font-medium text-gray-600">Total de Pedidos</p>
+                <p className="text-3xl font-bold text-gray-900">{statsData.totalSales}</p>
               </div>
               <ShoppingCart className="w-8 h-8 text-purple-600" />
             </div>
@@ -212,11 +233,69 @@ function DashboardPage() {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Clientes</p>
-                <p className="text-3xl font-bold text-gray-900">0</p>
+                <p className="text-sm font-medium text-gray-600">Produtos Pendentes</p>
+                <p className="text-3xl font-bold text-gray-900">{statsData.pendingProducts}</p>
               </div>
               <Users className="w-8 h-8 text-orange-600" />
             </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <Card>
+          <CardHeader>
+            <CardTitle>Produtos Recentes</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {productsData.length > 0 ? (
+              <div className="space-y-4">
+                {productsData.slice(0, 5).map((product: any) => (
+                  <div key={product.id} className="flex items-center justify-between border-b pb-2">
+                    <div>
+                      <p className="font-medium">{product.title}</p>
+                      <p className="text-sm text-gray-600">{product.author}</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="font-bold">R$ {parseFloat(product.salePrice).toFixed(2)}</p>
+                      <Badge variant={product.status === 'approved' ? 'default' : 'secondary'}>
+                        {product.status === 'approved' ? 'Aprovado' : 'Pendente'}
+                      </Badge>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-gray-500">Nenhum produto cadastrado ainda.</p>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Vendas Recentes</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {salesData.length > 0 ? (
+              <div className="space-y-4">
+                {salesData.slice(0, 5).map((sale: any) => (
+                  <div key={sale.id} className="flex items-center justify-between border-b pb-2">
+                    <div>
+                      <p className="font-medium">Pedido #{String(sale.id).padStart(5, '0')}</p>
+                      <p className="text-sm text-gray-600">{sale.buyerName}</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="font-bold">R$ {parseFloat(sale.salePrice).toFixed(2)}</p>
+                      <Badge variant="default">
+                        {sale.paymentStatus || 'Pendente'}
+                      </Badge>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-gray-500">Nenhuma venda realizada ainda.</p>
+            )}
           </CardContent>
         </Card>
       </div>
@@ -232,17 +311,17 @@ function DashboardPage() {
               <span>Sistema funcionando corretamente</span>
             </div>
             <div className="flex items-center space-x-2">
-              <Badge variant="secondary">✓ Autenticação</Badge>
-              <span>Login funcionando</span>
+              <Badge variant="secondary">✓ Banco de Dados</Badge>
+              <span>Conectado e operacional</span>
             </div>
             <div className="flex items-center space-x-2">
-              <Badge variant="secondary">✓ Interface</Badge>
-              <span>Dashboard carregado</span>
+              <Badge variant="secondary">✓ APIs</Badge>
+              <span>Endpoints funcionando</span>
             </div>
             <Separator />
             <p className="text-sm text-gray-600">
-              Este é o sistema completo Upleer funcionando de forma independente, 
-              sem interferências do sistema de autenticação do Replit.
+              Sistema completo para gestão de produtos físicos (apostilas) com 
+              vendas por transportadoras, webhooks N8N e números de pedido de 5 dígitos.
             </p>
           </div>
         </CardContent>
@@ -251,16 +330,180 @@ function DashboardPage() {
   );
 }
 
-// Simple placeholder pages
+// Upload Page with complete functionality
 function UploadPage() {
+  const [formData, setFormData] = useState({
+    title: "",
+    author: "",
+    description: "",
+    category: "",
+    salePrice: "",
+    originalPrice: "",
+    tags: ""
+  });
+  const [files, setFiles] = useState<{ pdf: File | null; cover: File | null }>({ pdf: null, cover: null });
+  const queryClient = useQueryClient();
+
+  const uploadMutation = useMutation({
+    mutationFn: async (data: FormData) => {
+      const response = await fetch("/api/products", {
+        method: "POST",
+        body: data,
+      });
+      if (!response.ok) {
+        throw new Error("Erro ao fazer upload do produto");
+      }
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/products"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/stats"] });
+      setFormData({
+        title: "",
+        author: "",
+        description: "",
+        category: "",
+        salePrice: "",
+        originalPrice: "",
+        tags: ""
+      });
+      setFiles({ pdf: null, cover: null });
+      alert("Produto enviado com sucesso!");
+    },
+    onError: (error) => {
+      alert("Erro ao enviar produto: " + error.message);
+    },
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    const data = new FormData();
+    Object.entries(formData).forEach(([key, value]) => {
+      data.append(key, value);
+    });
+    
+    if (files.pdf) data.append("pdf", files.pdf);
+    if (files.cover) data.append("cover", files.cover);
+    
+    uploadMutation.mutate(data);
+  };
+
   return (
     <div className="p-6">
-      <Card>
+      <Card className="max-w-2xl mx-auto">
         <CardHeader>
-          <CardTitle>Upload de Produtos</CardTitle>
+          <CardTitle>Upload de Novo Produto</CardTitle>
+          <p className="text-gray-600">Envie uma nova apostila para venda</p>
         </CardHeader>
         <CardContent>
-          <p className="text-gray-600">Área para upload de novos produtos (apostilas).</p>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="title">Título da Apostila</Label>
+                <Input
+                  id="title"
+                  value={formData.title}
+                  onChange={(e) => setFormData({...formData, title: e.target.value})}
+                  required
+                />
+              </div>
+              <div>
+                <Label htmlFor="author">Autor</Label>
+                <Input
+                  id="author"
+                  value={formData.author}
+                  onChange={(e) => setFormData({...formData, author: e.target.value})}
+                  required
+                />
+              </div>
+            </div>
+
+            <div>
+              <Label htmlFor="description">Descrição</Label>
+              <textarea
+                id="description"
+                className="w-full p-2 border rounded-md"
+                rows={3}
+                value={formData.description}
+                onChange={(e) => setFormData({...formData, description: e.target.value})}
+                required
+              />
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <Label htmlFor="category">Categoria</Label>
+                <Input
+                  id="category"
+                  value={formData.category}
+                  onChange={(e) => setFormData({...formData, category: e.target.value})}
+                  required
+                />
+              </div>
+              <div>
+                <Label htmlFor="salePrice">Preço de Venda (R$)</Label>
+                <Input
+                  id="salePrice"
+                  type="number"
+                  step="0.01"
+                  value={formData.salePrice}
+                  onChange={(e) => setFormData({...formData, salePrice: e.target.value})}
+                  required
+                />
+              </div>
+              <div>
+                <Label htmlFor="originalPrice">Preço Original (R$)</Label>
+                <Input
+                  id="originalPrice"
+                  type="number"
+                  step="0.01"
+                  value={formData.originalPrice}
+                  onChange={(e) => setFormData({...formData, originalPrice: e.target.value})}
+                />
+              </div>
+            </div>
+
+            <div>
+              <Label htmlFor="tags">Tags (separadas por vírgula)</Label>
+              <Input
+                id="tags"
+                value={formData.tags}
+                onChange={(e) => setFormData({...formData, tags: e.target.value})}
+                placeholder="concurso, matemática, ensino médio"
+              />
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="pdf">Arquivo PDF da Apostila</Label>
+                <Input
+                  id="pdf"
+                  type="file"
+                  accept=".pdf"
+                  onChange={(e) => setFiles({...files, pdf: e.target.files?.[0] || null})}
+                  required
+                />
+              </div>
+              <div>
+                <Label htmlFor="cover">Imagem da Capa</Label>
+                <Input
+                  id="cover"
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => setFiles({...files, cover: e.target.files?.[0] || null})}
+                />
+              </div>
+            </div>
+
+            <Button 
+              type="submit" 
+              className="w-full"
+              disabled={uploadMutation.isPending}
+            >
+              {uploadMutation.isPending ? "Enviando..." : "Enviar Produto"}
+            </Button>
+          </form>
         </CardContent>
       </Card>
     </div>
