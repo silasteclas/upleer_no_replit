@@ -149,21 +149,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/auth/fallback-login', fallbackLogin);
   app.post('/api/auth/fallback-logout', fallbackLogout);
   
-  // Auth routes with fallback support
-  app.get('/api/auth/user', fallbackAuth, isAuthenticated, async (req: any, res) => {
-    try {
-      const user = req.user;
-      res.json({
-        id: user.id,
-        email: user.email,
-        firstName: user.firstName,
-        lastName: user.lastName,
-        profileImageUrl: user.profileImageUrl
-      });
-    } catch (error) {
-      console.error("Error fetching user:", error);
-      res.status(500).json({ message: "Failed to fetch user" });
+  // Auth routes with fallback support  
+  app.get('/api/auth/user', async (req: any, res) => {
+    // Check if we're on public domain and use fallback auth
+    if (req.hostname === "prompt-flow-adm64.replit.app") {
+      if ((req.session as any)?.user) {
+        const user = (req.session as any).user;
+        return res.json({
+          id: user.id,
+          email: user.email,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          profileImageUrl: user.profileImageUrl || null
+        });
+      }
+      return res.status(401).json({ message: "Unauthorized" });
     }
+    
+    // Use regular Replit Auth for other domains
+    return isAuthenticated(req, res, async () => {
+      try {
+        const user = req.user;
+        res.json({
+          id: user.id,
+          email: user.email,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          profileImageUrl: user.profileImageUrl
+        });
+      } catch (error) {
+        console.error("Error fetching user:", error);
+        res.status(500).json({ message: "Failed to fetch user" });
+      }
+    });
   });
 
   // Product routes
