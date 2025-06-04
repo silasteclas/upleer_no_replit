@@ -44,18 +44,21 @@ export const fallbackLogin: RequestHandler = async (req, res) => {
 
       console.log(`[FALLBACK] Session set for user:`, (req.session as any).user);
       
-      // Save session explicitly
-      req.session.save((err) => {
-        if (err) {
-          console.error(`[FALLBACK] Session save error:`, err);
-        } else {
-          console.log(`[FALLBACK] Session saved successfully`);
-        }
-      });
-
-      return res.json({
-        message: "Login realizado com sucesso!",
-        user: (req.session as any).user
+      // Save session explicitly and wait for it
+      return new Promise((resolve) => {
+        req.session.save((err) => {
+          if (err) {
+            console.error(`[FALLBACK] Session save error:`, err);
+            return res.status(500).json({ message: "Erro ao salvar sessão" });
+          } else {
+            console.log(`[FALLBACK] Session saved successfully for user:`, user.id);
+            res.json({
+              message: "Login realizado com sucesso!",
+              user: (req.session as any).user
+            });
+            resolve(undefined);
+          }
+        });
       });
     }
 

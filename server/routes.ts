@@ -149,49 +149,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Setup auth middleware after public endpoints
   await setupAuth(app);
 
-  // Fallback auth for public domain
-  app.post('/api/auth/fallback-login', fallbackLogin);
+  // Simple auth system for all domains
+  const { simpleLogin, simpleUserCheck } = await import("./simple-auth");
+  
+  app.post('/api/auth/fallback-login', simpleLogin);
   app.post('/api/auth/fallback-logout', fallbackLogout);
   
-  // Auth routes with fallback support  
-  app.get('/api/auth/user', async (req: any, res) => {
-    console.log(`[AUTH] User check for hostname: ${req.hostname}`);
-    console.log(`[AUTH] Session data:`, req.session);
-    
-    // Check if we're on public domain or localhost and use fallback auth
-    if (req.hostname === "prompt-flow-adm64.replit.app" || req.hostname === "127.0.0.1" || req.hostname.includes("replit.app")) {
-      if ((req.session as any)?.user) {
-        const user = (req.session as any).user;
-        console.log(`[AUTH] Fallback user found:`, user);
-        return res.json({
-          id: user.id,
-          email: user.email,
-          firstName: user.firstName,
-          lastName: user.lastName,
-          profileImageUrl: user.profileImageUrl || null
-        });
-      }
-      console.log(`[AUTH] No fallback session found`);
-      return res.status(401).json({ message: "Unauthorized" });
-    }
-    
-    // Use regular Replit Auth for other domains
-    return isAuthenticated(req, res, async () => {
-      try {
-        const user = req.user;
-        res.json({
-          id: user.id,
-          email: user.email,
-          firstName: user.firstName,
-          lastName: user.lastName,
-          profileImageUrl: user.profileImageUrl
-        });
-      } catch (error) {
-        console.error("Error fetching user:", error);
-        res.status(500).json({ message: "Failed to fetch user" });
-      }
-    });
-  });
+  // Unified auth route that works everywhere  
+  app.get('/api/auth/user', simpleUserCheck);
 
   // Product routes
   app.post('/api/products', isAuthenticated, upload.fields([
