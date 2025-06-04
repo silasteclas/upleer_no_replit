@@ -158,8 +158,8 @@ export default function Products() {
                     
                     <div className="flex justify-between items-center text-xs text-gray-500 mb-2">
                       <span>{product.pageCount}p</span>
-                      <span className="font-medium text-gray-900">
-                        R$ {product.salePrice}
+                      <span className="font-medium text-green-600">
+                        R$ {(parseFloat(product.salePrice) - parseFloat(product.baseCost)).toFixed(2)}
                       </span>
                     </div>
                     
