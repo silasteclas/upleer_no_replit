@@ -27,7 +27,7 @@ export function getSession() {
   const pgStore = connectPg(session);
   const sessionStore = new pgStore({
     conString: process.env.DATABASE_URL,
-    createTableIfMissing: false,
+    createTableIfMissing: true,
     ttl: sessionTtl,
     tableName: "sessions",
   });
@@ -35,10 +35,10 @@ export function getSession() {
     secret: process.env.SESSION_SECRET!,
     store: sessionStore,
     resave: false,
-    saveUninitialized: false,
+    saveUninitialized: true,
     cookie: {
-      httpOnly: true,
-      secure: true,
+      httpOnly: false,
+      secure: false,
       maxAge: sessionTtl,
       sameSite: 'lax',
     },
@@ -69,7 +69,11 @@ async function upsertUser(
 
 export async function setupAuth(app: Express) {
   app.set("trust proxy", 1);
-  app.use(getSession());
+  
+  // Configure session middleware
+  const sessionMiddleware = getSession();
+  app.use(sessionMiddleware);
+  
   app.use(passport.initialize());
   app.use(passport.session());
 
@@ -120,30 +124,14 @@ export async function setupAuth(app: Express) {
     console.log(`[AUTH] Callback received for hostname: ${req.hostname}`);
     console.log(`[AUTH] Session ID: ${req.sessionID}`);
     console.log(`[AUTH] Query params:`, req.query);
+    console.log(`[AUTH] Headers:`, req.headers);
     
-    passport.authenticate(`replitauth:${req.hostname}`, (err: any, user: any, info: any) => {
-      console.log(`[AUTH] Authentication result - Error:`, err, 'User:', !!user, 'Info:', info);
-      
-      if (err) {
-        console.log(`[AUTH] Error during authentication:`, err);
-        return res.redirect("/api/login");
-      }
-      if (!user) {
-        console.log(`[AUTH] No user found during authentication, info:`, info);
-        return res.redirect("/api/login");
-      }
-      
-      console.log(`[AUTH] User object:`, JSON.stringify(user, null, 2));
-      
-      req.logIn(user, (err) => {
-        if (err) {
-          console.log(`[AUTH] Error during req.logIn:`, err);
-          return res.redirect("/api/login");
-        }
-        console.log(`[AUTH] User successfully logged in for ${req.hostname}`);
-        console.log(`[AUTH] Session after login:`, req.session);
-        return res.redirect("/");
-      });
+    const strategyName = `replitauth:${req.hostname}`;
+    console.log(`[AUTH] Using strategy: ${strategyName}`);
+    
+    passport.authenticate(strategyName, {
+      failureRedirect: "/api/login",
+      successRedirect: "/"
     })(req, res, next);
   });
 
