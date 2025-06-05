@@ -262,37 +262,41 @@ export default function IntegrationForm() {
 
   if (isLoading && isEditing) {
     return (
-      <div className="flex h-screen bg-gray-50">
+      <div className="min-h-screen bg-gray-50">
+        <Header
+          title="Carregando..."
+          subtitle="Aguarde"
+        />
         <Sidebar />
-        <div className="flex-1 flex items-center justify-center">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
-            <p>Carregando integração...</p>
+        <main className="ml-64 pt-20 p-6 min-h-screen overflow-auto">
+          <div className="flex items-center justify-center h-64">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+              <p>Carregando integração...</p>
+            </div>
           </div>
-        </div>
+        </main>
       </div>
     );
   }
 
   return (
-    <div className="flex h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50">
+      <Header
+        title={isEditing ? "Editar Integração" : "Nova Integração"}
+        subtitle={isEditing ? "Modifique as configurações da integração" : "Configure uma nova integração com API externa"}
+      />
       <Sidebar />
-      <div className="flex-1 flex flex-col overflow-hidden">
-        <Header
-          title={isEditing ? "Editar Integração" : "Nova Integração"}
-          subtitle={isEditing ? "Modifique as configurações da integração" : "Configure uma nova integração com API externa"}
-        />
-        
-        <main className="flex-1 overflow-x-hidden overflow-y-auto bg-gray-50 p-6">
-          <div className="max-w-3xl mx-auto">
-            <div className="mb-6">
-              <Button variant="ghost" onClick={() => setLocation("/integrations")}>
-                <ArrowLeft className="w-4 h-4 mr-2" />
-                Voltar para Integrações
-              </Button>
-            </div>
+      <main className="ml-64 pt-20 p-6 min-h-screen overflow-auto">
+        <div className="max-w-3xl mx-auto">
+          <div className="mb-6">
+            <Button variant="ghost" onClick={() => setLocation("/integrations")}>
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Voltar para Integrações
+            </Button>
+          </div>
 
-            <Card>
+          <Card>
               <CardHeader>
                 <CardTitle>Configurações da Integração</CardTitle>
                 <CardDescription>
@@ -432,9 +436,8 @@ export default function IntegrationForm() {
                 authConfig={form.watch("authConfig") || {}}
               />
             )}
-          </div>
-        </main>
-      </div>
+        </div>
+      </main>
     </div>
   );
 }
