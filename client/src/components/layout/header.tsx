@@ -73,3 +73,5 @@ export function Header({ title, subtitle }: HeaderProps) {
     </header>
   );
 }
+
+export default Header;

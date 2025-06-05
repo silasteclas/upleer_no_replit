@@ -15,8 +15,8 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import type { Product } from "@shared/schema";
-import Sidebar from "@/components/layout/sidebar";
-import Header from "@/components/layout/header";
+import { Sidebar } from "@/components/layout/sidebar";
+import { Header } from "@/components/layout/header";
 
 const purchaseSchema = z.object({
   buyerName: z.string().min(2, "Nome deve ter pelo menos 2 caracteres"),
