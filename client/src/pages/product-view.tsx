@@ -160,14 +160,13 @@ export default function ProductView() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
+    <div className="min-h-screen bg-gray-50">
+      <Header title="Detalhes do Produto" subtitle="Visualizar informações do produto" />
       <Sidebar />
-      <div className="flex-1 flex flex-col">
-        <Header title="Detalhes do Produto" subtitle="Visualizar informações do produto" />
-        <main className="flex-1 p-4">
-          <div className="max-w-5xl mx-auto">
-            <div className="mb-4">
-              <Button
+      <main className="ml-64 pt-32 p-6 min-h-screen overflow-auto">
+        <div className="max-w-5xl mx-auto">
+          <div className="mb-4">
+            <Button
                 variant="outline"
                 onClick={() => setLocation("/products")}
                 size="sm"
@@ -448,9 +447,8 @@ export default function ProductView() {
                 </Card>
               </div>
             </div>
-          </div>
-        </main>
-      </div>
+        </div>
+      </main>
     </div>
   );
 }

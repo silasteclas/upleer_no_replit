@@ -268,7 +268,7 @@ export default function IntegrationForm() {
           subtitle="Aguarde"
         />
         <Sidebar />
-        <main className="ml-64 pt-20 p-6 min-h-screen overflow-auto">
+        <main className="ml-64 pt-32 p-6 min-h-screen overflow-auto">
           <div className="flex items-center justify-center h-64">
             <div className="text-center">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
@@ -287,7 +287,7 @@ export default function IntegrationForm() {
         subtitle={isEditing ? "Modifique as configurações da integração" : "Configure uma nova integração com API externa"}
       />
       <Sidebar />
-      <main className="ml-64 pt-20 p-6 min-h-screen overflow-auto">
+      <main className="ml-64 pt-32 p-6 min-h-screen overflow-auto">
         <div className="max-w-3xl mx-auto">
           <div className="mb-6">
             <Button variant="ghost" onClick={() => setLocation("/integrations")}>
