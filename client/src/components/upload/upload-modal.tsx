@@ -192,8 +192,8 @@ export default function UploadModal() {
         
         setPageCount(actualPageCount);
         setBaseCost(calculatedBaseCost);
-        // Set initial author earnings to suggest same as base cost
-        const suggestedEarnings = calculatedBaseCost;
+        // Set initial author earnings to a reasonable suggestion (R$ 20,00)
+        const suggestedEarnings = 20.00;
         pricingForm.setValue("authorEarnings", suggestedEarnings);
         // Nova fórmula: Taxa fixa (9,90) + 30% dos ganhos do autor + ganhos do autor
         const fixedFee = 9.90;
@@ -666,10 +666,6 @@ export default function UploadModal() {
                   <div>
                     <p className="text-sm text-gray-600">Número de páginas:</p>
                     <p className="font-medium">{pageCount} páginas</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-600">Custo base:</p>
-                    <p className="font-medium">R$ {baseCost.toFixed(2)}</p>
                   </div>
                   
                   <div className="pt-4 border-t border-gray-200">
