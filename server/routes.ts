@@ -255,12 +255,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Product routes
-  app.post('/api/products', upload.fields([
+  app.post('/api/products', requireAuth, upload.fields([
     { name: 'pdf', maxCount: 1 },
     { name: 'cover', maxCount: 1 }
   ]), async (req: any, res) => {
     try {
-      const userId = req.user.id;
+      const userId = req.session.userId;
       const files = req.files as { [fieldname: string]: Express.Multer.File[] };
       
       if (!files.pdf || !files.pdf[0]) {
@@ -326,9 +326,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get('/api/products/:id', async (req: any, res) => {
+  app.get('/api/products/:id', requireAuth, async (req: any, res) => {
     try {
-      const userId = req.user.id;
+      const userId = req.session.userId;
       const productId = parseInt(req.params.id);
       const product = await storage.getProduct(productId);
       
@@ -348,9 +348,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put('/api/products/:id', async (req: any, res) => {
+  app.put('/api/products/:id', requireAuth, async (req: any, res) => {
     try {
-      const userId = req.user.id;
+      const userId = req.session.userId;
       const productId = parseInt(req.params.id);
       const product = await storage.getProduct(productId);
       
@@ -480,9 +480,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Sales routes
-  app.get('/api/sales', async (req: any, res) => {
+  app.get('/api/sales', requireAuth, async (req: any, res) => {
     try {
-      const userId = req.user?.claims?.sub || req.user?.id;
+      const userId = req.session.userId;
       const sales = await storage.getSalesByAuthor(userId);
       res.json(sales);
     } catch (error) {
@@ -492,9 +492,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Analytics routes
-  app.get('/api/analytics/stats', async (req: any, res) => {
+  app.get('/api/analytics/stats', requireAuth, async (req: any, res) => {
     try {
-      const userId = req.user.id;
+      const userId = req.session.userId;
       const stats = await storage.getAuthorStats(userId);
       res.json(stats);
     } catch (error) {
@@ -503,9 +503,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get('/api/analytics/sales-data', async (req: any, res) => {
+  app.get('/api/analytics/sales-data', requireAuth, async (req: any, res) => {
     try {
-      const userId = req.user.id;
+      const userId = req.session.userId;
       const months = parseInt(req.query.months as string) || 6;
       const salesData = await storage.getSalesData(userId, months);
       res.json(salesData);
@@ -516,9 +516,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Settings routes
-  app.get('/api/settings', async (req: any, res) => {
+  app.get('/api/settings', requireAuth, async (req: any, res) => {
     try {
-      const userId = req.user.id;
+      const userId = req.session.userId;
       // Return empty settings for now since we don't have the schema
       res.json({
         phone: "",
