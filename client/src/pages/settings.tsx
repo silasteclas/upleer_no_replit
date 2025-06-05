@@ -130,16 +130,15 @@ export default function Settings() {
   ];
 
   return (
-    <div className="flex h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50">
+      <Header 
+        title="Configurações" 
+        subtitle="Gerencie suas preferências e dados pessoais"
+      />
       <Sidebar />
-      <div className="flex-1 flex flex-col overflow-hidden">
-        <Header 
-          title="Configurações" 
-          subtitle="Gerencie suas preferências e dados pessoais"
-        />
-        <main className="flex-1 overflow-x-hidden overflow-y-auto bg-gray-50 p-6">
-          <div className="max-w-7xl mx-auto">
-            <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+      <main className="ml-64 pt-20 p-6 min-h-screen overflow-auto">
+        <div className="max-w-7xl mx-auto">
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
               {/* Sidebar */}
               <div className="lg:col-span-1">
                 <Card>
@@ -491,9 +490,8 @@ export default function Settings() {
                 )}
               </div>
             </div>
-          </div>
-        </main>
-      </div>
+        </div>
+      </main>
     </div>
   );
 }
