@@ -87,7 +87,7 @@ export default function Products() {
         subtitle="Gerencie suas apostilas e acompanhe o status" 
       />
       <Sidebar />
-      <main className="ml-64 pt-24 p-6 min-h-screen overflow-auto">
+      <main className="ml-64 pt-32 p-6 min-h-screen overflow-auto">
         <div>
           <div className="flex justify-between items-center mb-6">
             <div>

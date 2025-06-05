@@ -57,7 +57,7 @@ export default function Integrations() {
         subtitle="Gerencie conexões com sistemas externos"
       />
       <Sidebar />
-      <main className="ml-64 pt-24 p-6 min-h-screen overflow-auto">
+      <main className="ml-64 pt-32 p-6 min-h-screen overflow-auto">
         <div className="max-w-7xl mx-auto">
             {/* Actions Bar */}
             <div className="flex justify-between items-center mb-6">
