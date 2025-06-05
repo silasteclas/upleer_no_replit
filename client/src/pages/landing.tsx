@@ -71,7 +71,7 @@ export default function Landing() {
         </div>
 
         {/* Login Form */}
-        <div className="max-w-md mx-auto mb-16">
+        <div className="max-w-md mx-auto">
           <Card className="p-6">
             <CardContent>
               <h2 className="text-2xl font-bold text-center mb-6">Entrar no Upleer</h2>
@@ -111,58 +111,6 @@ export default function Landing() {
               </p>
             </CardContent>
           </Card>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
-          <Card className="text-center p-6">
-            <CardContent>
-              <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Upload className="text-primary text-2xl" />
-              </div>
-              <h3 className="text-xl font-semibold mb-2">Upload Fácil</h3>
-              <p className="text-gray-600">
-                Faça upload dos seus PDFs com validação automática de formato A4 e contagem de páginas
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card className="text-center p-6">
-            <CardContent>
-              <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <BarChart3 className="text-accent text-2xl" />
-              </div>
-              <h3 className="text-xl font-semibold mb-2">Analytics Detalhado</h3>
-              <p className="text-gray-600">
-                Acompanhe suas vendas, receita e performance com dashboards visuais e relatórios
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card className="text-center p-6">
-            <CardContent>
-              <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Shield className="text-purple-600 text-2xl" />
-              </div>
-              <h3 className="text-xl font-semibold mb-2">Seguro e Confiável</h3>
-              <p className="text-gray-600">
-                Seus arquivos e dados estão protegidos com segurança de nível empresarial
-              </p>
-            </CardContent>
-          </Card>
-        </div>
-
-        <div className="text-center">
-          <div className="flex gap-4 justify-center">
-            <Button size="lg" className="bg-primary hover:bg-blue-600 text-white px-8 py-3 text-lg" onClick={() => window.location.href = '/api/login'}>
-              Entrar
-            </Button>
-            <Button size="lg" variant="outline" className="px-8 py-3 text-lg" onClick={() => window.location.href = '/api/login'}>
-              Criar Conta
-            </Button>
-          </div>
-          <p className="text-sm text-gray-500 mt-4">
-            Grátis para começar • Sem taxas de setup
-          </p>
         </div>
       </div>
     </div>
