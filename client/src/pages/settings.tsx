@@ -104,10 +104,11 @@ export default function Settings() {
       // Clear the profile image state since it's now saved
       setProfileImage(null);
     },
-    onError: () => {
+    onError: (error: Error) => {
+      console.error("Profile update error:", error);
       toast({
         title: "Erro",
-        description: "Falha ao atualizar o perfil.",
+        description: error.message || "Falha ao atualizar o perfil.",
         variant: "destructive",
       });
     },
