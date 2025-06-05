@@ -11,17 +11,17 @@ interface HeaderProps {
 export function Header({ title, subtitle }: HeaderProps) {
   const { user } = useAuth();
   
-  const handleLogout = () => {
-    // Check if we're on public domain
-    const isPublicDomain = window.location.hostname === "prompt-flow-adm64.replit.app" || 
-                          window.location.hostname.includes("replit.app");
-    
-    if (isPublicDomain) {
+  const handleLogout = async () => {
+    try {
+      await fetch('/api/logout', { method: 'POST' });
       localStorage.removeItem('upleer_public_auth');
       localStorage.removeItem('upleer_user');
-      window.location.reload();
-    } else {
-      window.location.href = '/api/logout';
+      window.location.href = '/';
+    } catch (error) {
+      console.error('Logout error:', error);
+      localStorage.removeItem('upleer_public_auth');
+      localStorage.removeItem('upleer_user');
+      window.location.href = '/';
     }
   };
 

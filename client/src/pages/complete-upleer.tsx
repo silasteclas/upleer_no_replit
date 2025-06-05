@@ -807,7 +807,19 @@ export default function CompleteUpleer() {
     <div className="flex h-screen bg-gray-50">
       <Sidebar />
       <div className="flex-1 flex flex-col overflow-hidden">
-        <Header title={getPageTitle()} onLogout={() => setIsLoggedIn(false)} />
+        <Header title={getPageTitle()} onLogout={async () => {
+          try {
+            await fetch('/api/logout', { method: 'POST' });
+            localStorage.removeItem('upleer_public_auth');
+            localStorage.removeItem('upleer_user');
+            setIsLoggedIn(false);
+          } catch (error) {
+            console.error('Logout error:', error);
+            localStorage.removeItem('upleer_public_auth');
+            localStorage.removeItem('upleer_user');
+            setIsLoggedIn(false);
+          }
+        }} />
         <main className="flex-1 overflow-auto">
           <Switch>
             <Route path="/" component={DashboardPage} />

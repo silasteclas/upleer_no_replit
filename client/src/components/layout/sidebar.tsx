@@ -8,11 +8,15 @@ export function Sidebar() {
 
   const handleLogout = async () => {
     try {
-      await fetch("/api/auth/logout", { method: "POST" });
-      window.location.href = "/";
+      await fetch('/api/logout', { method: 'POST' });
+      localStorage.removeItem('upleer_public_auth');
+      localStorage.removeItem('upleer_user');
+      window.location.href = '/';
     } catch (error) {
-      console.error("Logout error:", error);
-      window.location.href = "/";
+      console.error('Logout error:', error);
+      localStorage.removeItem('upleer_public_auth');
+      localStorage.removeItem('upleer_user');
+      window.location.href = '/';
     }
   };
 
