@@ -418,10 +418,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Simulate purchase for a product
-  app.post("/api/products/:id/simulate-purchase", async (req: any, res) => {
+  app.post("/api/products/:id/simulate-purchase", requireAuth, async (req: any, res) => {
     try {
       const productId = parseInt(req.params.id);
-      const userId = req.user.id;
+      const userId = req.session.userId;
       const {
         buyerName,
         buyerEmail,
@@ -583,9 +583,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post('/api/settings/notifications', async (req: any, res) => {
+  app.post('/api/settings/notifications', requireAuth, async (req: any, res) => {
     try {
-      const userId = req.user.id;
+      const userId = req.session.userId;
       // For now, just return success since we don't have notifications settings table
       res.json({ message: "Notification preferences updated successfully" });
     } catch (error) {
