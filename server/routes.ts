@@ -315,9 +315,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get('/api/products', async (req: any, res) => {
+  app.get('/api/products', requireAuth, async (req: any, res) => {
     try {
-      const userId = req.user?.claims?.sub || req.user?.id;
+      const userId = req.session.userId;
       const products = await storage.getProductsByAuthor(userId);
       res.json(products);
     } catch (error) {
