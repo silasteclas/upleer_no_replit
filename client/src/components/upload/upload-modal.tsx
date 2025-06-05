@@ -195,7 +195,11 @@ export default function UploadModal() {
         // Set initial author earnings to suggest same as base cost
         const suggestedEarnings = calculatedBaseCost;
         pricingForm.setValue("authorEarnings", suggestedEarnings);
-        setSalePrice(calculatedBaseCost + suggestedEarnings);
+        // Nova fórmula: Taxa fixa (9,90) + 30% dos ganhos do autor + ganhos do autor
+        const fixedFee = 9.90;
+        const variableFee = suggestedEarnings * 0.30;
+        const initialSalePrice = fixedFee + variableFee + suggestedEarnings;
+        setSalePrice(initialSalePrice);
         
         setValidation({
           isValid: true,
@@ -237,9 +241,11 @@ export default function UploadModal() {
 
   const handleEarningsChange = (earnings: number) => {
     pricingForm.setValue("authorEarnings", earnings);
-    if (baseCost > 0) {
-      setSalePrice(baseCost + earnings);
-    }
+    // Nova fórmula: Taxa fixa (9,90) + 30% dos ganhos do autor + ganhos do autor
+    const fixedFee = 9.90;
+    const variableFee = earnings * 0.30;
+    const newSalePrice = fixedFee + variableFee + earnings;
+    setSalePrice(newSalePrice);
   };
 
   const handleNextStep = () => {
@@ -687,6 +693,31 @@ export default function UploadModal() {
                   <div className="pt-4 border-t border-gray-200">
                     <p className="text-sm text-gray-600">Preço de venda final:</p>
                     <p className="text-2xl font-bold text-primary">R$ {salePrice.toFixed(2)}</p>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Pricing Breakdown */}
+              <div className="bg-green-50 rounded-lg p-4">
+                <h5 className="font-medium text-gray-900 mb-3">Como é calculado o preço de venda</h5>
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between items-center py-1">
+                    <span className="text-gray-600">Seus ganhos:</span>
+                    <span className="font-medium">R$ {pricingForm.watch("authorEarnings").toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between items-center py-1">
+                    <span className="text-gray-600">Taxa fixa da plataforma:</span>
+                    <span className="font-medium">R$ 9,90</span>
+                  </div>
+                  <div className="flex justify-between items-center py-1">
+                    <span className="text-gray-600">Taxa variável (30%):</span>
+                    <span className="font-medium">R$ {(pricingForm.watch("authorEarnings") * 0.30).toFixed(2)}</span>
+                  </div>
+                  <div className="border-t border-green-200 pt-2 mt-2">
+                    <div className="flex justify-between items-center font-semibold">
+                      <span className="text-gray-800">Preço final:</span>
+                      <span className="text-green-600">R$ {salePrice.toFixed(2)}</span>
+                    </div>
                   </div>
                 </div>
               </div>
