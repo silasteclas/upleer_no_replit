@@ -51,16 +51,14 @@ export default function Integrations() {
   };
 
   return (
-    <div className="flex h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50">
+      <Header
+        title="Integrações de API"
+        subtitle="Gerencie conexões com sistemas externos"
+      />
       <Sidebar />
-      <div className="flex-1 flex flex-col overflow-hidden">
-        <Header
-          title="Integrações de API"
-          subtitle="Gerencie conexões com sistemas externos"
-        />
-        
-        <main className="flex-1 overflow-x-hidden overflow-y-auto bg-gray-50 p-6">
-          <div className="max-w-7xl mx-auto">
+      <main className="ml-64 pt-20 p-6 min-h-screen overflow-auto">
+        <div className="max-w-7xl mx-auto">
             {/* Actions Bar */}
             <div className="flex justify-between items-center mb-6">
               <div className="flex items-center gap-4">
@@ -174,9 +172,8 @@ export default function Integrations() {
                 ))
               )}
             </div>
-          </div>
-        </main>
-      </div>
+        </div>
+      </main>
     </div>
   );
 }
