@@ -548,12 +548,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post('/api/settings/profile', requireAuth, async (req: any, res) => {
     try {
+      console.log("=== Profile Update Route Hit ===");
+      console.log("Method:", req.method);
+      console.log("URL:", req.url);
+      console.log("Headers:", req.headers);
+      
       const userId = req.session.userId;
       const { profileImage, firstName, lastName, email, phone, bio } = req.body;
       
       console.log("=== Profile Update Request ===");
       console.log("User ID:", userId);
+      console.log("Request body keys:", Object.keys(req.body));
       console.log("Data to update:", { firstName, lastName, email, phone, bio });
+      console.log("Profile image length:", profileImage ? profileImage.length : 0);
       
       // Atualizar dados do perfil do usuário
       const updatedUser = await storage.updateUserProfile(userId, {
