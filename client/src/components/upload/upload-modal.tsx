@@ -708,22 +708,8 @@ export default function UploadModal() {
                     <span className="font-medium">R$ {pricingForm.watch("authorEarnings").toFixed(2)}</span>
                   </div>
                   <div className="flex justify-between items-center py-1">
-                    <span className="text-gray-600">Ganho da plataforma:</span>
+                    <span className="text-gray-600">Custo do produto (Impressão + taxas/impostos):</span>
                     <span className="font-medium">R$ {(9.90 + pageCount * 0.10 + pricingForm.watch("authorEarnings") * 0.30).toFixed(2)}</span>
-                  </div>
-                  <div className="ml-4 text-xs text-gray-500 space-y-1">
-                    <div className="flex justify-between">
-                      <span>• Taxa fixa:</span>
-                      <span>R$ 9,90</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>• Impressão ({pageCount} páginas):</span>
-                      <span>R$ {(pageCount * 0.10).toFixed(2)}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>• Comissão (30% do seu ganho):</span>
-                      <span>R$ {(pricingForm.watch("authorEarnings") * 0.30).toFixed(2)}</span>
-                    </div>
                   </div>
                   <div className="border-t border-green-200 pt-2 mt-2">
                     <div className="flex justify-between items-center font-semibold">
