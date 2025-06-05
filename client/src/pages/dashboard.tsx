@@ -45,7 +45,7 @@ export default function Dashboard() {
         subtitle="Acompanhe o desempenho dos seus produtos" 
       />
       <Sidebar />
-      <main className="ml-64 pt-20 p-6 min-h-screen overflow-auto">
+      <main className="ml-64 pt-24 p-6 min-h-screen overflow-auto">
         <div className="space-y-6">
           <StatsCards />
           
