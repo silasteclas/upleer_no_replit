@@ -136,7 +136,7 @@ export default function Settings() {
         subtitle="Gerencie suas preferências e dados pessoais"
       />
       <Sidebar />
-      <main className="ml-64 pt-20 p-6 min-h-screen overflow-auto">
+      <main className="ml-64 pt-24 p-6 min-h-screen overflow-auto">
         <div className="max-w-7xl mx-auto">
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
               {/* Sidebar */}
