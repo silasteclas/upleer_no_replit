@@ -117,45 +117,44 @@ export default function Sales() {
                   <p className="text-gray-600">Quando você tiver vendas, elas aparecerão aqui.</p>
                 </div>
               ) : (
-                <div className="space-y-4">
+                <div className="space-y-2">
                   {sales.map((sale: any) => (
-                    <div key={sale.id} className="border rounded-lg p-4 hover:bg-gray-50 transition-colors">
+                    <div 
+                      key={sale.id} 
+                      onClick={() => setLocation(`/sales/${sale.id}`)}
+                      className="border rounded-lg p-3 hover:bg-gray-50 transition-colors cursor-pointer group"
+                    >
                       <div className="flex items-center justify-between">
-                        <div className="flex-1">
-                          <div className="flex items-center space-x-4">
-                            <div className="flex-1">
-                              <h4 className="font-medium text-gray-900">{sale.product?.title || 'Produto'}</h4>
-                              <p className="text-sm text-gray-600">por {sale.product?.author || user?.firstName || 'Autor'}</p>
-                            </div>
-                            <div className="text-center">
-                              <p className="text-sm text-gray-500">Comprador</p>
-                              <p className="font-medium">{sale.buyerName}</p>
-                              <p className="text-sm text-gray-600">{sale.buyerEmail}</p>
-                            </div>
-                            <div className="text-center">
-                              <p className="text-sm text-gray-500">Valor</p>
-                              <p className="text-lg font-bold text-green-600">R$ {parseFloat(sale.salePrice).toFixed(2)}</p>
-                            </div>
-                            <div className="text-center">
-                              <p className="text-sm text-gray-500">Data</p>
-                              <p className="font-medium">{format(new Date(sale.createdAt), "dd/MM/yyyy", { locale: ptBR })}</p>
-                              <p className="text-sm text-gray-600">{format(new Date(sale.createdAt), "HH:mm", { locale: ptBR })}</p>
-                            </div>
-                            <div className="text-center">
-                              <Badge variant={sale.paymentStatus === 'paid' ? 'default' : 'secondary'}>
-                                <CreditCard className="w-3 h-3 mr-1" />
-                                {sale.paymentStatus === 'paid' ? 'Pago' : 'Pendente'}
-                              </Badge>
-                            </div>
+                        <div className="flex items-center space-x-6 flex-1">
+                          <div className="flex-1 min-w-0">
+                            <h4 className="font-medium text-gray-900 truncate">{sale.product?.title || 'Produto'}</h4>
+                            <p className="text-sm text-gray-600 truncate">por {sale.product?.author || user?.firstName || 'Autor'}</p>
+                          </div>
+                          <div className="text-left min-w-0 flex-shrink-0">
+                            <p className="text-xs text-gray-500 uppercase tracking-wide">Comprador</p>
+                            <p className="font-medium text-sm truncate">{sale.buyerName}</p>
+                            <p className="text-xs text-gray-600 truncate">{sale.buyerEmail}</p>
+                          </div>
+                          <div className="text-center flex-shrink-0">
+                            <p className="text-xs text-gray-500 uppercase tracking-wide">Valor</p>
+                            <p className="text-lg font-bold text-green-600">R$ {parseFloat(sale.salePrice).toFixed(2)}</p>
+                          </div>
+                          <div className="text-center flex-shrink-0">
+                            <p className="text-xs text-gray-500 uppercase tracking-wide">Data</p>
+                            <p className="font-medium text-sm">{format(new Date(sale.createdAt), "dd/MM/yyyy", { locale: ptBR })}</p>
+                            <p className="text-xs text-gray-600">{format(new Date(sale.createdAt), "HH:mm", { locale: ptBR })}</p>
+                          </div>
+                          <div className="text-center flex-shrink-0">
+                            <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">Status</p>
+                            <Badge variant={sale.paymentStatus === 'paid' ? 'default' : 'secondary'} className="text-xs">
+                              <CreditCard className="w-3 h-3 mr-1" />
+                              {sale.paymentStatus === 'paid' ? 'Pago' : 'Pendente'}
+                            </Badge>
                           </div>
                         </div>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => setLocation(`/sales/${sale.id}`)}
-                        >
-                          <ChevronRight className="w-4 h-4" />
-                        </Button>
+                        <div className="ml-4 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <ChevronRight className="w-4 h-4 text-gray-400" />
+                        </div>
                       </div>
                     </div>
                   ))}
