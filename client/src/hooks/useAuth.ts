@@ -12,7 +12,7 @@ export function useAuth() {
 
   const logoutMutation = useMutation({
     mutationFn: async () => {
-      await apiRequest("POST", "/api/auth/logout", {});
+      await apiRequest("POST", "/api/auth/logout");
     },
     onSuccess: () => {
       // Clear all queries from cache

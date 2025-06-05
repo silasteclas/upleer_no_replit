@@ -60,11 +60,7 @@ export default function ProductView() {
 
   const simulatePurchaseMutation = useMutation({
     mutationFn: async (data: PurchaseData) => {
-      const response = await apiRequest(`/api/products/${id}/simulate-purchase`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data)
-      });
+      const response = await apiRequest("POST", `/api/products/${id}/simulate-purchase`, data);
       return response.json();
     },
     onSuccess: (data) => {

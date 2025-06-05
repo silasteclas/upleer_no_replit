@@ -8,13 +8,31 @@ async function throwIfResNotOk(res: Response) {
 }
 
 export async function apiRequest(
+  method: string,
   url: string,
+  data?: any,
   options?: RequestInit
 ): Promise<Response> {
-  const res = await fetch(url, {
+  const requestOptions: RequestInit = {
+    method,
     credentials: "include",
+    headers: {
+      'Content-Type': 'application/json',
+      ...options?.headers,
+    },
     ...options,
-  });
+  };
+
+  if (data && method !== 'GET') {
+    requestOptions.body = JSON.stringify(data);
+  }
+
+  console.log("Making API request:", method, url, data ? "with data" : "no data");
+  
+  const res = await fetch(url, requestOptions);
+  
+  console.log("API response status:", res.status);
+  console.log("API response headers:", Object.fromEntries(res.headers.entries()));
 
   await throwIfResNotOk(res);
   return res;
