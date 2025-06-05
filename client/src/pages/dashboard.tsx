@@ -39,15 +39,14 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="min-h-screen flex bg-background">
+    <div className="min-h-screen bg-background">
+      <Header 
+        title="Dashboard" 
+        subtitle="Acompanhe o desempenho dos seus produtos" 
+      />
       <Sidebar />
-      <main className="flex-1 overflow-auto">
-        <Header 
-          title="Dashboard" 
-          subtitle="Acompanhe o desempenho dos seus produtos" 
-        />
-        
-        <div className="p-6 space-y-6">
+      <main className="ml-64 pt-20 p-6 min-h-screen overflow-auto">
+        <div className="space-y-6">
           <StatsCards />
           
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

@@ -81,15 +81,14 @@ export default function Products() {
   };
 
   return (
-    <div className="min-h-screen flex bg-background">
+    <div className="min-h-screen bg-background">
+      <Header 
+        title="Meus Produtos" 
+        subtitle="Gerencie suas apostilas e acompanhe o status" 
+      />
       <Sidebar />
-      <main className="flex-1 overflow-auto">
-        <Header 
-          title="Meus Produtos" 
-          subtitle="Gerencie suas apostilas e acompanhe o status" 
-        />
-        
-        <div className="p-6">
+      <main className="ml-64 pt-20 p-6 min-h-screen overflow-auto">
+        <div>
           <div className="flex justify-between items-center mb-6">
             <div>
               <h3 className="text-lg font-semibold text-gray-900">
