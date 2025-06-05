@@ -190,11 +190,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Public endpoint for updating product status (no authentication required)
+  // Public endpoint for updating product status and public URL (no authentication required)
   app.patch("/api/webhook/products/:id/status", async (req, res) => {
     try {
       const productId = parseInt(req.params.id);
-      const { status } = req.body;
+      const { status, publicUrl } = req.body;
       
       // Validate status
       const validStatuses = ['pending', 'published', 'rejected', 'archived'];
@@ -210,12 +210,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Produto não encontrado" });
       }
       
-      const updatedProduct = await storage.updateProductStatus(productId, status);
+      // Update product with status and optional public URL
+      const updates: any = { status };
+      if (publicUrl) {
+        updates.publicUrl = publicUrl;
+      }
       
-      console.log(`[WEBHOOK-STATUS] Product ${productId} status changed from ${product.status} to ${status}`);
+      const updatedProduct = await storage.updateProduct(productId, updates);
+      
+      console.log(`[WEBHOOK-STATUS] Product ${productId} status changed from ${product.status} to ${status}${publicUrl ? ` with URL: ${publicUrl}` : ''}`);
       
       res.json({
-        message: `Status do produto alterado para ${status}`,
+        message: `Status do produto alterado para ${status}${publicUrl ? ' e URL pública adicionada' : ''}`,
         product: updatedProduct
       });
     } catch (error) {

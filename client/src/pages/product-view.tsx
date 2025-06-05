@@ -400,6 +400,20 @@ export default function ProductView() {
                       </div>
                     )}
 
+                    {product.publicUrl && (
+                      <div>
+                        <h3 className="font-medium text-gray-900 mb-1">URL Pública na Loja</h3>
+                        <a 
+                          href={product.publicUrl} 
+                          target="_blank" 
+                          rel="noopener noreferrer" 
+                          className="text-blue-600 hover:text-blue-800 underline break-all"
+                        >
+                          {product.publicUrl}
+                        </a>
+                      </div>
+                    )}
+
                     <div>
                       <h3 className="font-medium text-gray-900 mb-1">Data de Criação</h3>
                       <p className="text-gray-700">

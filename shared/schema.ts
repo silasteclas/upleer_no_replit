@@ -56,7 +56,8 @@ export const products = pgTable("products", {
   baseCost: decimal("base_cost", { precision: 10, scale: 2 }).notNull(),
   salePrice: decimal("sale_price", { precision: 10, scale: 2 }).notNull(),
   marginPercent: integer("margin_percent").notNull().default(150),
-  status: varchar("status").notNull().default("pending"), // pending, approved, rejected
+  status: varchar("status").notNull().default("pending"), // pending, approved, rejected, published, archived
+  publicUrl: varchar("public_url"), // URL do produto na loja oficial
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
