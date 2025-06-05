@@ -192,14 +192,14 @@ export default function UploadModal() {
         
         setPageCount(actualPageCount);
         setBaseCost(calculatedBaseCost);
-        // Set initial author earnings based on page count (minimum: pages * 0.10)
-        const minimumEarnings = actualPageCount * 0.10;
-        const suggestedEarnings = Math.max(minimumEarnings, 10.00); // Minimum R$ 10,00
+        // Set initial author earnings suggestion
+        const suggestedEarnings = 25.00;
         pricingForm.setValue("authorEarnings", suggestedEarnings);
-        // Nova fórmula: Taxa fixa (9,90) + 30% dos ganhos do autor + ganhos do autor
+        // Nova fórmula: Taxa fixa (9,90) + Custo impressão (páginas × 0,10) + Ganho do autor
         const fixedFee = 9.90;
-        const variableFee = suggestedEarnings * 0.30;
-        const initialSalePrice = fixedFee + variableFee + suggestedEarnings;
+        const printingCost = actualPageCount * 0.10;
+        const platformMinimum = fixedFee + printingCost;
+        const initialSalePrice = platformMinimum + suggestedEarnings;
         setSalePrice(initialSalePrice);
         
         setValidation({
@@ -241,15 +241,12 @@ export default function UploadModal() {
   };
 
   const handleEarningsChange = (earnings: number) => {
-    // Ensure minimum value based on page count
-    const minimumEarnings = pageCount * 0.10;
-    const validEarnings = Math.max(earnings, minimumEarnings);
-    
-    pricingForm.setValue("authorEarnings", validEarnings);
-    // Nova fórmula: Taxa fixa (9,90) + 30% dos ganhos do autor + ganhos do autor
+    pricingForm.setValue("authorEarnings", earnings);
+    // Nova fórmula: Taxa fixa (9,90) + Custo impressão (páginas × 0,10) + Ganho do autor
     const fixedFee = 9.90;
-    const variableFee = validEarnings * 0.30;
-    const newSalePrice = fixedFee + variableFee + validEarnings;
+    const printingCost = pageCount * 0.10;
+    const platformMinimum = fixedFee + printingCost;
+    const newSalePrice = platformMinimum + earnings;
     setSalePrice(newSalePrice);
   };
 
@@ -682,12 +679,12 @@ export default function UploadModal() {
                         value={pricingForm.watch("authorEarnings")}
                         onChange={(e) => handleEarningsChange(Number(e.target.value))}
                         className="w-32 text-center"
-                        min={pageCount * 0.10}
+                        min="0"
                         step="0.01"
                       />
                     </div>
                     <p className="text-xs text-gray-500 mt-1">
-                      Valor mínimo: R$ {(pageCount * 0.10).toFixed(2)} ({pageCount} páginas × R$ 0,10)
+                      Digite o valor que você deseja receber por venda
                     </p>
                   </div>
                   
@@ -711,8 +708,8 @@ export default function UploadModal() {
                     <span className="font-medium">R$ 9,90</span>
                   </div>
                   <div className="flex justify-between items-center py-1">
-                    <span className="text-gray-600">Taxa variável (30%):</span>
-                    <span className="font-medium">R$ {(pricingForm.watch("authorEarnings") * 0.30).toFixed(2)}</span>
+                    <span className="text-gray-600">Custo de impressão ({pageCount} páginas):</span>
+                    <span className="font-medium">R$ {(pageCount * 0.10).toFixed(2)}</span>
                   </div>
                   <div className="border-t border-green-200 pt-2 mt-2">
                     <div className="flex justify-between items-center font-semibold">
