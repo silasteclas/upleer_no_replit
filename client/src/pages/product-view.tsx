@@ -164,25 +164,25 @@ export default function ProductView() {
       <Sidebar />
       <div className="flex-1 flex flex-col">
         <Header title="Detalhes do Produto" subtitle="Visualizar informações do produto" />
-        <main className="flex-1 p-6">
-          <div className="max-w-4xl mx-auto">
-            <div className="mb-6">
+        <main className="flex-1 p-4">
+          <div className="max-w-7xl mx-auto">
+            <div className="mb-4">
               <Button
                 variant="outline"
                 onClick={() => setLocation("/products")}
-                className="mb-4"
+                size="sm"
               >
                 <ArrowLeft className="w-4 h-4 mr-2" />
                 Voltar para Produtos
               </Button>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
               {/* Product Image */}
-              <div className="lg:col-span-1">
-                <Card>
+              <div className="lg:col-span-2">
+                <Card className="h-fit">
                   <CardContent className="p-0">
-                    <div className="aspect-[3/4] bg-gray-100 relative rounded-t-lg overflow-hidden">
+                    <div className="aspect-[4/3] bg-gray-100 relative rounded-t-lg overflow-hidden">
                       {product.coverImageUrl ? (
                         <img
                           src={product.coverImageUrl}
@@ -192,30 +192,30 @@ export default function ProductView() {
                       ) : (
                         <div className="w-full h-full flex items-center justify-center">
                           <div className="text-gray-400 text-center">
-                            <FileText className="w-12 h-12 mx-auto mb-2" />
-                            <p className="text-sm">Sem capa</p>
+                            <FileText className="w-16 h-16 mx-auto mb-3" />
+                            <p className="text-base">Sem capa</p>
                           </div>
                         </div>
                       )}
                     </div>
                     <div className="p-4">
-                      <Badge className={`${getStatusColor(product.status)} mb-2`}>
+                      <Badge className={`${getStatusColor(product.status)} mb-3`}>
                         {getStatusText(product.status)}
                       </Badge>
-                      <div className="space-y-2">
+                      <div className="grid grid-cols-2 gap-2">
                         <Button 
                           variant="outline" 
-                          className="w-full"
+                          size="sm"
                           onClick={() => setLocation(`/products/${product.id}/edit`)}
                         >
                           <Edit className="w-4 h-4 mr-2" />
-                          Editar Produto
+                          Editar
                         </Button>
                         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                           <DialogTrigger asChild>
-                            <Button className="w-full">
+                            <Button size="sm">
                               <ShoppingCart className="w-4 h-4 mr-2" />
-                              Simular Compra
+                              Simular
                             </Button>
                           </DialogTrigger>
                           <DialogContent className="max-w-md">
@@ -350,23 +350,23 @@ export default function ProductView() {
               </div>
 
               {/* Product Details */}
-              <div className="lg:col-span-2">
-                <Card>
-                  <CardHeader>
-                    <div className="flex justify-between items-start mb-4">
+              <div className="lg:col-span-3">
+                <Card className="h-fit">
+                  <CardHeader className="pb-4">
+                    <div className="flex justify-between items-start">
                       <div className="flex-1">
-                        <CardTitle className="text-2xl">{product.title}</CardTitle>
-                        <p className="text-lg text-gray-600">por {product.author}</p>
+                        <CardTitle className="text-xl font-bold">{product.title}</CardTitle>
+                        <p className="text-sm text-gray-600 mt-1">por {product.author}</p>
                       </div>
                       {product.publicUrl && (
-                        <div className="flex gap-2 ml-4">
+                        <div className="flex gap-2 ml-4 flex-shrink-0">
                           <Button
                             variant="outline"
                             size="sm"
                             className="text-green-600 border-green-200 hover:bg-green-50"
                             onClick={() => window.open(product.publicUrl, '_blank')}
                           >
-                            <ExternalLink className="w-4 h-4 mr-2" />
+                            <ExternalLink className="w-3 h-3 mr-1" />
                             Ver na Loja
                           </Button>
                           <Button
@@ -377,70 +377,69 @@ export default function ProductView() {
                               navigator.clipboard.writeText(product.publicUrl);
                             }}
                           >
-                            <Share2 className="w-4 h-4 mr-2" />
+                            <Share2 className="w-3 h-3 mr-1" />
                             Compartilhar
                           </Button>
                         </div>
                       )}
                     </div>
                   </CardHeader>
-                  <CardContent className="space-y-6">
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <h3 className="font-medium text-gray-900 mb-1">Ganho do Autor</h3>
-                        <p className="text-2xl font-bold text-green-600">R$ {(parseFloat(product.salePrice) - parseFloat(product.baseCost)).toFixed(2)}</p>
+                  <CardContent className="space-y-4">
+                    <div className="grid grid-cols-3 gap-4">
+                      <div className="bg-green-50 p-3 rounded-lg">
+                        <h3 className="font-medium text-gray-900 mb-1 text-sm">Ganho do Autor</h3>
+                        <p className="text-lg font-bold text-green-600">R$ {(parseFloat(product.salePrice) - parseFloat(product.baseCost)).toFixed(2)}</p>
                       </div>
-                      <div>
-                        <h3 className="font-medium text-gray-900 mb-1">Páginas</h3>
-                        <p className="text-xl">{product.pageCount} páginas</p>
+                      <div className="bg-blue-50 p-3 rounded-lg">
+                        <h3 className="font-medium text-gray-900 mb-1 text-sm">Páginas</h3>
+                        <p className="text-lg font-bold text-blue-600">{product.pageCount}</p>
                       </div>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <h3 className="font-medium text-gray-900 mb-1">Gênero</h3>
-                        <p className="text-gray-700">{product.genre}</p>
-                      </div>
-                      <div>
-                        <h3 className="font-medium text-gray-900 mb-1">Idioma</h3>
-                        <p className="text-gray-700">{product.language}</p>
+                      <div className="bg-purple-50 p-3 rounded-lg">
+                        <h3 className="font-medium text-gray-900 mb-1 text-sm">Gênero</h3>
+                        <p className="text-sm text-gray-700 capitalize">{product.genre}</p>
                       </div>
                     </div>
 
-                    {product.targetAudience && (
+                    <div className="grid grid-cols-3 gap-4">
                       <div>
-                        <h3 className="font-medium text-gray-900 mb-1">Público-Alvo</h3>
-                        <p className="text-gray-700">{product.targetAudience}</p>
+                        <h3 className="font-medium text-gray-900 mb-1 text-sm">Idioma</h3>
+                        <p className="text-sm text-gray-700 capitalize">{product.language}</p>
                       </div>
-                    )}
-
-                    {product.coAuthors && (
+                      {product.targetAudience && (
+                        <div>
+                          <h3 className="font-medium text-gray-900 mb-1 text-sm">Público-Alvo</h3>
+                          <p className="text-sm text-gray-700">{product.targetAudience}</p>
+                        </div>
+                      )}
                       <div>
-                        <h3 className="font-medium text-gray-900 mb-1">Co-Autores</h3>
-                        <p className="text-gray-700">{product.coAuthors}</p>
+                        <h3 className="font-medium text-gray-900 mb-1 text-sm">Data de Criação</h3>
+                        <p className="text-sm text-gray-700">
+                          {product.createdAt ? new Date(product.createdAt).toLocaleDateString('pt-BR') : 'N/A'}
+                        </p>
                       </div>
-                    )}
-
-                    {product.isbn && (
-                      <div>
-                        <h3 className="font-medium text-gray-900 mb-1">ISBN</h3>
-                        <p className="text-gray-700">{product.isbn}</p>
-                      </div>
-                    )}
-
-
-
-                    <div>
-                      <h3 className="font-medium text-gray-900 mb-1">Data de Criação</h3>
-                      <p className="text-gray-700">
-                        {product.createdAt ? new Date(product.createdAt).toLocaleDateString('pt-BR') : 'N/A'}
-                      </p>
                     </div>
+
+                    {(product.coAuthors || product.isbn) && (
+                      <div className="grid grid-cols-2 gap-4">
+                        {product.coAuthors && (
+                          <div>
+                            <h3 className="font-medium text-gray-900 mb-1 text-sm">Co-Autores</h3>
+                            <p className="text-sm text-gray-700">{product.coAuthors}</p>
+                          </div>
+                        )}
+                        {product.isbn && (
+                          <div>
+                            <h3 className="font-medium text-gray-900 mb-1 text-sm">ISBN</h3>
+                            <p className="text-sm text-gray-700">{product.isbn}</p>
+                          </div>
+                        )}
+                      </div>
+                    )}
 
                     {product.description && (
-                      <div>
-                        <h3 className="font-medium text-gray-900 mb-2">Descrição</h3>
-                        <p className="text-gray-700 leading-relaxed">{product.description}</p>
+                      <div className="border-t pt-4">
+                        <h3 className="font-medium text-gray-900 mb-2 text-sm">Descrição</h3>
+                        <p className="text-sm text-gray-700 leading-relaxed">{product.description}</p>
                       </div>
                     )}
                   </CardContent>
