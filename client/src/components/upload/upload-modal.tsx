@@ -329,9 +329,35 @@ export default function UploadModal() {
     "Precificação"
   ];
 
+  // Reset function to clear all states
+  const resetModal = () => {
+    setCurrentStep(1);
+    setPdfFile(null);
+    setCoverFile(null);
+    setValidation(null);
+    setPageCount(0);
+    setBaseCost(0);
+    setSalePrice(0);
+    setShowSuccess(false);
+    setUploadedProduct(null);
+    setProductInfo({
+      title: "",
+      description: "",
+      isbn: "",
+      author: "",
+      coAuthors: "",
+      genre: "",
+      language: "português",
+      targetAudience: "",
+    });
+    fileForm.reset();
+    infoForm.reset();
+    pricingForm.reset();
+  };
+
   // Show success screen after upload
   if (showSuccess && uploadedProduct) {
-    return <SuccessScreen product={uploadedProduct} />;
+    return <SuccessScreen product={uploadedProduct} onClose={resetModal} />;
   }
 
   return (

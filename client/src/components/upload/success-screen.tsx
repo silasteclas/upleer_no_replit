@@ -13,9 +13,10 @@ interface SuccessScreenProps {
     salePrice: number;
     authorEarnings: number;
   };
+  onClose?: () => void;
 }
 
-export function SuccessScreen({ product }: SuccessScreenProps) {
+export function SuccessScreen({ product, onClose }: SuccessScreenProps) {
   const [, setLocation] = useLocation();
   const [showContent, setShowContent] = useState(false);
 
@@ -91,12 +92,6 @@ export function SuccessScreen({ product }: SuccessScreenProps) {
             <div className={`transform transition-all duration-1000 delay-300 ${showContent ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'}`}>
               <Card className="bg-white/80 backdrop-blur-sm shadow-2xl border-0">
                 <CardContent className="p-8">
-                  <div className="text-center mb-6">
-                    <Badge className="bg-green-100 text-green-800 px-4 py-2 text-sm font-semibold">
-                      ✅ Mockup Persuasivo em Destaque
-                    </Badge>
-                  </div>
-                  
                   {/* Product Mockup */}
                   <div className="relative max-w-64 mx-auto">
                     {/* Book Stack Effect */}
@@ -210,7 +205,11 @@ export function SuccessScreen({ product }: SuccessScreenProps) {
                   </div>
                   
                   <Button
-                    onClick={() => setLocation('/dashboard')}
+                    onClick={() => {
+                      setLocation('/dashboard');
+                      // Reset modal state if onClose is provided
+                      if (onClose) onClose();
+                    }}
                     size="lg"
                     className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-8 py-3 text-lg font-semibold shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300"
                   >
