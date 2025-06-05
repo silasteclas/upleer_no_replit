@@ -359,8 +359,8 @@ export default function ProductView() {
                   <CardContent className="space-y-6">
                     <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <h3 className="font-medium text-gray-900 mb-1">Preço de Venda</h3>
-                        <p className="text-2xl font-bold text-green-600">R$ {product.salePrice}</p>
+                        <h3 className="font-medium text-gray-900 mb-1">Ganho do Autor</h3>
+                        <p className="text-2xl font-bold text-green-600">R$ {(parseFloat(product.salePrice) - parseFloat(product.baseCost)).toFixed(2)}</p>
                       </div>
                       <div>
                         <h3 className="font-medium text-gray-900 mb-1">Páginas</h3>
