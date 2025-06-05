@@ -83,15 +83,26 @@ export default function Settings() {
         ...data,
         profileImage: profileImage
       };
-      return apiRequest("POST", "/api/settings/profile", payload);
+      const response = await apiRequest("POST", "/api/settings/profile", payload);
+      return response.json();
     },
-    onSuccess: () => {
+    onSuccess: (responseData) => {
       toast({
         title: "Perfil atualizado",
         description: "Suas informações foram salvas com sucesso.",
       });
+      
+      // Update the user cache with the new data
+      if (responseData.user) {
+        queryClient.setQueryData(["/api/auth/user"], responseData.user);
+      }
+      
+      // Also invalidate to trigger a fresh fetch
       queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
       queryClient.invalidateQueries({ queryKey: ["/api/settings"] });
+      
+      // Clear the profile image state since it's now saved
+      setProfileImage(null);
     },
     onError: () => {
       toast({

@@ -546,9 +546,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post('/api/settings/profile', async (req: any, res) => {
+  app.post('/api/settings/profile', requireAuth, async (req: any, res) => {
     try {
-      const userId = req.user.id;
+      const userId = req.session.userId;
       const { profileImage, firstName, lastName, email, phone, bio } = req.body;
       
       console.log("=== Profile Update Request ===");
@@ -565,16 +565,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       console.log("User profile updated:", updatedUser);
       
-      res.json({ message: "Profile updated successfully" });
+      // Return the updated user data (without password)
+      const { password, ...userWithoutPassword } = updatedUser as any;
+      res.json({ 
+        message: "Profile updated successfully",
+        user: userWithoutPassword
+      });
     } catch (error) {
       console.error("Error updating profile:", error);
       res.status(500).json({ message: "Failed to update profile" });
     }
   });
 
-  app.post('/api/settings/banking', async (req: any, res) => {
+  app.post('/api/settings/banking', requireAuth, async (req: any, res) => {
     try {
-      const userId = req.user.id;
+      const userId = req.session.userId;
       // For now, just return success since we don't have banking settings table
       res.json({ message: "Banking information updated successfully" });
     } catch (error) {
