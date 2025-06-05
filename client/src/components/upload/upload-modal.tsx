@@ -192,8 +192,9 @@ export default function UploadModal() {
         
         setPageCount(actualPageCount);
         setBaseCost(calculatedBaseCost);
-        // Set initial author earnings to a reasonable suggestion (R$ 20,00)
-        const suggestedEarnings = 20.00;
+        // Set initial author earnings based on page count (minimum: pages * 0.10)
+        const minimumEarnings = actualPageCount * 0.10;
+        const suggestedEarnings = Math.max(minimumEarnings, 10.00); // Minimum R$ 10,00
         pricingForm.setValue("authorEarnings", suggestedEarnings);
         // Nova fórmula: Taxa fixa (9,90) + 30% dos ganhos do autor + ganhos do autor
         const fixedFee = 9.90;
@@ -240,11 +241,15 @@ export default function UploadModal() {
   };
 
   const handleEarningsChange = (earnings: number) => {
-    pricingForm.setValue("authorEarnings", earnings);
+    // Ensure minimum value based on page count
+    const minimumEarnings = pageCount * 0.10;
+    const validEarnings = Math.max(earnings, minimumEarnings);
+    
+    pricingForm.setValue("authorEarnings", validEarnings);
     // Nova fórmula: Taxa fixa (9,90) + 30% dos ganhos do autor + ganhos do autor
     const fixedFee = 9.90;
-    const variableFee = earnings * 0.30;
-    const newSalePrice = fixedFee + variableFee + earnings;
+    const variableFee = validEarnings * 0.30;
+    const newSalePrice = fixedFee + variableFee + validEarnings;
     setSalePrice(newSalePrice);
   };
 
@@ -677,12 +682,12 @@ export default function UploadModal() {
                         value={pricingForm.watch("authorEarnings")}
                         onChange={(e) => handleEarningsChange(Number(e.target.value))}
                         className="w-32 text-center"
-                        min="0"
+                        min={pageCount * 0.10}
                         step="0.01"
                       />
                     </div>
                     <p className="text-xs text-gray-500 mt-1">
-                      Digite o valor que você deseja receber por venda
+                      Valor mínimo: R$ {(pageCount * 0.10).toFixed(2)} ({pageCount} páginas × R$ 0,10)
                     </p>
                   </div>
                   
