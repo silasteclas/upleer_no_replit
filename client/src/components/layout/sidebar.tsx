@@ -26,7 +26,7 @@ export function Sidebar() {
 
   return (
     <aside className="fixed left-0 top-0 w-64 bg-white shadow-lg h-screen flex flex-col z-30">
-      <div className="p-6 border-b border-gray-200 mt-20">
+      <div className="p-6 border-b border-gray-200">
         <div className="flex items-center justify-center">
           <img 
             src={logoPath} 
