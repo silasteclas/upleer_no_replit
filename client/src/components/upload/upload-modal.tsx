@@ -387,7 +387,6 @@ export default function UploadModal() {
           ))}
         </div>
       </CardHeader>
-      
       <CardContent>
         {/* Step 1: File Upload */}
         {currentStep === 1 && (
@@ -907,7 +906,7 @@ export default function UploadModal() {
                     <div>Finalize agora e comece a lucrar</div>
                     <div>com sua apostila em múltiplos canais!</div>
                   </div>
-                  <div className="bg-gradient-to-r from-green-50 to-blue-50 border border-green-200 rounded-lg p-3 mt-4">
+                  <div className="bg-gradient-to-r from-green-50 to-blue-50 border border-green-200 rounded-lg p-3 mt-4 text-[20px]">
                     <div className="text-xs text-green-700 font-medium">
                       💰 Potencial de ganhos: R$ {pricingForm.watch("authorEarnings").toFixed(2)} por venda
                     </div>
