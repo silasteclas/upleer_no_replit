@@ -124,27 +124,28 @@ export default function Sales() {
                       onClick={() => setLocation(`/sales/${sale.id}`)}
                       className="border rounded-lg p-3 hover:bg-gray-50 transition-colors cursor-pointer group"
                     >
-                      <div className="flex items-center justify-between">
+                      {/* Desktop Layout */}
+                      <div className="hidden lg:flex items-center justify-between">
                         <div className="flex items-center space-x-6 flex-1">
                           <div className="flex-1 min-w-0">
                             <h4 className="font-medium text-gray-900 truncate">{sale.product?.title || 'Produto'}</h4>
                             <p className="text-sm text-gray-600 truncate">por {sale.product?.author || user?.firstName || 'Autor'}</p>
                           </div>
-                          <div className="text-left min-w-0 flex-shrink-0">
+                          <div className="text-left min-w-0 flex-shrink-0 w-48">
                             <p className="text-xs text-gray-500 uppercase tracking-wide">Comprador</p>
                             <p className="font-medium text-sm truncate">{sale.buyerName}</p>
                             <p className="text-xs text-gray-600 truncate">{sale.buyerEmail}</p>
                           </div>
-                          <div className="text-center flex-shrink-0">
+                          <div className="text-center flex-shrink-0 w-24">
                             <p className="text-xs text-gray-500 uppercase tracking-wide">Valor</p>
                             <p className="text-lg font-bold text-green-600">R$ {parseFloat(sale.salePrice).toFixed(2)}</p>
                           </div>
-                          <div className="text-center flex-shrink-0">
+                          <div className="text-center flex-shrink-0 w-24">
                             <p className="text-xs text-gray-500 uppercase tracking-wide">Data</p>
                             <p className="font-medium text-sm">{format(new Date(sale.createdAt), "dd/MM/yyyy", { locale: ptBR })}</p>
                             <p className="text-xs text-gray-600">{format(new Date(sale.createdAt), "HH:mm", { locale: ptBR })}</p>
                           </div>
-                          <div className="text-center flex-shrink-0">
+                          <div className="text-center flex-shrink-0 w-20">
                             <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">Status</p>
                             <Badge variant={sale.paymentStatus === 'paid' ? 'default' : 'secondary'} className="text-xs">
                               <CreditCard className="w-3 h-3 mr-1" />
@@ -154,6 +155,61 @@ export default function Sales() {
                         </div>
                         <div className="ml-4 opacity-0 group-hover:opacity-100 transition-opacity">
                           <ChevronRight className="w-4 h-4 text-gray-400" />
+                        </div>
+                      </div>
+
+                      {/* Tablet Layout */}
+                      <div className="hidden md:flex lg:hidden flex-col space-y-2">
+                        <div className="flex items-center justify-between">
+                          <div className="flex-1 min-w-0">
+                            <h4 className="font-medium text-gray-900 truncate">{sale.product?.title || 'Produto'}</h4>
+                            <p className="text-sm text-gray-600 truncate">por {sale.product?.author || user?.firstName || 'Autor'}</p>
+                          </div>
+                          <div className="flex items-center space-x-4">
+                            <div className="text-right">
+                              <p className="text-lg font-bold text-green-600">R$ {parseFloat(sale.salePrice).toFixed(2)}</p>
+                              <Badge variant={sale.paymentStatus === 'paid' ? 'default' : 'secondary'} className="text-xs">
+                                <CreditCard className="w-3 h-3 mr-1" />
+                                {sale.paymentStatus === 'paid' ? 'Pago' : 'Pendente'}
+                              </Badge>
+                            </div>
+                            <ChevronRight className="w-4 h-4 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity" />
+                          </div>
+                        </div>
+                        <div className="flex items-center justify-between text-sm">
+                          <div className="flex-1 min-w-0">
+                            <p className="text-gray-600 truncate">{sale.buyerName} • {sale.buyerEmail}</p>
+                          </div>
+                          <div className="text-gray-500">
+                            {format(new Date(sale.createdAt), "dd/MM/yyyy HH:mm", { locale: ptBR })}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Mobile Layout */}
+                      <div className="flex md:hidden flex-col space-y-2">
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1 min-w-0">
+                            <h4 className="font-medium text-gray-900 truncate">{sale.product?.title || 'Produto'}</h4>
+                            <p className="text-sm text-gray-600 truncate">por {sale.product?.author || user?.firstName || 'Autor'}</p>
+                          </div>
+                          <ChevronRight className="w-4 h-4 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity mt-1" />
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm text-gray-600 truncate">{sale.buyerName}</p>
+                            <p className="text-xs text-gray-500 truncate">{sale.buyerEmail}</p>
+                          </div>
+                          <div className="text-right">
+                            <p className="text-lg font-bold text-green-600">R$ {parseFloat(sale.salePrice).toFixed(2)}</p>
+                            <p className="text-xs text-gray-500">{format(new Date(sale.createdAt), "dd/MM HH:mm", { locale: ptBR })}</p>
+                          </div>
+                        </div>
+                        <div className="flex justify-end">
+                          <Badge variant={sale.paymentStatus === 'paid' ? 'default' : 'secondary'} className="text-xs">
+                            <CreditCard className="w-3 h-3 mr-1" />
+                            {sale.paymentStatus === 'paid' ? 'Pago' : 'Pendente'}
+                          </Badge>
                         </div>
                       </div>
                     </div>
