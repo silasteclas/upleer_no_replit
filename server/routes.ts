@@ -3,6 +3,7 @@ import express from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { simpleAuthFixed, simpleLoginFixed, simpleUserCheckFixed, simpleLogoutFixed } from "./simple-auth-fixed";
+import { requireAuth, getCurrentUser, registerUser, loginUser, logoutUser } from "./real-auth";
 import { insertProductSchema, insertApiIntegrationSchema, insertApiEndpointSchema, products, type Product } from "@shared/schema";
 import { db } from "./db";
 import { eq } from "drizzle-orm";
@@ -234,21 +235,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
   const { createSessionConfig } = await import("./session-config");
   app.use(createSessionConfig());
 
-  // Setup simple auth instead of complex Replit auth
-  app.use(simpleAuthFixed);
-
+  // Setup real authentication with password validation
   // Auth routes
-  app.post('/api/simple-login', simpleLoginFixed);
-  app.get('/api/auth/user', simpleUserCheckFixed);
-  app.post('/api/logout', simpleLogoutFixed);
+  app.post('/api/auth/register', registerUser);
+  app.post('/api/auth/login', loginUser);
+  app.get('/api/auth/user', getCurrentUser);
+  app.post('/api/auth/logout', logoutUser);
 
   // Stats endpoint
-  app.get('/api/stats', async (req: any, res) => {
+  app.get('/api/stats', requireAuth, async (req: any, res) => {
     try {
-      const userId = req.user?.id;
-      if (!userId) {
-        return res.status(401).json({ message: "Unauthorized" });
-      }
+      const userId = req.session.userId;
       const stats = await storage.getAuthorStats(userId);
       res.json(stats);
     } catch (error) {
