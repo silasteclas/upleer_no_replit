@@ -711,8 +711,64 @@ export default function UploadModal() {
                   </div>
                   
                   <div className="pt-4 border-t border-gray-200">
-                    <p className="text-sm text-gray-600">Preço de venda final:</p>
-                    <p className="text-2xl font-bold text-primary">R$ {salePrice.toFixed(2)}</p>
+                    <h5 className="text-sm font-medium text-gray-700 mb-3">Preços por Canal de Venda:</h5>
+                    <div className="space-y-3">
+                      {/* Upleer Store */}
+                      <div className="flex items-center justify-between p-3 bg-white rounded-lg border">
+                        <div className="flex items-center space-x-3">
+                          <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center">
+                            <span className="text-white text-xs font-bold">U</span>
+                          </div>
+                          <span className="font-medium text-gray-900">Loja Upleer</span>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-lg font-bold text-primary">R$ {salePrice.toFixed(2)}</p>
+                          <p className="text-xs text-gray-500">Preço base</p>
+                        </div>
+                      </div>
+
+                      {/* Mercado Livre */}
+                      <div className="flex items-center justify-between p-3 bg-white rounded-lg border">
+                        <div className="flex items-center space-x-3">
+                          <div className="w-8 h-8 bg-yellow-400 rounded-full flex items-center justify-center">
+                            <span className="text-blue-800 text-xs font-bold">ML</span>
+                          </div>
+                          <span className="font-medium text-gray-900">Mercado Livre</span>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-lg font-bold text-orange-600">R$ {(salePrice * 1.15).toFixed(2)}</p>
+                          <p className="text-xs text-gray-500">+15%</p>
+                        </div>
+                      </div>
+
+                      {/* Shopee */}
+                      <div className="flex items-center justify-between p-3 bg-white rounded-lg border">
+                        <div className="flex items-center space-x-3">
+                          <div className="w-8 h-8 bg-orange-500 rounded-full flex items-center justify-center">
+                            <span className="text-white text-xs font-bold">S</span>
+                          </div>
+                          <span className="font-medium text-gray-900">Shopee</span>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-lg font-bold text-orange-500">R$ {(salePrice * 1.12).toFixed(2)}</p>
+                          <p className="text-xs text-gray-500">+12%</p>
+                        </div>
+                      </div>
+
+                      {/* Amazon */}
+                      <div className="flex items-center justify-between p-3 bg-white rounded-lg border">
+                        <div className="flex items-center space-x-3">
+                          <div className="w-8 h-8 bg-gray-800 rounded-full flex items-center justify-center">
+                            <span className="text-white text-xs font-bold">A</span>
+                          </div>
+                          <span className="font-medium text-gray-900">Amazon</span>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-lg font-bold text-gray-800">R$ {(salePrice * 1.18).toFixed(2)}</p>
+                          <p className="text-xs text-gray-500">+18%</p>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
