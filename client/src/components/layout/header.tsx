@@ -9,21 +9,7 @@ interface HeaderProps {
 }
 
 export function Header({ title, subtitle }: HeaderProps) {
-  const { user } = useAuth();
-  
-  const handleLogout = async () => {
-    try {
-      await fetch('/api/logout', { method: 'POST' });
-      localStorage.removeItem('upleer_public_auth');
-      localStorage.removeItem('upleer_user');
-      window.location.href = '/';
-    } catch (error) {
-      console.error('Logout error:', error);
-      localStorage.removeItem('upleer_public_auth');
-      localStorage.removeItem('upleer_user');
-      window.location.href = '/';
-    }
-  };
+  const { user, logout, isLoggingOut } = useAuth();
 
   const getInitials = (firstName?: string, lastName?: string) => {
     if (!firstName && !lastName) return "U";
@@ -49,7 +35,13 @@ export function Header({ title, subtitle }: HeaderProps) {
             <Bell className="w-5 h-5" />
             <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full"></span>
           </Button>
-          <Button variant="ghost" size="sm" onClick={handleLogout} className="text-red-600 hover:text-red-700">
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={logout} 
+            disabled={isLoggingOut}
+            className="text-red-600 hover:text-red-700"
+          >
             <LogOut className="w-5 h-5" />
           </Button>
           <div className="flex items-center space-x-3">
