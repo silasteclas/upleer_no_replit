@@ -195,11 +195,13 @@ export default function UploadModal() {
         // Set initial author earnings suggestion
         const suggestedEarnings = 25.00;
         pricingForm.setValue("authorEarnings", suggestedEarnings);
-        // Nova fórmula: Taxa fixa (9,90) + Custo impressão (páginas × 0,10) + Ganho do autor
+        // Nova fórmula: Ganho plataforma = 9,90 + (páginas × 0,10) + (30% do ganho do autor)
+        // Preço de venda = Ganho plataforma + Ganho do autor
         const fixedFee = 9.90;
         const printingCost = actualPageCount * 0.10;
-        const platformMinimum = fixedFee + printingCost;
-        const initialSalePrice = platformMinimum + suggestedEarnings;
+        const platformCommission = suggestedEarnings * 0.30;
+        const platformGain = fixedFee + printingCost + platformCommission;
+        const initialSalePrice = platformGain + suggestedEarnings;
         setSalePrice(initialSalePrice);
         
         setValidation({
@@ -242,11 +244,13 @@ export default function UploadModal() {
 
   const handleEarningsChange = (earnings: number) => {
     pricingForm.setValue("authorEarnings", earnings);
-    // Nova fórmula: Taxa fixa (9,90) + Custo impressão (páginas × 0,10) + Ganho do autor
+    // Nova fórmula: Ganho plataforma = 9,90 + (páginas × 0,10) + (30% do ganho do autor)
+    // Preço de venda = Ganho plataforma + Ganho do autor
     const fixedFee = 9.90;
     const printingCost = pageCount * 0.10;
-    const platformMinimum = fixedFee + printingCost;
-    const newSalePrice = platformMinimum + earnings;
+    const platformCommission = earnings * 0.30;
+    const platformGain = fixedFee + printingCost + platformCommission;
+    const newSalePrice = platformGain + earnings;
     setSalePrice(newSalePrice);
   };
 
@@ -704,12 +708,22 @@ export default function UploadModal() {
                     <span className="font-medium">R$ {pricingForm.watch("authorEarnings").toFixed(2)}</span>
                   </div>
                   <div className="flex justify-between items-center py-1">
-                    <span className="text-gray-600">Taxa fixa da plataforma:</span>
-                    <span className="font-medium">R$ 9,90</span>
+                    <span className="text-gray-600">Ganho da plataforma:</span>
+                    <span className="font-medium">R$ {(9.90 + pageCount * 0.10 + pricingForm.watch("authorEarnings") * 0.30).toFixed(2)}</span>
                   </div>
-                  <div className="flex justify-between items-center py-1">
-                    <span className="text-gray-600">Custo de impressão ({pageCount} páginas):</span>
-                    <span className="font-medium">R$ {(pageCount * 0.10).toFixed(2)}</span>
+                  <div className="ml-4 text-xs text-gray-500 space-y-1">
+                    <div className="flex justify-between">
+                      <span>• Taxa fixa:</span>
+                      <span>R$ 9,90</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>• Impressão ({pageCount} páginas):</span>
+                      <span>R$ {(pageCount * 0.10).toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>• Comissão (30% do seu ganho):</span>
+                      <span>R$ {(pricingForm.watch("authorEarnings") * 0.30).toFixed(2)}</span>
+                    </div>
                   </div>
                   <div className="border-t border-green-200 pt-2 mt-2">
                     <div className="flex justify-between items-center font-semibold">
