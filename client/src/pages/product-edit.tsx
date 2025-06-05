@@ -154,7 +154,10 @@ export default function ProductEdit() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <main className="max-w-4xl mx-auto p-6">
+      <Header title="Editar Produto" subtitle="Atualizar informações do produto" />
+      <Sidebar />
+      <main className="ml-64 pt-32 p-6 min-h-screen overflow-auto">
+        <div className="max-w-4xl mx-auto">
         <div className="mb-6">
           <Button
             variant="outline"
@@ -284,6 +287,7 @@ export default function ProductEdit() {
             </form>
           </CardContent>
         </Card>
+        </div>
       </main>
     </div>
   );

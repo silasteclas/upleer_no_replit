@@ -62,18 +62,17 @@ export default function SaleDetails() {
   }
 
   return (
-    <div className="flex h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50">
+      <Header 
+        title={`Pedido #${sale.id.toString().padStart(5, '0')}`}
+        subtitle="Detalhes completos do pedido"
+      />
       <Sidebar />
-      <div className="flex-1 flex flex-col overflow-hidden">
-        <Header 
-          title={`Pedido #${sale.id.toString().padStart(5, '0')}`}
-          subtitle="Detalhes completos do pedido"
-        />
-        <main className="flex-1 overflow-x-hidden overflow-y-auto bg-gray-50 p-6">
-          <div className="max-w-7xl mx-auto space-y-6">
-            {/* Navigation */}
-            <div className="flex items-center space-x-4">
-              <Button 
+      <main className="ml-64 pt-32 p-6 min-h-screen overflow-auto">
+        <div className="max-w-7xl mx-auto space-y-6">
+          {/* Navigation */}
+          <div className="flex items-center space-x-4">
+            <Button 
                 variant="outline" 
                 onClick={() => setLocation("/sales")}
                 className="flex items-center space-x-2"
@@ -417,9 +416,8 @@ export default function SaleDetails() {
                 </div>
               </CardContent>
             </Card>
-          </div>
-        </main>
-      </div>
+        </div>
+      </main>
     </div>
   );
 }
