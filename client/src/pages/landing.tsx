@@ -106,6 +106,20 @@ export default function Landing() {
                   {loginMutation.isPending ? "Entrando..." : "Entrar"}
                 </Button>
               </form>
+              
+              <div className="mt-6 pt-4 border-t border-gray-200">
+                <p className="text-sm text-gray-600 text-center mb-3">
+                  Novo no Upleer?
+                </p>
+                <Button 
+                  variant="outline" 
+                  className="w-full"
+                  onClick={handleLogin}
+                >
+                  Criar Conta Gratuita
+                </Button>
+              </div>
+              
               <p className="text-sm text-gray-600 text-center mt-4">
                 Use qualquer email válido e senha para acessar o sistema
               </p>
