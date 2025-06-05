@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { ArrowLeft, Download, Edit, FileText, Send, ShoppingCart } from "lucide-react";
+import { ArrowLeft, Download, Edit, FileText, Send, ShoppingCart, ExternalLink, Share2 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useEffect, useState } from "react";
 import { useToast } from "@/hooks/use-toast";
@@ -203,6 +203,28 @@ export default function ProductView() {
                         {getStatusText(product.status)}
                       </Badge>
                       <div className="space-y-2">
+                        {product.publicUrl && (
+                          <>
+                            <Button
+                              variant="outline"
+                              className="w-full text-green-600 border-green-200 hover:bg-green-50"
+                              onClick={() => window.open(product.publicUrl, '_blank')}
+                            >
+                              <ExternalLink className="w-4 h-4 mr-2" />
+                              Ver na Loja
+                            </Button>
+                            <Button
+                              variant="outline"
+                              className="w-full text-blue-600 border-blue-200 hover:bg-blue-50"
+                              onClick={() => {
+                                navigator.clipboard.writeText(product.publicUrl);
+                              }}
+                            >
+                              <Share2 className="w-4 h-4 mr-2" />
+                              Compartilhar URL
+                            </Button>
+                          </>
+                        )}
                         <Button 
                           variant="outline" 
                           className="w-full"
@@ -400,19 +422,7 @@ export default function ProductView() {
                       </div>
                     )}
 
-                    {product.publicUrl && (
-                      <div>
-                        <h3 className="font-medium text-gray-900 mb-1">URL Pública na Loja</h3>
-                        <a 
-                          href={product.publicUrl} 
-                          target="_blank" 
-                          rel="noopener noreferrer" 
-                          className="text-blue-600 hover:text-blue-800 underline break-all"
-                        >
-                          {product.publicUrl}
-                        </a>
-                      </div>
-                    )}
+
 
                     <div>
                       <h3 className="font-medium text-gray-900 mb-1">Data de Criação</h3>
