@@ -57,6 +57,8 @@ export default function UploadModal() {
   const [pageCount, setPageCount] = useState(0);
   const [baseCost, setBaseCost] = useState(0);
   const [salePrice, setSalePrice] = useState(0);
+  const [showSuccess, setShowSuccess] = useState(false);
+  const [uploadedProduct, setUploadedProduct] = useState<any>(null);
   const [productInfo, setProductInfo] = useState<ProductInfoData>({
     title: "",
     description: "",
@@ -129,34 +131,18 @@ export default function UploadModal() {
 
       return response.json();
     },
-    onSuccess: () => {
-      toast({
-        title: "Sucesso!",
-        description: "Apostila enviada para avaliação com sucesso.",
-      });
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["/api/products"] });
       
-      // Reset everything
-      setCurrentStep(1);
-      setPdfFile(null);
-      setCoverFile(null);
-      setValidation(null);
-      setPageCount(0);
-      setBaseCost(0);
-      setSalePrice(0);
-      setProductInfo({
-        title: "",
-        description: "",
-        isbn: "",
-        author: "",
-        coAuthors: "",
-        genre: "",
-        language: "português",
-        targetAudience: "",
+      // Set uploaded product data and show success screen
+      setUploadedProduct({
+        title: productInfo.title,
+        coverUrl: coverFile ? URL.createObjectURL(coverFile) : undefined,
+        pageCount: pageCount,
+        salePrice: salePrice,
+        authorEarnings: pricingForm.getValues("authorEarnings")
       });
-      fileForm.reset();
-      infoForm.reset();
-      pricingForm.reset();
+      setShowSuccess(true);
     },
     onError: (error) => {
       if (isUnauthorizedError(error)) {
@@ -342,6 +328,11 @@ export default function UploadModal() {
     "Informações do Produto", 
     "Precificação"
   ];
+
+  // Show success screen after upload
+  if (showSuccess && uploadedProduct) {
+    return <SuccessScreen product={uploadedProduct} />;
+  }
 
   return (
     <Card className="max-w-4xl mx-auto">
