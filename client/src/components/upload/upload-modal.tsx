@@ -14,6 +14,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import { FileText, Image, CheckCircle, ArrowLeft, ArrowRight } from "lucide-react";
 import { PDFDocument } from "pdf-lib";
+import { SuccessScreen } from "./success-screen";
 
 // Step 1: File upload
 const fileUploadSchema = z.object({
