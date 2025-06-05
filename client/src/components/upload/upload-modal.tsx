@@ -662,11 +662,19 @@ export default function UploadModal() {
                   </div>
                 </div>
                 
-                <div className="mt-8 text-center space-y-2">
-                  <div className="text-sm font-medium text-gray-700">Preview em Tempo Real</div>
-                  <div className="text-xs text-gray-500">
-                    <div>Apostila Digital</div>
-                    <div className="text-primary font-medium mt-1">Qualidade Profissional</div>
+                <div className="mt-6 text-center space-y-3 bg-gradient-to-br from-orange-50 via-yellow-50 to-red-50 rounded-lg p-4 border border-orange-200 shadow-md">
+                  <div className="text-lg font-bold text-orange-700">📝 Construindo seu sucesso!</div>
+                  <div className="text-sm text-gray-700 font-medium">
+                    <div>Cada informação torna sua apostila</div>
+                    <div>mais atrativa para os compradores!</div>
+                  </div>
+                  <div className="bg-gradient-to-r from-yellow-100 to-orange-100 border border-orange-300 rounded-lg p-3 mt-3 shadow-sm">
+                    <div className="text-sm text-orange-800 font-bold">
+                      ⭐ Apostila mais completa = Mais vendas
+                    </div>
+                    <div className="text-xs text-red-700 font-semibold mt-1">
+                      🎯 Preencha todos os campos disponíveis
+                    </div>
                   </div>
                 </div>
               </div>
