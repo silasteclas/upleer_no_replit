@@ -902,14 +902,17 @@ export default function UploadModal() {
                 </div>
                 
                 <div className="mt-8 text-center space-y-3">
-                  <div className="text-sm font-medium text-gray-700">🎉 Parabéns!</div>
+                  <div className="text-sm font-medium text-gray-700">🚀 Quase lá!</div>
                   <div className="text-xs text-gray-500">
-                    <div>Sua apostila está pronta</div>
-                    <div>para começar a gerar vendas!</div>
+                    <div>Finalize agora e comece a lucrar</div>
+                    <div>com sua apostila em múltiplos canais!</div>
                   </div>
-                  <div className="bg-green-50 border border-green-200 rounded-lg p-3 mt-4">
+                  <div className="bg-gradient-to-r from-green-50 to-blue-50 border border-green-200 rounded-lg p-3 mt-4">
                     <div className="text-xs text-green-700 font-medium">
-                      💰 Você receberá R$ {pricingForm.watch("authorEarnings").toFixed(2)} por venda
+                      💰 Potencial de ganhos: R$ {pricingForm.watch("authorEarnings").toFixed(2)} por venda
+                    </div>
+                    <div className="text-xs text-blue-600 mt-1">
+                      ⚡ Disponível em 4 plataformas de venda
                     </div>
                   </div>
                 </div>
