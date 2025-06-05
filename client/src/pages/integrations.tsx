@@ -5,8 +5,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Plus, Settings, Activity, AlertCircle, CheckCircle } from "lucide-react";
 import { Link } from "wouter";
-import Header from "@/components/layout/header";
-import Sidebar from "@/components/layout/sidebar";
+import { Header } from "@/components/layout/header";
+import { Sidebar } from "@/components/layout/sidebar";
 
 interface ApiIntegration {
   id: number;

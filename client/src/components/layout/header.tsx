@@ -8,7 +8,7 @@ interface HeaderProps {
   subtitle: string;
 }
 
-export default function Header({ title, subtitle }: HeaderProps) {
+export function Header({ title, subtitle }: HeaderProps) {
   const { user } = useAuth();
   
   const handleLogout = () => {

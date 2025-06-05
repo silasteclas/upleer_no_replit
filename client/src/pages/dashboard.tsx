@@ -1,8 +1,8 @@
 import { useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
-import Sidebar from "@/components/layout/sidebar";
-import Header from "@/components/layout/header";
+import { Sidebar } from "@/components/layout/sidebar";
+import { Header } from "@/components/layout/header";
 import StatsCards from "@/components/dashboard/stats-cards";
 import SalesChart from "@/components/dashboard/sales-chart";
 import QuickActions from "@/components/dashboard/quick-actions";

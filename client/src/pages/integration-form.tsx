@@ -14,8 +14,8 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useLocation, useParams } from "wouter";
 import { ArrowLeft, Save, TestTube } from "lucide-react";
-import Header from "@/components/layout/header";
-import Sidebar from "@/components/layout/sidebar";
+import { Header } from "@/components/layout/header";
+import { Sidebar } from "@/components/layout/sidebar";
 import EndpointTester from "@/components/integrations/endpoint-tester";
 
 const integrationSchema = z.object({

@@ -3,7 +3,7 @@ import { BookOpen, BarChart3, Upload, Package, Settings, LogOut } from "lucide-r
 import { Button } from "@/components/ui/button";
 import logoPath from "@assets/Logotipo para site upleer (1).png";
 
-export default function Sidebar() {
+export function Sidebar() {
   const [location] = useLocation();
 
   const handleLogout = async () => {

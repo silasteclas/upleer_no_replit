@@ -15,6 +15,8 @@ import { z } from "zod";
 import type { Product } from "@shared/schema";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { isUnauthorizedError } from "@/lib/authUtils";
+import { Header } from "@/components/layout/header";
+import { Sidebar } from "@/components/layout/sidebar";
 
 const editProductSchema = z.object({
   title: z.string().min(1, "Título é obrigatório"),
