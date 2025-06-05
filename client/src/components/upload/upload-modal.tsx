@@ -730,7 +730,7 @@ export default function UploadModal() {
                         </div>
                         <div className="text-right">
                           <p className="text-lg font-bold text-primary">R$ {salePrice.toFixed(2)}</p>
-                          <p className="text-xs text-gray-500">Preço base</p>
+                          <p className="text-xs text-gray-500">Plataforma oficial</p>
                         </div>
                       </div>
 
@@ -744,7 +744,7 @@ export default function UploadModal() {
                         </div>
                         <div className="text-right">
                           <p className="text-lg font-bold text-orange-600">R$ {(salePrice * 1.15).toFixed(2)}</p>
-                          <p className="text-xs text-gray-500">+15%</p>
+                          <p className="text-xs text-gray-500">Maior alcance</p>
                         </div>
                       </div>
 
@@ -758,7 +758,7 @@ export default function UploadModal() {
                         </div>
                         <div className="text-right">
                           <p className="text-lg font-bold text-orange-500">R$ {(salePrice * 1.12).toFixed(2)}</p>
-                          <p className="text-xs text-gray-500">+12%</p>
+                          <p className="text-xs text-gray-500">Público jovem</p>
                         </div>
                       </div>
 
@@ -772,7 +772,7 @@ export default function UploadModal() {
                         </div>
                         <div className="text-right">
                           <p className="text-lg font-bold text-gray-800">R$ {(salePrice * 1.18).toFixed(2)}</p>
-                          <p className="text-xs text-gray-500">+18%</p>
+                          <p className="text-xs text-gray-500">Mercado premium</p>
                         </div>
                       </div>
                     </div>
