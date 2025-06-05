@@ -188,7 +188,7 @@ export default function UploadModal() {
         const pdfDoc = await PDFDocument.load(arrayBuffer);
         const actualPageCount = pdfDoc.getPageCount();
         
-        const calculatedBaseCost = actualPageCount * 0.5; // R$ 0.50 per page
+        const calculatedBaseCost = actualPageCount * 0.15; // R$ 0.15 per page
         
         setPageCount(actualPageCount);
         setBaseCost(calculatedBaseCost);
