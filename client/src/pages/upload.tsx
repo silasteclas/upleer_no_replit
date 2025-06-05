@@ -1,8 +1,8 @@
 import { useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
-import Sidebar from "@/components/layout/sidebar";
-import Header from "@/components/layout/header";
+import { Sidebar } from "@/components/layout/sidebar";
+import { Header } from "@/components/layout/header";
 import UploadModal from "@/components/upload/upload-modal";
 
 export default function Upload() {
@@ -35,17 +35,16 @@ export default function Upload() {
   }
 
   return (
-    <div className="min-h-screen flex bg-background">
+    <div className="min-h-screen bg-gray-50">
       <Sidebar />
-      <main className="flex-1 overflow-auto">
-        <Header 
-          title="Nova Apostila" 
-          subtitle="Faça upload e configure sua nova apostila" 
-        />
-        
-        <div className="p-6">
-          <UploadModal />
-        </div>
+      <Header 
+        title="Nova Apostila" 
+        subtitle="Faça upload e configure sua nova apostila" 
+      />
+      
+      {/* Main content with proper spacing for fixed header/sidebar */}
+      <main className="ml-64 pt-32 p-6">
+        <UploadModal />
       </main>
     </div>
   );
