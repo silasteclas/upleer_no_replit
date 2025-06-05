@@ -344,30 +344,6 @@ export default function ProductView() {
                             </Form>
                           </DialogContent>
                         </Dialog>
-                        {product.publicUrl && (
-                          <>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="w-full text-green-600 border-green-200 hover:bg-green-50"
-                              onClick={() => window.open(product.publicUrl, '_blank')}
-                            >
-                              <ExternalLink className="w-4 h-4 mr-2" />
-                              Ver na Loja
-                            </Button>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="w-full text-blue-600 border-blue-200 hover:bg-blue-50"
-                              onClick={() => {
-                                navigator.clipboard.writeText(product.publicUrl);
-                              }}
-                            >
-                              <Share2 className="w-4 h-4 mr-2" />
-                              Compartilhar URL
-                            </Button>
-                          </>
-                        )}
                       </div>
                     </div>
                   </CardContent>
@@ -378,8 +354,36 @@ export default function ProductView() {
               <div className="lg:col-span-2">
                 <Card className="h-fit">
                   <CardHeader className="pb-3">
-                    <CardTitle className="text-lg font-bold">{product.title}</CardTitle>
-                    <p className="text-sm text-gray-600">por {product.author}</p>
+                    <div className="flex justify-between items-start">
+                      <div className="flex-1">
+                        <CardTitle className="text-lg font-bold">{product.title}</CardTitle>
+                        <p className="text-sm text-gray-600">por {product.author}</p>
+                      </div>
+                      {product?.publicUrl && (
+                        <div className="flex gap-2 ml-4 flex-shrink-0">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="text-green-600 border-green-200 hover:bg-green-50"
+                            onClick={() => window.open(product.publicUrl, '_blank')}
+                          >
+                            <ExternalLink className="w-3 h-3 mr-1" />
+                            Ver na Loja
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="text-blue-600 border-blue-200 hover:bg-blue-50"
+                            onClick={() => {
+                              navigator.clipboard.writeText(product.publicUrl);
+                            }}
+                          >
+                            <Share2 className="w-3 h-3 mr-1" />
+                            Compartilhar
+                          </Button>
+                        </div>
+                      )}
+                    </div>
                   </CardHeader>
                   <CardContent className="space-y-3">
                     <div className="grid grid-cols-3 gap-3">
