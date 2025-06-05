@@ -182,7 +182,7 @@ export default function ProductView() {
               <div className="lg:col-span-2">
                 <Card className="h-fit">
                   <CardContent className="p-0">
-                    <div className="aspect-[4/3] bg-gray-100 relative rounded-t-lg overflow-hidden">
+                    <div className="aspect-[1/1.414] bg-gray-100 relative rounded-t-lg overflow-hidden">
                       {product.coverImageUrl ? (
                         <img
                           src={product.coverImageUrl}
