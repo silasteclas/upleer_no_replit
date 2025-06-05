@@ -137,8 +137,8 @@ export default function Sales() {
                             <p className="text-xs text-gray-600 truncate">{sale.buyerEmail}</p>
                           </div>
                           <div className="text-center flex-shrink-0 w-24">
-                            <p className="text-xs text-gray-500 uppercase tracking-wide">Valor</p>
-                            <p className="text-lg font-bold text-green-600">R$ {parseFloat(sale.salePrice).toFixed(2)}</p>
+                            <p className="text-xs text-gray-500 uppercase tracking-wide">Comissão</p>
+                            <p className="text-lg font-bold text-green-600">R$ {(parseFloat(sale.salePrice) * 0.8).toFixed(2)}</p>
                           </div>
                           <div className="text-center flex-shrink-0 w-24">
                             <p className="text-xs text-gray-500 uppercase tracking-wide">Data</p>
@@ -167,7 +167,7 @@ export default function Sales() {
                           </div>
                           <div className="flex items-center space-x-4">
                             <div className="text-right">
-                              <p className="text-lg font-bold text-green-600">R$ {parseFloat(sale.salePrice).toFixed(2)}</p>
+                              <p className="text-lg font-bold text-green-600">R$ {(parseFloat(sale.salePrice) * 0.8).toFixed(2)}</p>
                               <Badge variant={sale.paymentStatus === 'paid' ? 'default' : 'secondary'} className="text-xs">
                                 <CreditCard className="w-3 h-3 mr-1" />
                                 {sale.paymentStatus === 'paid' ? 'Pago' : 'Pendente'}
@@ -201,7 +201,7 @@ export default function Sales() {
                             <p className="text-xs text-gray-500 truncate">{sale.buyerEmail}</p>
                           </div>
                           <div className="text-right">
-                            <p className="text-lg font-bold text-green-600">R$ {parseFloat(sale.salePrice).toFixed(2)}</p>
+                            <p className="text-lg font-bold text-green-600">R$ {(parseFloat(sale.salePrice) * 0.8).toFixed(2)}</p>
                             <p className="text-xs text-gray-500">{format(new Date(sale.createdAt), "dd/MM HH:mm", { locale: ptBR })}</p>
                           </div>
                         </div>
