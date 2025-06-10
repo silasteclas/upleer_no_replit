@@ -227,9 +227,19 @@ export default function AdminDashboard() {
 
           {/* Recent Products */}
           <Card>
-            <CardHeader>
-              <CardTitle>Produtos Recentes</CardTitle>
-              <CardDescription>Últimos produtos cadastrados na plataforma</CardDescription>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <div>
+                <CardTitle>Produtos Recentes</CardTitle>
+                <CardDescription>Últimos produtos cadastrados na plataforma</CardDescription>
+              </div>
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => setLocation('/admin/products')}
+              >
+                <Eye className="w-4 h-4 mr-2" />
+                Ver Todos
+              </Button>
             </CardHeader>
             <CardContent>
               {productsLoading ? (

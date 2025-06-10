@@ -506,6 +506,88 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Admin endpoint to download specific product files
+  app.get('/api/admin/download/pdf/:productId', requireAdmin, async (req, res) => {
+    try {
+      const productId = parseInt(req.params.productId);
+      const product = await storage.getProduct(productId);
+      
+      if (!product || !product.pdfUrl) {
+        return res.status(404).json({ message: "Produto ou PDF não encontrado" });
+      }
+
+      const fs = require('fs');
+      const path = require('path');
+      const filename = product.pdfUrl.split('/').pop();
+      const filePath = path.join(process.cwd(), 'uploads', filename);
+      
+      if (!fs.existsSync(filePath)) {
+        return res.status(404).json({ message: "Arquivo PDF não encontrado no servidor" });
+      }
+
+      console.log(`[ADMIN-DOWNLOAD] PDF for product ${productId}: ${filename}`);
+      
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader('Content-Disposition', `attachment; filename="${product.title}.pdf"`);
+      res.setHeader('Cache-Control', 'no-cache');
+      
+      res.sendFile(filePath, (err) => {
+        if (err) {
+          console.error('Erro ao enviar PDF:', err);
+          res.status(500).json({ message: "Erro ao enviar arquivo" });
+        }
+      });
+    } catch (error) {
+      console.error("Erro no download de PDF:", error);
+      res.status(500).json({ message: "Erro interno do servidor" });
+    }
+  });
+
+  app.get('/api/admin/download/cover/:productId', requireAdmin, async (req, res) => {
+    try {
+      const productId = parseInt(req.params.productId);
+      const product = await storage.getProduct(productId);
+      
+      if (!product || !product.coverImageUrl) {
+        return res.status(404).json({ message: "Produto ou capa não encontrada" });
+      }
+
+      const fs = require('fs');
+      const path = require('path');
+      const filename = product.coverImageUrl.split('/').pop();
+      const filePath = path.join(process.cwd(), 'uploads', filename);
+      
+      if (!fs.existsSync(filePath)) {
+        return res.status(404).json({ message: "Arquivo de capa não encontrado no servidor" });
+      }
+
+      console.log(`[ADMIN-DOWNLOAD] Cover for product ${productId}: ${filename}`);
+      
+      const ext = path.extname(filename).toLowerCase();
+      const mimeTypes: Record<string, string> = {
+        '.jpg': 'image/jpeg',
+        '.jpeg': 'image/jpeg',
+        '.png': 'image/png',
+        '.gif': 'image/gif',
+        '.webp': 'image/webp'
+      };
+      
+      res.setHeader('Content-Type', mimeTypes[ext] || 'image/jpeg');
+      res.setHeader('Content-Disposition', `attachment; filename="${product.title}-capa${ext}"`);
+      res.setHeader('Cache-Control', 'no-cache');
+      
+      res.sendFile(filePath, (err) => {
+        if (err) {
+          console.error('Erro ao enviar capa:', err);
+          res.status(500).json({ message: "Erro ao enviar arquivo" });
+        }
+      });
+    } catch (error) {
+      console.error("Erro no download de capa:", error);
+      res.status(500).json({ message: "Erro interno do servidor" });
+    }
+  });
+
   app.get('/api/admin/all-products', requireAdmin, async (req, res) => {
     try {
       const products = await storage.getAllProducts();

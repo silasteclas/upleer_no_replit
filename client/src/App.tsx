@@ -19,6 +19,7 @@ import ProductEdit from "@/pages/product-edit";
 import SaleDetails from "@/pages/sale-details";
 import AdminLogin from "@/pages/admin-login";
 import AdminDashboard from "@/pages/admin-dashboard";
+import AdminProducts from "@/pages/admin-products";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -29,6 +30,7 @@ function Router() {
       {/* Admin routes - separate from author authentication */}
       <Route path="/admin/login" component={AdminLogin} />
       <Route path="/admin/dashboard" component={AdminDashboard} />
+      <Route path="/admin/products" component={AdminProducts} />
       
       {/* Author routes */}
       {isLoading || !isAuthenticated ? (
