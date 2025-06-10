@@ -13,6 +13,19 @@ import { z } from "zod";
 import bcrypt from "bcryptjs";
 import fs from "fs";
 
+// Extend session interface
+declare module 'express-session' {
+  interface SessionData {
+    user?: {
+      id: string;
+      email: string;
+      firstName?: string;
+      lastName?: string;
+      role: string;
+    };
+  }
+}
+
 // Admin authentication middleware
 const requireAdmin = async (req: any, res: any, next: any) => {
   try {
@@ -429,6 +442,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/auth/user', getCurrentUser);
   app.post('/api/auth/logout', logoutUser);
 
+  // Test endpoint for debugging
+  app.get('/api/admin/test', (req, res) => {
+    console.log("Session data:", req.session);
+    console.log("Session user:", (req.session as any)?.user);
+    res.json({
+      hasSession: !!req.session,
+      sessionId: req.sessionID,
+      user: (req.session as any)?.user || null
+    });
+  });
+
   // Admin authentication routes
   app.post('/api/admin/login', async (req, res) => {
     try {
@@ -449,7 +473,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         };
 
         // Set admin session
-        req.session.user = adminUser;
+        (req.session as any).user = adminUser;
 
         return res.json({
           message: "Login administrativo realizado com sucesso",
@@ -472,11 +496,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Set admin session
-      req.session.user = {
+      (req.session as any).user = {
         id: user.id,
         email: user.email,
-        firstName: user.firstName,
-        lastName: user.lastName,
+        firstName: user.firstName ? user.firstName : undefined,
+        lastName: user.lastName ? user.lastName : undefined,
         role: user.role
       };
 

@@ -12,7 +12,7 @@ export async function apiRequest(
   method: string = 'GET',
   data?: any,
   options?: RequestInit
-): Promise<Response> {
+): Promise<any> {
   const requestOptions: RequestInit = {
     method,
     credentials: "include",
@@ -27,15 +27,23 @@ export async function apiRequest(
     requestOptions.body = JSON.stringify(data);
   }
 
-  console.log("Making API request:", method, url, data ? "with data" : "no data");
+  console.log("Making API request:", url, method, data ? "with data" : "no data");
   
   const res = await fetch(url, requestOptions);
   
   console.log("API response status:", res.status);
-  console.log("API response headers:", Object.fromEntries(res.headers.entries()));
 
   await throwIfResNotOk(res);
-  return res;
+  
+  // Return JSON response for successful requests
+  try {
+    const jsonResponse = await res.json();
+    console.log("API response data:", jsonResponse);
+    return jsonResponse;
+  } catch (e) {
+    console.log("No JSON response body");
+    return null;
+  }
 }
 
 type UnauthorizedBehavior = "returnNull" | "throw";
