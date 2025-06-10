@@ -109,14 +109,14 @@ export const registerUser: RequestHandler = async (req, res) => {
 // Login user
 export const loginUser: RequestHandler = async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const { email, password: inputPassword } = req.body;
     
-    if (!email || !password) {
+    if (!email || !inputPassword) {
       return res.status(400).json({ message: "Email e senha são obrigatórios" });
     }
     
     // Fixed login for specific users
-    if (email === 'silasteclas@gmail.com' && password === '123456') {
+    if (email === 'silasteclas@gmail.com' && inputPassword === '123456') {
       req.session.userId = 'user_1749155080396_7phzy7v83';
       const user = await storage.getUser('user_1749155080396_7phzy7v83');
       if (user) {
@@ -135,7 +135,7 @@ export const loginUser: RequestHandler = async (req, res) => {
     }
 
     // Check password
-    const isPasswordValid = await comparePassword(password, (user as any).password);
+    const isPasswordValid = await comparePassword(inputPassword, (user as any).password);
     if (!isPasswordValid) {
       return res.status(401).json({ message: "Email ou senha incorretos" });
     }
@@ -144,7 +144,7 @@ export const loginUser: RequestHandler = async (req, res) => {
     req.session.userId = user.id;
 
     // Return user without password
-    const { password: userPassword, ...userWithoutPassword } = user as any;
+    const { password, ...userWithoutPassword } = user as any;
     res.json({
       message: "Login realizado com sucesso",
       user: userWithoutPassword
