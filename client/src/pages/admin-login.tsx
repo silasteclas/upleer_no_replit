@@ -18,47 +18,27 @@ export default function AdminLogin() {
 
   const loginMutation = useMutation({
     mutationFn: async (credentials: { email: string; password: string }) => {
-      return await apiRequest('/api/admin/login', 'POST', credentials);
+      console.log("Fazendo login admin com:", credentials.email);
+      const response = await apiRequest('/api/admin/login', 'POST', credentials);
+      console.log("Resposta do login admin:", response);
+      return response;
     },
     onSuccess: (response) => {
-      console.log("Login admin bem-sucedido:", response);
+      console.log("✅ LOGIN ADMIN SUCESSO:", response);
+      
       toast({
         title: "Login realizado com sucesso",
-        description: "Redirecionando...",
+        description: "Redirecionando para painel administrativo...",
       });
       
-      // Redirecionamento robusto com múltiplas tentativas
-      console.log("ADMIN LOGIN SUCCESS - Iniciando redirecionamento");
+      // Força redirecionamento imediato
+      console.log("🔄 REDIRECIONANDO PARA /admin/dashboard");
       
-      const performRedirect = () => {
-        console.log("Executando redirecionamento para /admin/dashboard");
-        
-        // Método mais compatível
-        if (typeof window !== 'undefined') {
-          try {
-            // Primeira tentativa - mais direta
-            window.location.href = '/admin/dashboard';
-            console.log("Redirecionamento 1 executado");
-          } catch (error) {
-            console.log("Redirecionamento 1 falhou, tentando método 2:", error);
-            
-            try {
-              // Segunda tentativa
-              window.location.assign('/admin/dashboard');
-              console.log("Redirecionamento 2 executado");
-            } catch (error2) {
-              console.log("Redirecionamento 2 falhou, tentando método 3:", error2);
-              
-              // Terceira tentativa - força refresh
-              window.location.replace('/admin/dashboard');
-              console.log("Redirecionamento 3 executado");
-            }
-          }
-        }
-      };
-      
-      // Executa o redirecionamento após pequeno delay para garantir que o toast apareça
-      setTimeout(performRedirect, 200);
+      // Usa timeout zero para garantir que o toast apareça primeiro
+      setTimeout(() => {
+        console.log("Executando window.location.href = '/admin/dashboard'");
+        window.location.href = '/admin/dashboard';
+      }, 100);
     },
     onError: (error: Error) => {
       toast({
