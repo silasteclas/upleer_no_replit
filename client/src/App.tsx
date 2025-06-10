@@ -17,6 +17,8 @@ import IntegrationLogs from "@/pages/integration-logs";
 import ProductView from "@/pages/product-view";
 import ProductEdit from "@/pages/product-edit";
 import SaleDetails from "@/pages/sale-details";
+import AdminLogin from "@/pages/admin-login";
+import AdminDashboard from "@/pages/admin-dashboard";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -24,6 +26,11 @@ function Router() {
 
   return (
     <Switch>
+      {/* Admin routes - separate from author authentication */}
+      <Route path="/admin/login" component={AdminLogin} />
+      <Route path="/admin/dashboard" component={AdminDashboard} />
+      
+      {/* Author routes */}
       {isLoading || !isAuthenticated ? (
         <Route path="/" component={Landing} />
       ) : (
