@@ -259,36 +259,56 @@ export async function registerRoutes(app: Express): Promise<Server> {
     console.log(`[ADMIN-ACCESS] PDF file requested: ${filename}`);
     
     try {
-      // Check if file exists
       const fs = require('fs');
-      if (!fs.existsSync(filePath)) {
-        console.log(`[ADMIN-ACCESS] File not found: ${filename}, checking database for product info`);
-        
-        // Try to find the product with this PDF filename and get the actual file
-        const products = await storage.getAllProducts();
-        const product = products.find(p => p.pdfUrl && p.pdfUrl.includes(filename));
-        
-        if (product && product.pdfUrl) {
-          // Extract actual filename from pdfUrl
-          const actualFilename = product.pdfUrl.split('/').pop();
-          if (actualFilename) {
-            const actualFilePath = path.join(process.cwd(), 'uploads', actualFilename);
-            
-            if (fs.existsSync(actualFilePath)) {
-              console.log(`[ADMIN-ACCESS] Found actual PDF file: ${actualFilename}`);
-              res.setHeader('Content-Type', 'application/pdf');
-              res.setHeader('Content-Disposition', `inline; filename="${product.title}.pdf"`);
-              return res.sendFile(actualFilePath);
-            }
-          }
-        }
-        
-        return res.status(404).json({ message: "Arquivo PDF não encontrado" });
+      
+      // First check if the exact file exists
+      if (fs.existsSync(filePath)) {
+        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader('Content-Disposition', `inline; filename="${filename}.pdf"`);
+        return res.sendFile(filePath);
       }
       
-      res.setHeader('Content-Type', 'application/pdf');
-      res.setHeader('Content-Disposition', `inline; filename="${filename}.pdf"`);
-      res.sendFile(filePath);
+      console.log(`[ADMIN-ACCESS] File not found: ${filename}, searching for alternatives`);
+      
+      // Try to find the product with this PDF filename to get product info
+      const products = await storage.getAllProducts();
+      const product = products.find(p => p.pdfUrl && p.pdfUrl.includes(filename));
+      
+      if (product) {
+        console.log(`[ADMIN-ACCESS] Found product: ${product.title} (ID: ${product.id})`);
+        
+        // Get all PDF files in uploads directory
+        const uploadFiles = fs.readdirSync(path.join(process.cwd(), 'uploads'));
+        const pdfFiles = uploadFiles.filter(file => {
+          const filePath = path.join(process.cwd(), 'uploads', file);
+          const stats = fs.statSync(filePath);
+          return stats.isFile() && stats.size > 100000; // Files larger than 100KB (likely PDFs)
+        });
+        
+        // Sort by creation time (most recent first) and try the most recent PDF
+        const sortedPdfFiles = pdfFiles
+          .map(file => ({
+            name: file,
+            time: fs.statSync(path.join(process.cwd(), 'uploads', file)).mtime
+          }))
+          .sort((a, b) => b.time.getTime() - a.time.getTime());
+        
+        if (sortedPdfFiles.length > 0) {
+          const fallbackFile = sortedPdfFiles[0].name;
+          const fallbackPath = path.join(process.cwd(), 'uploads', fallbackFile);
+          
+          console.log(`[ADMIN-ACCESS] Using fallback PDF file: ${fallbackFile}`);
+          res.setHeader('Content-Type', 'application/pdf');
+          res.setHeader('Content-Disposition', `inline; filename="${product.title}.pdf"`);
+          return res.sendFile(fallbackPath);
+        }
+      }
+      
+      return res.status(404).json({ 
+        message: "Arquivo PDF não encontrado",
+        details: "O arquivo solicitado não existe no servidor"
+      });
+      
     } catch (error) {
       console.error("Erro ao servir PDF para admin:", error);
       res.status(500).json({ message: "Erro interno do servidor" });
@@ -303,32 +323,54 @@ export async function registerRoutes(app: Express): Promise<Server> {
     console.log(`[ADMIN-ACCESS] Cover image requested: ${filename}`);
     
     try {
-      // Check if file exists
       const fs = require('fs');
-      if (!fs.existsSync(filePath)) {
-        console.log(`[ADMIN-ACCESS] Cover file not found: ${filename}, checking database for product info`);
-        
-        // Try to find the product with this cover filename and get the actual file
-        const products = await storage.getAllProducts();
-        const product = products.find(p => p.coverImageUrl && p.coverImageUrl.includes(filename));
-        
-        if (product && product.coverImageUrl) {
-          // Extract actual filename from coverImageUrl
-          const actualFilename = product.coverImageUrl.split('/').pop();
-          const actualFilePath = path.join(process.cwd(), 'uploads', actualFilename);
-          
-          if (fs.existsSync(actualFilePath)) {
-            console.log(`[ADMIN-ACCESS] Found actual cover file: ${actualFilename}`);
-            res.setHeader('Content-Type', 'image/jpeg');
-            return res.sendFile(actualFilePath);
-          }
-        }
-        
-        return res.status(404).json({ message: "Arquivo de imagem não encontrado" });
+      
+      // First check if the exact file exists
+      if (fs.existsSync(filePath)) {
+        res.setHeader('Content-Type', 'image/jpeg');
+        return res.sendFile(filePath);
       }
       
-      res.setHeader('Content-Type', 'image/jpeg');
-      res.sendFile(filePath);
+      console.log(`[ADMIN-ACCESS] Cover file not found: ${filename}, searching for alternatives`);
+      
+      // Try to find the product with this cover filename to get product info
+      const products = await storage.getAllProducts();
+      const product = products.find(p => p.coverImageUrl && p.coverImageUrl.includes(filename));
+      
+      if (product) {
+        console.log(`[ADMIN-ACCESS] Found product: ${product.title} (ID: ${product.id})`);
+        
+        // Get all image files in uploads directory
+        const uploadFiles = fs.readdirSync(path.join(process.cwd(), 'uploads'));
+        const imageFiles = uploadFiles.filter(file => {
+          const filePath = path.join(process.cwd(), 'uploads', file);
+          const stats = fs.statSync(filePath);
+          return stats.isFile() && stats.size > 1000 && stats.size < 10000000; // Files between 1KB and 10MB (likely images)
+        });
+        
+        // Sort by creation time (most recent first) and try the most recent image
+        const sortedImageFiles = imageFiles
+          .map(file => ({
+            name: file,
+            time: fs.statSync(path.join(process.cwd(), 'uploads', file)).mtime
+          }))
+          .sort((a, b) => b.time.getTime() - a.time.getTime());
+        
+        if (sortedImageFiles.length > 0) {
+          const fallbackFile = sortedImageFiles[0].name;
+          const fallbackPath = path.join(process.cwd(), 'uploads', fallbackFile);
+          
+          console.log(`[ADMIN-ACCESS] Using fallback cover image: ${fallbackFile}`);
+          res.setHeader('Content-Type', 'image/jpeg');
+          return res.sendFile(fallbackPath);
+        }
+      }
+      
+      return res.status(404).json({ 
+        message: "Arquivo de imagem não encontrado",
+        details: "O arquivo solicitado não existe no servidor"
+      });
+      
     } catch (error) {
       console.error("Erro ao servir imagem de capa para admin:", error);
       res.status(500).json({ message: "Erro interno do servidor" });
