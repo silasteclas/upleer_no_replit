@@ -11,6 +11,7 @@ import multer from "multer";
 import path from "path";
 import { z } from "zod";
 import bcrypt from "bcryptjs";
+import fs from "fs";
 
 // Admin authentication middleware
 const requireAdmin = async (req: any, res: any, next: any) => {
@@ -516,9 +517,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Produto ou PDF não encontrado" });
       }
 
-      const fs = require('fs');
-      const path = require('path');
       const filename = product.pdfUrl.split('/').pop();
+      if (!filename) {
+        return res.status(404).json({ message: "Nome do arquivo PDF inválido" });
+      }
       const filePath = path.join(process.cwd(), 'uploads', filename);
       
       if (!fs.existsSync(filePath)) {
@@ -552,9 +554,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Produto ou capa não encontrada" });
       }
 
-      const fs = require('fs');
-      const path = require('path');
       const filename = product.coverImageUrl.split('/').pop();
+      if (!filename) {
+        return res.status(404).json({ message: "Nome do arquivo de capa inválido" });
+      }
       const filePath = path.join(process.cwd(), 'uploads', filename);
       
       if (!fs.existsSync(filePath)) {

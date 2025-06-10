@@ -300,7 +300,7 @@ export default function AdminProducts() {
                             variant="outline"
                             size="sm"
                             className="w-full justify-start"
-                            onClick={() => handleDownloadPDF(product.id, product.pdfUrl?.split('/').pop())}
+                            onClick={() => handleDownloadPDF(product.id)}
                           >
                             <FileText className="w-4 h-4 mr-2" />
                             Baixar PDF
@@ -312,7 +312,7 @@ export default function AdminProducts() {
                             variant="outline"
                             size="sm"
                             className="w-full justify-start"
-                            onClick={() => handleDownloadCover(product.id, product.coverUrl?.split('/').pop())}
+                            onClick={() => handleDownloadCover(product.id)}
                           >
                             <Image className="w-4 h-4 mr-2" />
                             Baixar Capa
