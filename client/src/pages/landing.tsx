@@ -28,8 +28,12 @@ export default function Landing() {
 
   const loginMutation = useMutation({
     mutationFn: async (data: { email: string; password: string }) => {
-      const response = await apiRequest("POST", "/api/auth/login", data);
-      return response.json();
+      console.log("🔐 AUTOR LOGIN - Email:", data.email);
+      console.log("🔗 AUTOR LOGIN - URL: /api/auth/login");
+      
+      const response = await apiRequest("/api/auth/login", "POST", data);
+      console.log("📨 Resposta do login autor:", response);
+      return response;
     },
     onSuccess: (response) => {
       console.log("Login de autor bem-sucedido:", response);
@@ -73,14 +77,14 @@ export default function Landing() {
         throw new Error("Você deve aceitar os termos de uso");
       }
       
-      const response = await apiRequest("POST", "/api/auth/register", {
+      const response = await apiRequest("/api/auth/register", "POST", {
         firstName: data.firstName,
         lastName: data.lastName,
         email: data.email,
         password: data.password,
         phone: data.phone,
       });
-      return response.json();
+      return response;
     },
     onSuccess: (response) => {
       console.log("Registro bem-sucedido:", response);
@@ -205,6 +209,25 @@ export default function Landing() {
                   </Button>
                 </div>
 
+                {/* Botão de teste para debug */}
+                <div className="mt-4 p-2 bg-blue-50 border border-blue-200 rounded text-sm">
+                  <p className="text-blue-800 mb-2">Teste rápido - Login de autor:</p>
+                  <Button 
+                    type="button" 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => {
+                      console.log("🧪 TESTE: Executando login de autor");
+                      loginMutation.mutate({ 
+                        email: "silasteclas@gmail.com", 
+                        password: "123456" 
+                      });
+                    }}
+                  >
+                    Testar Login Autor
+                  </Button>
+                </div>
+                
                 <p className="text-sm text-gray-600 text-center mt-4">
                   Use qualquer email válido e senha para acessar o sistema
                 </p>
