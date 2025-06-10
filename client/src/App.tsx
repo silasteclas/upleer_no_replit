@@ -35,11 +35,31 @@ function Router() {
   // Determine which auth to use based on route
   const authData = isAdminRoute ? adminAuth : authorAuth;
   const { isAuthenticated, isLoading } = authData;
+  
+  // Debug logging
+  if (isAdminRoute) {
+    console.log("🔍 ADMIN ROUTE DEBUG:", {
+      location,
+      isAdminRoute,
+      adminAuth,
+      isAuthenticated,
+      isLoading
+    });
+  }
 
   return (
     <Switch>
       {/* Admin routes - with proper authentication check */}
-      <Route path="/admin/login" component={AdminLogin} />
+      <Route path="/admin/login">
+        {() => {
+          if (isAdminRoute && !isLoading && isAuthenticated) {
+            // Se já está autenticado e tenta acessar login, redireciona para dashboard
+            window.location.href = '/admin/dashboard';
+            return null;
+          }
+          return <AdminLogin />;
+        }}
+      </Route>
       <Route path="/admin/dashboard">
         {() => {
           if (isAdminRoute && !isLoading && !isAuthenticated) {

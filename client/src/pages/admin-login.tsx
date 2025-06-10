@@ -45,15 +45,9 @@ export default function AdminLogin() {
       
       console.log("🔄 ADMIN: Login bem-sucedido, redirecionando...");
       
-      // Força reload completo da página para garantir estado limpo
-      setTimeout(() => {
-        console.log("Redirecionando para dashboard administrativo");
-        window.location.href = '/admin/dashboard';
-        // Força reload se não redirecionar
-        setTimeout(() => {
-          window.location.reload();
-        }, 1000);
-      }, 100);
+      // Redirecionamento imediato com reload completo
+      console.log("Login bem-sucedido, redirecionando...");
+      window.location.replace('/admin/dashboard');
     },
     onError: (error: Error) => {
       toast({
