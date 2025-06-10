@@ -48,14 +48,24 @@ app.use((req, res, next) => {
 });
 
 (async () => {
-  const server = await registerRoutes(app);
+  let server;
+  
+  try {
+    server = await registerRoutes(app);
+    console.log('[SERVER] Routes registered successfully');
+  } catch (error) {
+    console.error('[SERVER] Error during route registration:', error);
+    // Continue with basic server setup even if routes fail
+    const { createServer } = await import("http");
+    server = createServer(app);
+  }
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
     const status = err.status || err.statusCode || 500;
     const message = err.message || "Internal Server Error";
-
+    
+    console.error('[ERROR]', message, err);
     res.status(status).json({ message });
-    throw err;
   });
 
   // importantly only setup vite in development and after

@@ -86,8 +86,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Serve static files from uploads directory
   app.use('/uploads', express.static('uploads'));
 
+  // Test database connection on startup
+  try {
+    await storage.getAllProducts();
+    console.log('[DATABASE] Connection successful');
+  } catch (error) {
+    console.error('[DATABASE] Connection error:', error);
+    console.log('[DATABASE] Continuing with limited functionality...');
+  }
+
   // Public webhook endpoints (before auth middleware to avoid session issues)
   
+  // Health check endpoint
+  app.get("/api/health", async (req, res) => {
+    try {
+      await storage.getAllProducts();
+      res.json({ status: "ok", database: "connected" });
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown database error';
+      res.status(503).json({ status: "error", database: "disconnected", error: errorMessage });
+    }
+  });
+
   // Webhook endpoint for receiving sales from external sources (N8N)
   app.post("/api/webhook/sales", async (req, res) => {
     try {
