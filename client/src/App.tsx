@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { Toaster } from "@/components/ui/toaster";
 import { queryClient } from "@/lib/queryClient";
 import { useAuth } from "@/hooks/useAuth";
+import { useAdminAuth } from "@/hooks/useAdminAuth";
 import { useLocation } from "wouter";
 
 import Landing from "@/pages/landing";
@@ -27,18 +28,39 @@ function Router() {
   const [location] = useLocation();
   const isAdminRoute = location.startsWith('/admin');
   
-  // Only use author auth for non-admin routes
-  const authData = isAdminRoute ? { isAuthenticated: true, isLoading: false } : useAuth();
+  // Separate authentication for admin and author routes
+  const authorAuth = useAuth();
+  const adminAuth = useAdminAuth();
+  
+  // Determine which auth to use based on route
+  const authData = isAdminRoute ? adminAuth : authorAuth;
   const { isAuthenticated, isLoading } = authData;
 
   return (
     <Switch>
-      {/* Admin routes - completely separate from author authentication */}
+      {/* Admin routes - with proper authentication check */}
       <Route path="/admin/login" component={AdminLogin} />
-      <Route path="/admin/dashboard" component={AdminDashboard} />
-      <Route path="/admin/products" component={AdminProducts} />
+      <Route path="/admin/dashboard">
+        {() => {
+          if (isAdminRoute && !isLoading && !isAuthenticated) {
+            return <AdminLogin />;
+          }
+          return <AdminDashboard />;
+        }}
+      </Route>
+      <Route path="/admin/products">
+        {() => {
+          if (isAdminRoute && !isLoading && !isAuthenticated) {
+            return <AdminLogin />;
+          }
+          return <AdminProducts />;
+        }}
+      </Route>
       <Route path="/admin/*">
         {() => {
+          if (isAdminRoute && !isLoading && !isAuthenticated) {
+            return <AdminLogin />;
+          }
           window.location.href = '/admin/dashboard';
           return null;
         }}

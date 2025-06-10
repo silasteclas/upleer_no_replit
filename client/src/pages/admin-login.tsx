@@ -39,31 +39,21 @@ export default function AdminLogin() {
         description: "Redirecionando...",
       });
       
-      // Limpa cache de consultas
+      // Limpa cache de consultas e força revalidação
       queryClient.invalidateQueries({ queryKey: ["/api/admin/user"] });
+      queryClient.refetchQueries({ queryKey: ["/api/admin/user"] });
       
-      // Múltiplas abordagens de redirecionamento
-      console.log("🔄 ADMIN: Iniciando redirecionamento");
+      console.log("🔄 ADMIN: Login bem-sucedido, redirecionando...");
       
-      // Método 1: React Router (wouter)
-      try {
-        setLocation('/admin/dashboard');
-        console.log("Método 1: setLocation executado");
-      } catch (e) {
-        console.log("setLocation falhou:", e);
-      }
-      
-      // Método 2: window.location.href (com timeout)
+      // Força reload completo da página para garantir estado limpo
       setTimeout(() => {
-        console.log("Método 2: Executando window.location.href");
+        console.log("Redirecionando para dashboard administrativo");
         window.location.href = '/admin/dashboard';
-      }, 200);
-      
-      // Método 3: fallback final
-      setTimeout(() => {
-        console.log("Método 3: Fallback window.location.replace");
-        window.location.replace('/admin/dashboard');
-      }, 500);
+        // Força reload se não redirecionar
+        setTimeout(() => {
+          window.location.reload();
+        }, 1000);
+      }, 100);
     },
     onError: (error: Error) => {
       toast({
