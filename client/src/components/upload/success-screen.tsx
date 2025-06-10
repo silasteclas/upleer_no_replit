@@ -206,7 +206,7 @@ export function SuccessScreen({ product, onClose }: SuccessScreenProps) {
                   
                   <Button
                     onClick={() => {
-                      setLocation('/dashboard');
+                      setLocation('/');
                       // Reset modal state if onClose is provided
                       if (onClose) onClose();
                     }}
