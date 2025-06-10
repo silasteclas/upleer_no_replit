@@ -27,17 +27,34 @@ function Router() {
 
   return (
     <Switch>
-      {/* Admin routes - separate from author authentication */}
+      {/* Admin routes - completely separate from author authentication */}
       <Route path="/admin/login" component={AdminLogin} />
       <Route path="/admin/dashboard" component={AdminDashboard} />
       <Route path="/admin/products" component={AdminProducts} />
+      <Route path="/admin/*">
+        {(params) => {
+          // Default admin route - redirect to dashboard
+          window.location.href = '/admin/dashboard';
+          return null;
+        }}
+      </Route>
       
-      {/* Author routes */}
+      {/* Author routes - only apply auth check to non-admin routes */}
       {isLoading || !isAuthenticated ? (
-        <Route path="/" component={Landing} />
+        <>
+          <Route path="/" component={Landing} />
+          <Route path="/dashboard">
+            {() => {
+              // Redirect to home if not authenticated
+              window.location.href = '/';
+              return null;
+            }}
+          </Route>
+        </>
       ) : (
         <>
           <Route path="/" component={Dashboard} />
+          <Route path="/dashboard" component={Dashboard} />
           <Route path="/upload" component={Upload} />
           <Route path="/products" component={Products} />
           <Route path="/products/:id" component={ProductView} />

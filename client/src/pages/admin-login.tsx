@@ -24,30 +24,12 @@ export default function AdminLogin() {
       console.log("Login admin bem-sucedido:", response);
       toast({
         title: "Login realizado com sucesso",
-        description: "Redirecionando para o painel administrativo...",
+        description: "Redirecionando...",
       });
       
-      // Múltiplas tentativas de redirecionamento para garantir compatibilidade
-      setTimeout(() => {
-        console.log("Iniciando redirecionamento para /admin/dashboard");
-        
-        // Método 1: window.location.replace (não adiciona histórico)
-        try {
-          window.location.replace('/admin/dashboard');
-        } catch (e) {
-          console.log("Método 1 falhou, tentando método 2:", e);
-          
-          // Método 2: window.location.href
-          try {
-            window.location.href = '/admin/dashboard';
-          } catch (e2) {
-            console.log("Método 2 falhou, tentando método 3:", e2);
-            
-            // Método 3: forçar refresh completo
-            window.location.assign('/admin/dashboard');
-          }
-        }
-      }, 500);
+      // Força o redirecionamento imediato sem timeout
+      console.log("Redirecionando para /admin/dashboard");
+      window.location = '/admin/dashboard';
     },
     onError: (error: Error) => {
       toast({
