@@ -31,14 +31,29 @@ export default function Landing() {
       const response = await apiRequest("POST", "/api/auth/login", data);
       return response.json();
     },
-    onSuccess: () => {
+    onSuccess: (response) => {
+      console.log("Login de autor bem-sucedido:", response);
       toast({
         title: "Login realizado com sucesso!",
         description: "Redirecionando para o painel...",
       });
       queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
-      // Redirecionamento imediato para o dashboard do autor
-      window.location.href = '/dashboard';
+      
+      // Múltiplas tentativas de redirecionamento
+      setTimeout(() => {
+        console.log("Iniciando redirecionamento para /dashboard");
+        try {
+          window.location.replace('/dashboard');
+        } catch (e) {
+          console.log("Método 1 falhou, tentando método 2:", e);
+          try {
+            window.location.href = '/dashboard';
+          } catch (e2) {
+            console.log("Método 2 falhou, tentando método 3:", e2);
+            window.location.assign('/dashboard');
+          }
+        }
+      }, 500);
     },
     onError: (error: any) => {
       toast({
@@ -67,14 +82,27 @@ export default function Landing() {
       });
       return response.json();
     },
-    onSuccess: () => {
+    onSuccess: (response) => {
+      console.log("Registro bem-sucedido:", response);
       toast({
         title: "Conta criada com sucesso!",
         description: "Redirecionando para o painel...",
       });
       queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
-      // Redirecionamento imediato para o dashboard do autor
-      window.location.href = '/dashboard';
+      
+      // Múltiplas tentativas de redirecionamento
+      setTimeout(() => {
+        console.log("Iniciando redirecionamento para /dashboard após registro");
+        try {
+          window.location.replace('/dashboard');
+        } catch (e) {
+          try {
+            window.location.href = '/dashboard';
+          } catch (e2) {
+            window.location.assign('/dashboard');
+          }
+        }
+      }, 500);
     },
     onError: (error: any) => {
       toast({
