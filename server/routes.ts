@@ -67,7 +67,15 @@ async function sendProductToWebhook(product: Product) {
 }
 
 const upload = multer({
-  dest: "uploads/",
+  storage: multer.diskStorage({
+    destination: "uploads/",
+    filename: (req, file, cb) => {
+      // Generate consistent filename using crypto
+      const crypto = require('crypto');
+      const hash = crypto.createHash('md5').update(file.originalname + Date.now()).digest('hex');
+      cb(null, hash);
+    }
+  }),
   limits: {
     fileSize: 50 * 1024 * 1024, // 50MB
   },
@@ -244,36 +252,87 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Admin endpoint to access PDF files directly (no auth required for platform owner)
-  app.get("/api/admin/files/pdf/:filename", (req, res) => {
+  app.get("/api/admin/files/pdf/:filename", async (req, res) => {
     const filename = req.params.filename;
     const filePath = path.join(process.cwd(), 'uploads', filename);
     
     console.log(`[ADMIN-ACCESS] PDF file requested: ${filename}`);
     
-    res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader('Content-Disposition', `inline; filename="${filename}.pdf"`);
-    res.sendFile(filePath, (err) => {
-      if (err) {
-        console.error("Erro ao servir PDF para admin:", err);
-        res.status(404).json({ message: "Arquivo PDF não encontrado" });
+    try {
+      // Check if file exists
+      const fs = require('fs');
+      if (!fs.existsSync(filePath)) {
+        console.log(`[ADMIN-ACCESS] File not found: ${filename}, checking database for product info`);
+        
+        // Try to find the product with this PDF filename and get the actual file
+        const products = await storage.getAllProducts();
+        const product = products.find(p => p.pdfUrl && p.pdfUrl.includes(filename));
+        
+        if (product && product.pdfUrl) {
+          // Extract actual filename from pdfUrl
+          const actualFilename = product.pdfUrl.split('/').pop();
+          if (actualFilename) {
+            const actualFilePath = path.join(process.cwd(), 'uploads', actualFilename);
+            
+            if (fs.existsSync(actualFilePath)) {
+              console.log(`[ADMIN-ACCESS] Found actual PDF file: ${actualFilename}`);
+              res.setHeader('Content-Type', 'application/pdf');
+              res.setHeader('Content-Disposition', `inline; filename="${product.title}.pdf"`);
+              return res.sendFile(actualFilePath);
+            }
+          }
+        }
+        
+        return res.status(404).json({ message: "Arquivo PDF não encontrado" });
       }
-    });
+      
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader('Content-Disposition', `inline; filename="${filename}.pdf"`);
+      res.sendFile(filePath);
+    } catch (error) {
+      console.error("Erro ao servir PDF para admin:", error);
+      res.status(500).json({ message: "Erro interno do servidor" });
+    }
   });
 
   // Admin endpoint to access cover images directly (no auth required for platform owner)
-  app.get("/api/admin/files/cover/:filename", (req, res) => {
+  app.get("/api/admin/files/cover/:filename", async (req, res) => {
     const filename = req.params.filename;
     const filePath = path.join(process.cwd(), 'uploads', filename);
     
     console.log(`[ADMIN-ACCESS] Cover image requested: ${filename}`);
     
-    res.setHeader('Content-Type', 'image/jpeg');
-    res.sendFile(filePath, (err) => {
-      if (err) {
-        console.error("Erro ao servir imagem de capa para admin:", err);
-        res.status(404).json({ message: "Arquivo de imagem não encontrado" });
+    try {
+      // Check if file exists
+      const fs = require('fs');
+      if (!fs.existsSync(filePath)) {
+        console.log(`[ADMIN-ACCESS] Cover file not found: ${filename}, checking database for product info`);
+        
+        // Try to find the product with this cover filename and get the actual file
+        const products = await storage.getAllProducts();
+        const product = products.find(p => p.coverImageUrl && p.coverImageUrl.includes(filename));
+        
+        if (product && product.coverImageUrl) {
+          // Extract actual filename from coverImageUrl
+          const actualFilename = product.coverImageUrl.split('/').pop();
+          const actualFilePath = path.join(process.cwd(), 'uploads', actualFilename);
+          
+          if (fs.existsSync(actualFilePath)) {
+            console.log(`[ADMIN-ACCESS] Found actual cover file: ${actualFilename}`);
+            res.setHeader('Content-Type', 'image/jpeg');
+            return res.sendFile(actualFilePath);
+          }
+        }
+        
+        return res.status(404).json({ message: "Arquivo de imagem não encontrado" });
       }
-    });
+      
+      res.setHeader('Content-Type', 'image/jpeg');
+      res.sendFile(filePath);
+    } catch (error) {
+      console.error("Erro ao servir imagem de capa para admin:", error);
+      res.status(500).json({ message: "Erro interno do servidor" });
+    }
   });
 
   // Public endpoint for updating product status and public URL (no authentication required)
