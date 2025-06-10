@@ -566,7 +566,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       console.log(`[ADMIN-DOWNLOAD] Cover for product ${productId}: ${filename}`);
       
-      const ext = path.extname(filename).toLowerCase();
+      const ext = path.extname(filename || '').toLowerCase();
       const mimeTypes: Record<string, string> = {
         '.jpg': 'image/jpeg',
         '.jpeg': 'image/jpeg',
