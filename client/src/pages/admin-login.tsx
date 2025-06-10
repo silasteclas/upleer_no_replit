@@ -8,6 +8,7 @@ import { useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useLocation } from "wouter";
+import { useQueryClient } from "@tanstack/react-query";
 
 export default function AdminLogin() {
   const [email, setEmail] = useState("");
@@ -15,6 +16,7 @@ export default function AdminLogin() {
   const [showPassword, setShowPassword] = useState(false);
   const { toast } = useToast();
   const [, setLocation] = useLocation();
+  const queryClient = useQueryClient();
 
   const loginMutation = useMutation({
     mutationFn: async (credentials: { email: string; password: string }) => {
@@ -37,9 +39,31 @@ export default function AdminLogin() {
         description: "Redirecionando...",
       });
       
-      // Redirecionamento imediato e direto
-      console.log("🔄 ADMIN: Forçando redirecionamento agora");
-      window.location = '/admin/dashboard';
+      // Limpa cache de consultas
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/user"] });
+      
+      // Múltiplas abordagens de redirecionamento
+      console.log("🔄 ADMIN: Iniciando redirecionamento");
+      
+      // Método 1: React Router (wouter)
+      try {
+        setLocation('/admin/dashboard');
+        console.log("Método 1: setLocation executado");
+      } catch (e) {
+        console.log("setLocation falhou:", e);
+      }
+      
+      // Método 2: window.location.href (com timeout)
+      setTimeout(() => {
+        console.log("Método 2: Executando window.location.href");
+        window.location.href = '/admin/dashboard';
+      }, 200);
+      
+      // Método 3: fallback final
+      setTimeout(() => {
+        console.log("Método 3: Fallback window.location.replace");
+        window.location.replace('/admin/dashboard');
+      }, 500);
     },
     onError: (error: Error) => {
       toast({
