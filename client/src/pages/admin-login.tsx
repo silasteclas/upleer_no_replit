@@ -18,9 +18,15 @@ export default function AdminLogin() {
 
   const loginMutation = useMutation({
     mutationFn: async (credentials: { email: string; password: string }) => {
-      console.log("Fazendo login admin com:", credentials.email);
-      const response = await apiRequest('/api/admin/login', 'POST', credentials);
-      console.log("Resposta do login admin:", response);
+      console.log("🔐 ADMIN LOGIN - Email:", credentials.email);
+      console.log("🔗 ADMIN LOGIN - URL: /api/admin/login");
+      
+      // Força a URL correta explicitamente
+      const adminLoginUrl = '/api/admin/login';
+      console.log("📡 Fazendo requisição para:", adminLoginUrl);
+      
+      const response = await apiRequest(adminLoginUrl, 'POST', credentials);
+      console.log("📨 Resposta do servidor:", response);
       return response;
     },
     onSuccess: (response) => {
@@ -75,6 +81,25 @@ export default function AdminLogin() {
           </CardDescription>
         </CardHeader>
         <CardContent>
+          {/* Botão de teste para debug */}
+          <div className="mb-4 p-2 bg-yellow-50 border border-yellow-200 rounded text-sm">
+            <p className="text-yellow-800 mb-2">Teste rápido:</p>
+            <Button 
+              type="button" 
+              variant="outline" 
+              size="sm"
+              onClick={() => {
+                console.log("🧪 TESTE: Executando login com credenciais admin");
+                loginMutation.mutate({ 
+                  email: "adm@digiondigital.com", 
+                  password: "admin#321" 
+                });
+              }}
+            >
+              Testar Login Admin
+            </Button>
+          </div>
+          
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
