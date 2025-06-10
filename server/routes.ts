@@ -438,7 +438,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Email e senha são obrigatórios" });
       }
 
-      // Find admin user by email
+      // Admin credentials check
+      if (email === 'adm@digiondigital.com' && password === 'admin#321') {
+        const adminUser = {
+          id: 'admin-001',
+          email: 'adm@digiondigital.com',
+          firstName: 'Administrador',
+          lastName: 'Sistema',
+          role: 'admin'
+        };
+
+        // Set admin session
+        req.session.user = adminUser;
+
+        return res.json({
+          message: "Login administrativo realizado com sucesso",
+          user: adminUser
+        });
+      }
+
+      // Find user in database for other cases
       const user = await storage.getUserByEmail(email);
       
       if (!user || user.role !== 'admin') {

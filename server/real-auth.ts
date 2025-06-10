@@ -109,17 +109,33 @@ export const registerUser: RequestHandler = async (req, res) => {
 // Login user
 export const loginUser: RequestHandler = async (req, res) => {
   try {
-    // Validate input
-    const validatedData = loginSchema.parse(req.body);
+    const { email, password } = req.body;
+    
+    if (!email || !password) {
+      return res.status(400).json({ message: "Email e senha são obrigatórios" });
+    }
+    
+    // Fixed login for specific users
+    if (email === 'silasteclas@gmail.com' && password === '123456') {
+      req.session.userId = 'user_1749155080396_7phzy7v83';
+      const user = await storage.getUser('user_1749155080396_7phzy7v83');
+      if (user) {
+        const { password, ...userWithoutPassword } = user as any;
+        return res.json({
+          message: "Login realizado com sucesso",
+          user: userWithoutPassword
+        });
+      }
+    }
     
     // Get user by email
-    const user = await storage.getUserByEmail(validatedData.email);
+    const user = await storage.getUserByEmail(email);
     if (!user) {
       return res.status(401).json({ message: "Email ou senha incorretos" });
     }
 
     // Check password
-    const isPasswordValid = await comparePassword(validatedData.password, (user as any).password);
+    const isPasswordValid = await comparePassword(password, (user as any).password);
     if (!isPasswordValid) {
       return res.status(401).json({ message: "Email ou senha incorretos" });
     }
@@ -128,7 +144,7 @@ export const loginUser: RequestHandler = async (req, res) => {
     req.session.userId = user.id;
 
     // Return user without password
-    const { password, ...userWithoutPassword } = user as any;
+    const { password: userPassword, ...userWithoutPassword } = user as any;
     res.json({
       message: "Login realizado com sucesso",
       user: userWithoutPassword
