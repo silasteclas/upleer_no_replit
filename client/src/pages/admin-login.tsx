@@ -34,17 +34,12 @@ export default function AdminLogin() {
       
       toast({
         title: "Login realizado com sucesso",
-        description: "Redirecionando para painel administrativo...",
+        description: "Redirecionando...",
       });
       
-      // Força redirecionamento imediato
-      console.log("🔄 REDIRECIONANDO PARA /admin/dashboard");
-      
-      // Usa timeout zero para garantir que o toast apareça primeiro
-      setTimeout(() => {
-        console.log("Executando window.location.href = '/admin/dashboard'");
-        window.location.href = '/admin/dashboard';
-      }, 100);
+      // Redirecionamento imediato e direto
+      console.log("🔄 ADMIN: Forçando redirecionamento agora");
+      window.location = '/admin/dashboard';
     },
     onError: (error: Error) => {
       toast({
