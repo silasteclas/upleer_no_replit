@@ -34,9 +34,11 @@ export default function Landing() {
     onSuccess: () => {
       toast({
         title: "Login realizado com sucesso!",
-        description: "Bem-vindo ao Upleer",
+        description: "Redirecionando para o painel...",
       });
       queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
+      // Redirecionamento imediato para o dashboard do autor
+      window.location.href = '/dashboard';
     },
     onError: (error: any) => {
       toast({
@@ -68,9 +70,11 @@ export default function Landing() {
     onSuccess: () => {
       toast({
         title: "Conta criada com sucesso!",
-        description: "Bem-vindo ao Upleer",
+        description: "Redirecionando para o painel...",
       });
       queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
+      // Redirecionamento imediato para o dashboard do autor
+      window.location.href = '/dashboard';
     },
     onError: (error: any) => {
       toast({

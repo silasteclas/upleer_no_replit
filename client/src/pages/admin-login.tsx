@@ -23,16 +23,10 @@ export default function AdminLogin() {
     onSuccess: (response) => {
       toast({
         title: "Login realizado com sucesso",
-        description: "Bem-vindo ao painel administrativo",
+        description: "Redirecionando para o painel administrativo...",
       });
-      // Força o redirecionamento após um breve delay
-      setTimeout(() => {
-        setLocation('/admin/dashboard');
-        // Fallback: força redirecionamento via window.location se wouter falhar
-        if (window.location.pathname !== '/admin/dashboard') {
-          window.location.href = '/admin/dashboard';
-        }
-      }, 1000);
+      // Redirecionamento imediato
+      window.location.href = '/admin/dashboard';
     },
     onError: (error: Error) => {
       toast({
