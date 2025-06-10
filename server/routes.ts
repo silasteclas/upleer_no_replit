@@ -151,17 +151,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
         title,
         description,
         author,
-        isbn: isbn || null,
-        coAuthors: coAuthors || null,
-        category,
-        originalPrice: originalPrice || null,
-        salePrice,
-        profitMargin: profitMargin || null,
-        tags: tags || null,
+        isbn: isbn || undefined,
+        coAuthors: coAuthors || undefined,
+        genre: category,
+        language: "português",
+        targetAudience: undefined,
+        pdfUrl: pdfUrl || "/uploads/placeholder.pdf",
+        coverImageUrl: coverImageUrl || undefined,
+        pageCount: 100,
+        baseCost: "10.00",
+        salePrice: salePrice.toString(),
+        marginPercent: 150,
         status: "pending",
-        authorId: userId,
-        pdfUrl,
-        coverImageUrl
+        authorId: userId
       });
 
       // Send to webhook
