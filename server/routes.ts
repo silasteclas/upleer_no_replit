@@ -10,6 +10,20 @@ import { eq } from "drizzle-orm";
 import multer from "multer";
 import path from "path";
 import { z } from "zod";
+import bcrypt from "bcryptjs";
+
+// Admin authentication middleware
+const requireAdmin = async (req: any, res: any, next: any) => {
+  try {
+    const user = req.session?.user;
+    if (!user || user.role !== 'admin') {
+      return res.status(403).json({ message: "Acesso negado - apenas administradores" });
+    }
+    next();
+  } catch (error) {
+    res.status(500).json({ message: "Erro na verificação de administrador" });
+  }
+};
 
 // Function to send product data to external webhook
 async function sendProductToWebhook(product: Product) {
@@ -413,6 +427,151 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/auth/login', loginUser);
   app.get('/api/auth/user', getCurrentUser);
   app.post('/api/auth/logout', logoutUser);
+
+  // Admin authentication routes
+  app.post('/api/admin/login', async (req, res) => {
+    try {
+      const { email, password } = req.body;
+
+      if (!email || !password) {
+        return res.status(400).json({ message: "Email e senha são obrigatórios" });
+      }
+
+      // Find admin user by email
+      const user = await storage.getUserByEmail(email);
+      
+      if (!user || user.role !== 'admin') {
+        return res.status(401).json({ message: "Credenciais inválidas ou acesso negado" });
+      }
+
+      // Verify password
+      const isValidPassword = await bcrypt.compare(password, user.password || '');
+      
+      if (!isValidPassword) {
+        return res.status(401).json({ message: "Credenciais inválidas" });
+      }
+
+      // Set admin session
+      req.session.user = {
+        id: user.id,
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        role: user.role
+      };
+
+      res.json({
+        message: "Login administrativo realizado com sucesso",
+        user: {
+          id: user.id,
+          email: user.email,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          role: user.role
+        }
+      });
+
+    } catch (error) {
+      console.error("Erro no login administrativo:", error);
+      res.status(500).json({ message: "Erro interno do servidor" });
+    }
+  });
+
+  app.get('/api/admin/user', async (req: any, res) => {
+    try {
+      const user = req.session?.user;
+      if (!user || user.role !== 'admin') {
+        return res.status(401).json({ message: "Não autenticado como administrador" });
+      }
+      res.json(user);
+    } catch (error) {
+      res.status(500).json({ message: "Erro ao verificar sessão administrativa" });
+    }
+  });
+
+  app.post('/api/admin/logout', (req, res) => {
+    req.session.destroy(() => {
+      res.json({ message: "Logout administrativo realizado com sucesso" });
+    });
+  });
+
+  // Admin management routes
+  app.get('/api/admin/users', requireAdmin, async (req, res) => {
+    try {
+      const users = await storage.getAllUsers();
+      res.json(users);
+    } catch (error) {
+      console.error("Erro ao buscar usuários:", error);
+      res.status(500).json({ message: "Erro interno do servidor" });
+    }
+  });
+
+  app.get('/api/admin/all-products', requireAdmin, async (req, res) => {
+    try {
+      const products = await storage.getAllProducts();
+      res.json(products);
+    } catch (error) {
+      console.error("Erro ao buscar todos os produtos:", error);
+      res.status(500).json({ message: "Erro interno do servidor" });
+    }
+  });
+
+  app.get('/api/admin/all-sales', requireAdmin, async (req, res) => {
+    try {
+      // Get all sales across all authors
+      const allUsers = await storage.getAllUsers();
+      let allSales = [];
+      
+      for (const user of allUsers) {
+        if (user.role === 'author') {
+          const userSales = await storage.getSalesByAuthor(user.id);
+          allSales.push(...userSales);
+        }
+      }
+      
+      res.json(allSales);
+    } catch (error) {
+      console.error("Erro ao buscar todas as vendas:", error);
+      res.status(500).json({ message: "Erro interno do servidor" });
+    }
+  });
+
+  app.get('/api/admin/dashboard-stats', requireAdmin, async (req, res) => {
+    try {
+      const users = await storage.getAllUsers();
+      const products = await storage.getAllProducts();
+      
+      // Calculate overall platform stats
+      const totalAuthors = users.filter(u => u.role === 'author').length;
+      const totalProducts = products.length;
+      const activeProducts = products.filter(p => p.status === 'approved').length;
+      const pendingProducts = products.filter(p => p.status === 'pending').length;
+      
+      // Calculate total sales across all authors
+      let totalSales = 0;
+      let totalRevenue = 0;
+      
+      for (const user of users) {
+        if (user.role === 'author') {
+          const userStats = await storage.getAuthorStats(user.id);
+          totalSales += userStats.totalSales;
+          totalRevenue += userStats.totalRevenue;
+        }
+      }
+      
+      res.json({
+        totalAuthors,
+        totalProducts,
+        activeProducts,
+        pendingProducts,
+        totalSales,
+        totalRevenue
+      });
+    } catch (error) {
+      console.error("Erro ao calcular estatísticas administrativas:", error);
+      res.status(500).json({ message: "Erro interno do servidor" });
+    }
+  });
 
   // Stats endpoint
   app.get('/api/stats', requireAuth, async (req: any, res) => {

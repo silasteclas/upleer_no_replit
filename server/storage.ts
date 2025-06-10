@@ -30,6 +30,9 @@ export interface IStorage {
   updateUserProfileImage(id: string, profileImageUrl: string): Promise<User>;
   updateUserProfile(id: string, updates: Partial<UpsertUser>): Promise<User>;
   
+  // Admin operations
+  getAllUsers(): Promise<User[]>;
+  
   // Product operations
   createProduct(product: InsertProduct): Promise<Product>;
   getProductsByAuthor(authorId: string): Promise<Product[]>;
@@ -132,6 +135,11 @@ export class DatabaseStorage implements IStorage {
       .where(eq(users.id, id))
       .returning();
     return user;
+  }
+
+  // Admin operations
+  async getAllUsers(): Promise<User[]> {
+    return await db.select().from(users).orderBy(desc(users.createdAt));
   }
 
   // Product operations
