@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { Toaster } from "@/components/ui/toaster";
 import { queryClient } from "@/lib/queryClient";
 import { useAuth } from "@/hooks/useAuth";
+import { useLocation } from "wouter";
 
 import Landing from "@/pages/landing";
 import Dashboard from "@/pages/dashboard";
@@ -23,7 +24,12 @@ import AdminProducts from "@/pages/admin-products";
 import NotFound from "@/pages/not-found";
 
 function Router() {
-  const { isAuthenticated, isLoading } = useAuth();
+  const [location] = useLocation();
+  const isAdminRoute = location.startsWith('/admin');
+  
+  // Only use author auth for non-admin routes
+  const authData = isAdminRoute ? { isAuthenticated: true, isLoading: false } : useAuth();
+  const { isAuthenticated, isLoading } = authData;
 
   return (
     <Switch>
@@ -32,25 +38,15 @@ function Router() {
       <Route path="/admin/dashboard" component={AdminDashboard} />
       <Route path="/admin/products" component={AdminProducts} />
       <Route path="/admin/*">
-        {(params) => {
-          // Default admin route - redirect to dashboard
+        {() => {
           window.location.href = '/admin/dashboard';
           return null;
         }}
       </Route>
       
-      {/* Author routes - only apply auth check to non-admin routes */}
+      {/* Author routes */}
       {isLoading || !isAuthenticated ? (
-        <>
-          <Route path="/" component={Landing} />
-          <Route path="/dashboard">
-            {() => {
-              // Redirect to home if not authenticated
-              window.location.href = '/';
-              return null;
-            }}
-          </Route>
-        </>
+        <Route path="/" component={Landing} />
       ) : (
         <>
           <Route path="/" component={Dashboard} />
