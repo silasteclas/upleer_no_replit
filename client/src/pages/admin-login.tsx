@@ -27,9 +27,38 @@ export default function AdminLogin() {
         description: "Redirecionando...",
       });
       
-      // Força o redirecionamento imediato sem timeout
-      console.log("Redirecionando para /admin/dashboard");
-      window.location = '/admin/dashboard';
+      // Redirecionamento robusto com múltiplas tentativas
+      console.log("ADMIN LOGIN SUCCESS - Iniciando redirecionamento");
+      
+      const performRedirect = () => {
+        console.log("Executando redirecionamento para /admin/dashboard");
+        
+        // Método mais compatível
+        if (typeof window !== 'undefined') {
+          try {
+            // Primeira tentativa - mais direta
+            window.location.href = '/admin/dashboard';
+            console.log("Redirecionamento 1 executado");
+          } catch (error) {
+            console.log("Redirecionamento 1 falhou, tentando método 2:", error);
+            
+            try {
+              // Segunda tentativa
+              window.location.assign('/admin/dashboard');
+              console.log("Redirecionamento 2 executado");
+            } catch (error2) {
+              console.log("Redirecionamento 2 falhou, tentando método 3:", error2);
+              
+              // Terceira tentativa - força refresh
+              window.location.replace('/admin/dashboard');
+              console.log("Redirecionamento 3 executado");
+            }
+          }
+        }
+      };
+      
+      // Executa o redirecionamento após pequeno delay para garantir que o toast apareça
+      setTimeout(performRedirect, 200);
     },
     onError: (error: Error) => {
       toast({
