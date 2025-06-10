@@ -1,11 +1,10 @@
 import { useQuery } from "@tanstack/react-query";
-import { getQueryFn } from "@/lib/queryClient";
 
 export function useAdminAuth() {
   const { data: adminUser, isLoading, error } = useQuery({
     queryKey: ["/api/admin/user"],
-    queryFn: getQueryFn({ on401: "returnNull" }),
     retry: false,
+    refetchOnWindowFocus: false,
     staleTime: 1000 * 60 * 5, // 5 minutos
   });
 
