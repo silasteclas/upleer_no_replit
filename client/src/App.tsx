@@ -4,8 +4,6 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { Toaster } from "@/components/ui/toaster";
 import { queryClient } from "@/lib/queryClient";
 import { useAuth } from "@/hooks/useAuth";
-import { useAdminAuth } from "@/hooks/useAdminAuth";
-import { useLocation } from "wouter";
 
 import Landing from "@/pages/landing";
 import Dashboard from "@/pages/dashboard";
@@ -19,73 +17,13 @@ import IntegrationLogs from "@/pages/integration-logs";
 import ProductView from "@/pages/product-view";
 import ProductEdit from "@/pages/product-edit";
 import SaleDetails from "@/pages/sale-details";
-import AdminLogin from "@/pages/admin-login";
-import AdminDashboard from "@/pages/admin-dashboard";
-import AdminProducts from "@/pages/admin-products";
 import NotFound from "@/pages/not-found";
 
 function Router() {
-  const [location] = useLocation();
-  const isAdminRoute = location.startsWith('/admin');
-  
-  // Separate authentication for admin and author routes
-  const authorAuth = useAuth();
-  const adminAuth = useAdminAuth();
-  
-  // Determine which auth to use based on route
-  const authData = isAdminRoute ? adminAuth : authorAuth;
-  const { isAuthenticated, isLoading } = authData;
-  
-  // Debug logging
-  if (isAdminRoute) {
-    console.log("🔍 ADMIN ROUTE DEBUG:", {
-      location,
-      isAdminRoute,
-      adminAuth,
-      isAuthenticated,
-      isLoading
-    });
-  }
+  const { isAuthenticated, isLoading } = useAuth();
 
   return (
     <Switch>
-      {/* Admin routes - with proper authentication check */}
-      <Route path="/admin/login">
-        {() => {
-          if (isAdminRoute && !isLoading && isAuthenticated) {
-            // Se já está autenticado e tenta acessar login, redireciona para dashboard
-            window.location.href = '/admin/dashboard';
-            return null;
-          }
-          return <AdminLogin />;
-        }}
-      </Route>
-      <Route path="/admin/dashboard">
-        {() => {
-          if (isAdminRoute && !isLoading && !isAuthenticated) {
-            return <AdminLogin />;
-          }
-          return <AdminDashboard />;
-        }}
-      </Route>
-      <Route path="/admin/products">
-        {() => {
-          if (isAdminRoute && !isLoading && !isAuthenticated) {
-            return <AdminLogin />;
-          }
-          return <AdminProducts />;
-        }}
-      </Route>
-      <Route path="/admin/*">
-        {() => {
-          if (isAdminRoute && !isLoading && !isAuthenticated) {
-            return <AdminLogin />;
-          }
-          window.location.href = '/admin/dashboard';
-          return null;
-        }}
-      </Route>
-      
       {/* Author routes */}
       {isLoading || !isAuthenticated ? (
         <Route path="/" component={Landing} />
