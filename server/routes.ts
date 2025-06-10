@@ -13,7 +13,7 @@ import { z } from "zod";
 
 // Function to send product data to external webhook
 async function sendProductToWebhook(product: Product) {
-  const webhookUrl = "https://auton8n.upleer.com.br/webhook-test/5b04bf83-a7d2-4eec-9d85-dfa14f2e3e00";
+  const webhookUrl = "https://auton8n.upleer.com.br/webhook/5b04bf83-a7d2-4eec-9d85-dfa14f2e3e00";
   
   try {
     // Extract filename from URLs for admin access
@@ -252,52 +252,53 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Admin endpoint to access PDF files directly (no auth required for platform owner)
-  app.get("/api/admin/files/pdf/:filename", async (req, res) => {
+  app.get("/api/admin/files/pdf/:filename", (req, res, next) => {
     const filename = req.params.filename;
     console.log(`[ADMIN-ACCESS] PDF file requested: ${filename}`);
     
+    const fs = require('fs');
+    const uploadsDir = path.join(process.cwd(), 'uploads');
+    
+    // Find the most recent large file (likely to be a PDF)
     try {
-      const fs = require('fs');
-      
-      // Check if exact file exists
-      const exactPath = path.join(process.cwd(), 'uploads', filename);
-      if (fs.existsSync(exactPath)) {
-        console.log(`[ADMIN-ACCESS] Found exact file: ${filename}`);
-        res.setHeader('Content-Type', 'application/pdf');
-        res.setHeader('Content-Disposition', `inline; filename="${filename}.pdf"`);
-        return res.sendFile(exactPath);
-      }
-      
-      // Find the most recent large file as fallback
-      const uploadsDir = path.join(process.cwd(), 'uploads');
       const files = fs.readdirSync(uploadsDir);
-      
       const largeFiles = files
-        .filter(file => {
-          const filePath = path.join(uploadsDir, file);
-          const stats = fs.statSync(filePath);
-          return stats.size > 500000; // Files > 500KB
+        .filter((file: string) => {
+          try {
+            const filePath = path.join(uploadsDir, file);
+            const stats = fs.statSync(filePath);
+            return stats.size > 500000; // Files > 500KB
+          } catch {
+            return false;
+          }
         })
-        .sort((a, b) => {
+        .sort((a: string, b: string) => {
           const aStats = fs.statSync(path.join(uploadsDir, a));
           const bStats = fs.statSync(path.join(uploadsDir, b));
           return bStats.mtime.getTime() - aStats.mtime.getTime();
         });
-      
+
       if (largeFiles.length > 0) {
-        const fallbackFile = largeFiles[0];
-        const fallbackPath = path.join(uploadsDir, fallbackFile);
-        console.log(`[ADMIN-ACCESS] Serving fallback PDF: ${fallbackFile}`);
+        const pdfFile = largeFiles[0];
+        const pdfPath = path.join(uploadsDir, pdfFile);
+        console.log(`[ADMIN-ACCESS] Serving PDF: ${pdfFile}`);
+        
         res.setHeader('Content-Type', 'application/pdf');
-        res.setHeader('Content-Disposition', `inline; filename="document.pdf"`);
-        return res.sendFile(fallbackPath);
+        res.setHeader('Content-Disposition', 'inline; filename="documento.pdf"');
+        res.setHeader('Cache-Control', 'no-cache');
+        
+        return res.sendFile(pdfPath, (err) => {
+          if (err) {
+            console.error('Erro ao enviar arquivo PDF:', err);
+            res.status(404).json({ message: "Arquivo não encontrado" });
+          }
+        });
       }
       
-      return res.status(404).json({ message: "Nenhum arquivo PDF encontrado" });
-      
-    } catch (error: any) {
-      console.error("Erro no endpoint PDF admin:", error);
-      res.status(500).json({ message: "Erro interno do servidor", error: error.message });
+      res.status(404).json({ message: "Nenhum arquivo PDF encontrado" });
+    } catch (error) {
+      console.error("Erro no endpoint PDF:", error);
+      res.status(500).json({ message: "Erro interno do servidor" });
     }
   });
 
@@ -881,7 +882,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       };
 
       // Send to N8N webhook
-      const webhookUrl = 'https://auton8n.upleer.com.br/webhook-test/5b04bf83-a7d2-4eec-9d85-dfa14f2e3e00';
+      const webhookUrl = 'https://auton8n.upleer.com.br/webhook/5b04bf83-a7d2-4eec-9d85-dfa14f2e3e00';
       
       const response = await fetch(webhookUrl, {
         method: 'POST',
