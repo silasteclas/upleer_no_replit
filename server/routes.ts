@@ -16,6 +16,10 @@ async function sendProductToWebhook(product: Product) {
   const webhookUrl = "https://auton8n.upleer.com.br/webhook-test/5b04bf83-a7d2-4eec-9d85-dfa14f2e3e00";
   
   try {
+    // Extract filename from URLs for admin access
+    const pdfFilename = product.pdfUrl ? product.pdfUrl.split('/').pop() : null;
+    const coverFilename = product.coverImageUrl ? product.coverImageUrl.split('/').pop() : null;
+    
     const webhookData = {
       id: product.id,
       title: product.title,
@@ -35,7 +39,13 @@ async function sendProductToWebhook(product: Product) {
       pdfUrl: product.pdfUrl,
       coverImageUrl: product.coverImageUrl,
       createdAt: product.createdAt,
-      updatedAt: product.updatedAt
+      updatedAt: product.updatedAt,
+      // Admin access URLs for platform owner
+      adminAccess: {
+        productDetails: `https://bbf3fd2f-5839-4fea-9611-af32c6e20f91-00-2j7vwbakpk3p3.kirk.replit.dev/api/admin/products/${product.id}`,
+        pdfDownload: pdfFilename ? `https://bbf3fd2f-5839-4fea-9611-af32c6e20f91-00-2j7vwbakpk3p3.kirk.replit.dev/api/admin/files/pdf/${pdfFilename}` : null,
+        coverDownload: coverFilename ? `https://bbf3fd2f-5839-4fea-9611-af32c6e20f91-00-2j7vwbakpk3p3.kirk.replit.dev/api/admin/files/cover/${coverFilename}` : null
+      }
     };
 
     const response = await fetch(webhookUrl, {
@@ -189,6 +199,61 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.error("Erro ao listar produtos para webhook:", error);
       res.status(500).json({ message: "Erro interno do servidor", error: (error as Error).message });
     }
+  });
+
+  // Admin routes for platform owner to access uploaded files
+  // Admin endpoint to get product details with file access
+  app.get("/api/admin/products/:id", async (req, res) => {
+    try {
+      const productId = parseInt(req.params.id);
+      const product = await storage.getProduct(productId);
+      
+      if (!product) {
+        return res.status(404).json({ message: "Produto não encontrado" });
+      }
+      
+      res.json({
+        ...product,
+        fullPdfUrl: product.pdfUrl ? `${req.protocol}://${req.get('host')}${product.pdfUrl}` : null,
+        fullCoverUrl: product.coverImageUrl ? `${req.protocol}://${req.get('host')}${product.coverImageUrl}` : null
+      });
+    } catch (error) {
+      console.error("Erro ao buscar produto para admin:", error);
+      res.status(500).json({ message: "Erro interno do servidor" });
+    }
+  });
+
+  // Admin endpoint to access PDF files directly (no auth required for platform owner)
+  app.get("/api/admin/files/pdf/:filename", (req, res) => {
+    const filename = req.params.filename;
+    const filePath = path.join(process.cwd(), 'uploads', filename);
+    
+    console.log(`[ADMIN-ACCESS] PDF file requested: ${filename}`);
+    
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `inline; filename="${filename}.pdf"`);
+    res.sendFile(filePath, (err) => {
+      if (err) {
+        console.error("Erro ao servir PDF para admin:", err);
+        res.status(404).json({ message: "Arquivo PDF não encontrado" });
+      }
+    });
+  });
+
+  // Admin endpoint to access cover images directly (no auth required for platform owner)
+  app.get("/api/admin/files/cover/:filename", (req, res) => {
+    const filename = req.params.filename;
+    const filePath = path.join(process.cwd(), 'uploads', filename);
+    
+    console.log(`[ADMIN-ACCESS] Cover image requested: ${filename}`);
+    
+    res.setHeader('Content-Type', 'image/jpeg');
+    res.sendFile(filePath, (err) => {
+      if (err) {
+        console.error("Erro ao servir imagem de capa para admin:", err);
+        res.status(404).json({ message: "Arquivo de imagem não encontrado" });
+      }
+    });
   });
 
   // Public endpoint for updating product status and public URL (no authentication required)
