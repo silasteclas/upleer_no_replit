@@ -20,12 +20,19 @@ export default function AdminLogin() {
     mutationFn: async (credentials: { email: string; password: string }) => {
       return await apiRequest('/api/admin/login', 'POST', credentials);
     },
-    onSuccess: () => {
+    onSuccess: (response) => {
       toast({
         title: "Login realizado com sucesso",
         description: "Bem-vindo ao painel administrativo",
       });
-      setLocation('/admin/dashboard');
+      // Força o redirecionamento após um breve delay
+      setTimeout(() => {
+        setLocation('/admin/dashboard');
+        // Fallback: força redirecionamento via window.location se wouter falhar
+        if (window.location.pathname !== '/admin/dashboard') {
+          window.location.href = '/admin/dashboard';
+        }
+      }, 1000);
     },
     onError: (error: Error) => {
       toast({
@@ -107,6 +114,16 @@ export default function AdminLogin() {
             >
               {loginMutation.isPending ? "Entrando..." : "Entrar"}
             </Button>
+            {loginMutation.isSuccess && (
+              <Button 
+                type="button" 
+                variant="outline"
+                className="w-full mt-2"
+                onClick={() => setLocation('/admin/dashboard')}
+              >
+                Ir para o Painel Administrativo
+              </Button>
+            )}
           </form>
         </CardContent>
       </Card>
