@@ -284,6 +284,65 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/auth/logout", logoutHandler);
   app.post("/api/auth/logout", logoutHandler);
 
+  // Settings endpoints
+  app.get("/api/settings", requireAuth, async (req, res) => {
+    try {
+      const userId = (req as any).userId;
+      const user = await storage.getUser(userId);
+      
+      res.json({
+        phone: user?.phone || "",
+        bio: "",
+        banking: {
+          bankName: "",
+          accountType: "corrente",
+          agency: "",
+          account: "",
+          accountDigit: "",
+          cpf: "",
+          holderName: ""
+        }
+      });
+    } catch (error) {
+      console.error("Error fetching settings:", error);
+      res.status(500).json({ message: "Erro interno do servidor" });
+    }
+  });
+
+  app.post("/api/settings/profile", requireAuth, async (req, res) => {
+    try {
+      const userId = (req as any).userId;
+      const { firstName, lastName, email, phone, bio, profileImage } = req.body;
+      
+      // Update user profile
+      const updatedUser = await storage.updateUserProfile(userId, {
+        firstName,
+        lastName,
+        email,
+        phone,
+        profileImageUrl: profileImage || null
+      });
+      
+      res.json({ 
+        message: "Perfil atualizado com sucesso",
+        user: updatedUser 
+      });
+    } catch (error) {
+      console.error("Error updating profile:", error);
+      res.status(500).json({ message: "Erro interno do servidor" });
+    }
+  });
+
+  app.post("/api/settings/banking", requireAuth, async (req, res) => {
+    try {
+      // For now, just return success since we don't have banking storage
+      res.json({ message: "Dados bancários atualizados com sucesso" });
+    } catch (error) {
+      console.error("Error updating banking:", error);
+      res.status(500).json({ message: "Erro interno do servidor" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

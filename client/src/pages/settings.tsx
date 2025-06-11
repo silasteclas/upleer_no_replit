@@ -93,7 +93,7 @@ export default function Settings() {
       });
       
       // Update the user cache with the new data
-      if (responseData && responseData.user) {
+      if (responseData?.user) {
         queryClient.setQueryData(["/api/auth/user"], responseData.user);
       }
       
