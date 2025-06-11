@@ -182,29 +182,6 @@ export default function Landing() {
                     Criar Conta Gratuita
                   </Button>
                 </div>
-
-                {/* Botão de teste para debug */}
-                <div className="mt-4 p-2 bg-blue-50 border border-blue-200 rounded text-sm">
-                  <p className="text-blue-800 mb-2">Teste rápido - Login de autor:</p>
-                  <Button 
-                    type="button" 
-                    variant="outline" 
-                    size="sm"
-                    onClick={() => {
-                      console.log("🧪 TESTE: Executando login de autor");
-                      loginMutation.mutate({ 
-                        email: "silasteclas@gmail.com", 
-                        password: "123456" 
-                      });
-                    }}
-                  >
-                    Testar Login Autor
-                  </Button>
-                </div>
-                
-                <p className="text-sm text-gray-600 text-center mt-4">
-                  Use qualquer email válido e senha para acessar o sistema
-                </p>
               </CardContent>
             </Card>
           ) : (
