@@ -152,11 +152,14 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getProductsByAuthor(authorId: string): Promise<Product[]> {
-    return await db
+    console.log("🔍 DEBUG Storage - Buscando produtos para authorId:", authorId);
+    const result = await db
       .select()
       .from(products)
       .where(eq(products.authorId, authorId))
       .orderBy(desc(products.createdAt));
+    console.log("🔍 DEBUG Storage - Resultado da consulta:", result.length, "produtos");
+    return result;
   }
 
   async getAllProducts(): Promise<Product[]> {
