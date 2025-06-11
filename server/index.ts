@@ -13,7 +13,7 @@ app.set('trust proxy', 1);
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
-// Add webhook endpoint BEFORE other routes to avoid Vite interception
+// Add webhook endpoints BEFORE any other middleware to avoid Vite interception
 app.patch('/api/webhook/products/:id/status', async (req, res) => {
   try {
     const { storage } = await import("./storage");
@@ -65,6 +65,111 @@ app.patch('/api/webhook/products/:id/status', async (req, res) => {
     
   } catch (error) {
     console.error('Error updating product status:', error);
+    res.status(500).json({ message: 'Erro interno do servidor' });
+  }
+});
+
+// Add webhook endpoint for sales BEFORE other routes to avoid Vite interception
+app.post('/api/webhook/sales', async (req, res) => {
+  try {
+    const { storage } = await import("./storage");
+    const {
+      productId,
+      buyerName,
+      buyerEmail,
+      buyerPhone,
+      buyerCpf,
+      buyerAddress,
+      buyerCity,
+      buyerState,
+      buyerZipCode,
+      salePrice,
+      orderDate,
+      paymentStatus,
+      paymentMethod,
+      installments,
+      discountCoupon,
+      discountAmount,
+      shippingCost,
+      shippingCarrier,
+      deliveryDays
+    } = req.body;
+    
+    if (!productId) {
+      return res.status(400).json({ message: 'productId é obrigatório' });
+    }
+    
+    if (!buyerName || !buyerEmail) {
+      return res.status(400).json({ message: 'buyerName e buyerEmail são obrigatórios' });
+    }
+    
+    if (!salePrice) {
+      return res.status(400).json({ message: 'salePrice é obrigatório' });
+    }
+    
+    // Check if product exists and get the author
+    const product = await storage.getProduct(productId);
+    if (!product) {
+      return res.status(404).json({ message: 'Produto não encontrado' });
+    }
+    
+    // Convert string prices to numbers
+    const price = parseFloat(salePrice.toString().replace(',', '.'));
+    const discount = discountAmount ? parseFloat(discountAmount.toString().replace(',', '.')) : 0;
+    const shipping = shippingCost ? parseFloat(shippingCost.toString().replace(',', '.')) : 0;
+    
+    // Calculate commission and author earnings (assuming 15% commission)
+    const commissionRate = 0.15;
+    const commission = price * commissionRate;
+    const authorEarnings = price - commission;
+    
+    // Create sale record - the authorId is automatically determined by the product
+    const saleData = {
+      productId: productId,
+      buyerName: buyerName,
+      buyerEmail: buyerEmail,
+      buyerPhone: buyerPhone || '',
+      buyerCpf: buyerCpf || '',
+      buyerAddress: buyerAddress || '',
+      buyerCity: buyerCity || '',
+      buyerState: buyerState || '',
+      buyerZipCode: buyerZipCode || '',
+      salePrice: price.toFixed(2),
+      commission: commission.toFixed(2),
+      authorEarnings: authorEarnings.toFixed(2),
+      orderDate: orderDate ? new Date(orderDate) : new Date(),
+      paymentStatus: paymentStatus || 'pending',
+      paymentMethod: paymentMethod || '',
+      installments: installments || 1,
+      discountCoupon: discountCoupon || '',
+      discountAmount: discount.toFixed(2),
+      shippingCost: shipping.toFixed(2),
+      shippingCarrier: shippingCarrier || '',
+      deliveryDays: deliveryDays || 0
+    };
+    
+    const newSale = await storage.createSale(saleData);
+    
+    console.log(`[WEBHOOK] New sale created: ID ${newSale.id} for product ${productId} (author: ${product.authorId})`);
+    
+    res.json({
+      message: 'Venda registrada com sucesso',
+      sale: {
+        id: newSale.id,
+        productId: newSale.productId,
+        productTitle: product.title,
+        authorId: product.authorId,
+        authorName: product.author,
+        buyerName: newSale.buyerName,
+        buyerEmail: newSale.buyerEmail,
+        salePrice: newSale.salePrice,
+        orderDate: newSale.orderDate,
+        paymentStatus: newSale.paymentStatus
+      }
+    });
+    
+  } catch (error) {
+    console.error('Error creating sale:', error);
     res.status(500).json({ message: 'Erro interno do servidor' });
   }
 });

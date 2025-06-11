@@ -121,61 +121,6 @@ const upload = multer({
 });
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Webhook endpoint to update product status (for N8N integration) - MUST BE BEFORE VITE
-  app.patch('/api/webhook/products/:id/status', async (req, res) => {
-    try {
-      const productId = parseInt(req.params.id);
-      const { status, publicUrl } = req.body;
-      
-      if (!productId || isNaN(productId)) {
-        return res.status(400).json({ message: 'ID do produto inválido' });
-      }
-      
-      if (!status) {
-        return res.status(400).json({ message: 'Status é obrigatório' });
-      }
-      
-      // Valid status values
-      const validStatuses = ['pending', 'published', 'rejected', 'archived'];
-      if (!validStatuses.includes(status)) {
-        return res.status(400).json({ 
-          message: 'Status inválido. Valores permitidos: pending, published, rejected, archived' 
-        });
-      }
-      
-      // Check if product exists
-      const product = await storage.getProduct(productId);
-      if (!product) {
-        return res.status(404).json({ message: 'Produto não encontrado' });
-      }
-      
-      // Update product status and public URL
-      const updates: any = { status };
-      if (publicUrl) {
-        updates.publicUrl = publicUrl;
-      }
-      
-      const updatedProduct = await storage.updateProduct(productId, updates);
-      
-      console.log(`[WEBHOOK] Product ${productId} status updated to ${status}${publicUrl ? ` with URL ${publicUrl}` : ''}`);
-      
-      res.json({
-        message: 'Status do produto atualizado com sucesso',
-        product: {
-          id: updatedProduct.id,
-          status: updatedProduct.status,
-          publicUrl: updatedProduct.publicUrl,
-          title: updatedProduct.title,
-          author: updatedProduct.author
-        }
-      });
-      
-    } catch (error) {
-      console.error('Error updating product status:', error);
-      res.status(500).json({ message: 'Erro interno do servidor' });
-    }
-  });
-
   // Public download endpoint for webhooks/N8N integration - MUST BE BEFORE OTHER ROUTES
   app.get('/api/download/:type/:filename', (req, res) => {
     const { type, filename } = req.params;
