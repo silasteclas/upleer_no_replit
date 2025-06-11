@@ -12,35 +12,30 @@ export function useAuth() {
 
   const logoutMutation = useMutation({
     mutationFn: async () => {
-      try {
-        await fetch("/api/auth/logout", {
-          method: "GET",
-          credentials: "include",
-        });
-      } catch (error) {
-        // Even if fetch fails, we'll proceed with logout
-        console.log("Logout request completed");
-      }
-    },
-    onSuccess: () => {
-      // Clear all queries from cache
+      // Clear local state immediately
       queryClient.clear();
-      // Specifically invalidate the user query
       queryClient.setQueryData(["/api/auth/user"], null);
+      
+      // Make logout request in background
+      fetch("/api/auth/logout", {
+        method: "GET",
+        credentials: "include",
+      }).catch(() => {
+        // Ignore errors - we're logging out anyway
+      });
+    },
+    onSettled: () => {
+      // Always clear state and redirect, regardless of success/error
+      queryClient.clear();
+      queryClient.setQueryData(["/api/auth/user"], null);
+      
       toast({
         title: "Logout realizado",
         description: "Você foi desconectado com sucesso",
       });
-      // Force a page reload to clear any remaining state
-      setTimeout(() => {
-        window.location.reload();
-      }, 500);
-    },
-    onError: (error: Error) => {
-      // Even on error, clear the session and reload
-      queryClient.clear();
-      queryClient.setQueryData(["/api/auth/user"], null);
-      window.location.reload();
+      
+      // Redirect to home page
+      window.location.href = "/";
     },
   });
 
