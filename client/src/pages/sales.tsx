@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -8,19 +8,27 @@ import { Sidebar } from "@/components/layout/sidebar";
 import { Header } from "@/components/layout/header";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { Download, Calendar, DollarSign, Package, User, ChevronRight, ShoppingBag, Truck, CreditCard } from "lucide-react";
+import { Download, Calendar, DollarSign, Package, User, ChevronRight, ShoppingBag, Truck, CreditCard, RefreshCw } from "lucide-react";
 
 export default function Sales() {
   const [, setLocation] = useLocation();
+  const queryClient = useQueryClient();
   
-  const { data: sales, isLoading } = useQuery({
+  const { data: sales, isLoading, refetch } = useQuery({
     queryKey: ["/api/sales"],
+    refetchInterval: 30000, // Refetch every 30 seconds
   });
 
   const { data: user } = useQuery({
     queryKey: ["/api/auth/user"],
     retry: false,
-  });
+  }) as { data: any };
+
+  const handleRefresh = async () => {
+    await refetch();
+    // Also invalidate related queries
+    queryClient.invalidateQueries({ queryKey: ["/api/analytics/stats"] });
+  };
 
   if (isLoading) {
     return (
@@ -104,10 +112,22 @@ export default function Sales() {
           {/* Sales List */}
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center">
-                <ShoppingBag className="w-5 h-5 mr-2" />
-                Histórico de Vendas
-              </CardTitle>
+              <div className="flex items-center justify-between">
+                <CardTitle className="flex items-center">
+                  <ShoppingBag className="w-5 h-5 mr-2" />
+                  Histórico de Vendas
+                </CardTitle>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={handleRefresh}
+                  disabled={isLoading}
+                  className="flex items-center gap-2"
+                >
+                  <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
+                  Atualizar
+                </Button>
+              </div>
             </CardHeader>
             <CardContent>
               {!Array.isArray(sales) || sales.length === 0 ? (
