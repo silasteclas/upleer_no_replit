@@ -93,11 +93,11 @@ export default function Settings() {
       });
       
       // Update the user cache with the new data
-      if (responseData.user) {
+      if (responseData && responseData.user) {
         queryClient.setQueryData(["/api/auth/user"], responseData.user);
       }
       
-      // Also invalidate to trigger a fresh fetch
+      // Always invalidate to trigger a fresh fetch
       queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
       queryClient.invalidateQueries({ queryKey: ["/api/settings"] });
       
