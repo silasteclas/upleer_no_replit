@@ -13,6 +13,7 @@ interface StatsData {
 export default function StatsCards() {
   const { data: stats, isLoading } = useQuery<StatsData>({
     queryKey: ["/api/analytics/stats"],
+    refetchInterval: 60000, // Refetch every 60 seconds
   });
 
   const statsCards = [

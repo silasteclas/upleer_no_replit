@@ -149,7 +149,7 @@ export default function Sales() {
                         <div className="flex items-center space-x-6 flex-1">
                           <div className="flex-1 min-w-0">
                             <h4 className="font-medium text-gray-900 truncate">{sale.product?.title || 'Produto'}</h4>
-                            <p className="text-sm text-gray-600 truncate">por {sale.product?.author || user?.firstName || 'Autor'}</p>
+                            <p className="text-sm text-gray-600 truncate">por {sale.product?.author || 'Autor'}</p>
                           </div>
                           <div className="text-left min-w-0 flex-shrink-0 w-48">
                             <p className="text-xs text-gray-500 uppercase tracking-wide">Comprador</p>
@@ -183,7 +183,7 @@ export default function Sales() {
                         <div className="flex items-center justify-between">
                           <div className="flex-1 min-w-0">
                             <h4 className="font-medium text-gray-900 truncate">{sale.product?.title || 'Produto'}</h4>
-                            <p className="text-sm text-gray-600 truncate">por {sale.product?.author || user?.firstName || 'Autor'}</p>
+                            <p className="text-sm text-gray-600 truncate">por {sale.product?.author || 'Autor'}</p>
                           </div>
                           <div className="flex items-center space-x-4">
                             <div className="text-right">
@@ -211,7 +211,7 @@ export default function Sales() {
                         <div className="flex items-start justify-between">
                           <div className="flex-1 min-w-0">
                             <h4 className="font-medium text-gray-900 truncate">{sale.product?.title || 'Produto'}</h4>
-                            <p className="text-sm text-gray-600 truncate">por {sale.product?.author || user?.firstName || 'Autor'}</p>
+                            <p className="text-sm text-gray-600 truncate">por {sale.product?.author || 'Autor'}</p>
                           </div>
                           <ChevronRight className="w-4 h-4 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity mt-1" />
                         </div>
