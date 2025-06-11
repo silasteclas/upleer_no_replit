@@ -13,20 +13,48 @@ async function sendProductToWebhook(product: any) {
   const webhookUrl = 'https://auton8n.upleer.com.br/webhook/5b04bf83-a7d2-4eec-9d85-dfa14f2e3e00';
   
   try {
-    console.log(`[WEBHOOK] Sending product ${product.id} to webhook...`);
-    console.log(`[WEBHOOK] Full product data:`, JSON.stringify(product, null, 2));
-    
-    // Primeiro teste com dados simplificados que funcionaram no teste manual
-    const simpleData = {
-      id: product.id,
-      title: product.title || 'Produto sem título',
-      author: product.author || 'Autor não informado',
-      salePrice: product.salePrice || '0.00',
-      status: product.status || 'pending',
-      test: true
+    // Escrever logs em arquivo para debug
+    const logData = {
+      timestamp: new Date().toISOString(),
+      productId: product.id,
+      webhookUrl: webhookUrl,
+      fullProduct: product
     };
-
-    console.log(`[WEBHOOK] Sending simplified data:`, JSON.stringify(simpleData, null, 2));
+    
+    fs.writeFileSync('/tmp/webhook-debug.log', JSON.stringify(logData, null, 2) + '\n', { flag: 'a' });
+    
+    console.log(`[WEBHOOK] Sending product ${product.id} to webhook...`);
+    
+    // Tentar primeiro com dados completos do produto
+    const pdfFilename = product.pdfUrl ? product.pdfUrl.split('/').pop() : null;
+    const coverFilename = product.coverImageUrl ? product.coverImageUrl.split('/').pop() : null;
+    
+    const webhookData = {
+      id: product.id,
+      title: product.title,
+      description: product.description,
+      author: product.author,
+      isbn: product.isbn,
+      coAuthors: product.coAuthors,
+      genre: product.genre,
+      language: product.language,
+      targetAudience: product.targetAudience,
+      pageCount: product.pageCount,
+      baseCost: product.baseCost,
+      salePrice: product.salePrice,
+      marginPercent: product.marginPercent,
+      status: product.status,
+      authorId: product.authorId,
+      pdfUrl: product.pdfUrl,
+      coverImageUrl: product.coverImageUrl,
+      createdAt: product.createdAt,
+      updatedAt: product.updatedAt,
+      downloadUrls: {
+        productDetails: `https://bbf3fd2f-5839-4fea-9611-af32c6e20f91-00-2j7vwbakpk3p3.kirk.replit.dev/api/products/${product.id}`,
+        pdfDownload: pdfFilename ? `https://bbf3fd2f-5839-4fea-9611-af32c6e20f91-00-2j7vwbakpk3p3.kirk.replit.dev/uploads/${pdfFilename}` : null,
+        coverDownload: coverFilename ? `https://bbf3fd2f-5839-4fea-9611-af32c6e20f91-00-2j7vwbakpk3p3.kirk.replit.dev/uploads/${coverFilename}` : null
+      }
+    };
     
     const response = await fetch(webhookUrl, {
       method: 'POST',
@@ -34,39 +62,39 @@ async function sendProductToWebhook(product: any) {
         'Content-Type': 'application/json',
         'User-Agent': 'Upleer-Webhook/1.0'
       },
-      body: JSON.stringify(simpleData)
+      body: JSON.stringify(webhookData)
     });
 
     const responseText = await response.text();
-    console.log(`[WEBHOOK] Response status:`, response.status);
-    console.log(`[WEBHOOK] Response headers:`, JSON.stringify([...response.headers.entries()]));
+    
+    // Log da resposta
+    const responseLog = {
+      timestamp: new Date().toISOString(),
+      productId: product.id,
+      status: response.status,
+      statusText: response.statusText,
+      headers: Object.fromEntries(response.headers),
+      responseBody: responseText,
+      sentData: webhookData
+    };
+    
+    fs.writeFileSync('/tmp/webhook-response.log', JSON.stringify(responseLog, null, 2) + '\n', { flag: 'a' });
     
     if (response.ok) {
       console.log(`[WEBHOOK] Product ${product.id} sent successfully to webhook`);
-      console.log(`[WEBHOOK] Response:`, responseText);
     } else {
       console.error(`[WEBHOOK] Failed to send product ${product.id}:`, response.status, response.statusText);
-      console.error(`[WEBHOOK] Response body:`, responseText);
-      console.error(`[WEBHOOK] Request URL:`, webhookUrl);
-      
-      // Teste adicional para verificar se a URL está acessível
-      try {
-        const testResponse = await fetch(webhookUrl, {
-          method: 'GET',
-          headers: {
-            'User-Agent': 'Upleer-Test/1.0'
-          }
-        });
-        console.log(`[WEBHOOK] GET test status:`, testResponse.status);
-        const testText = await testResponse.text();
-        console.log(`[WEBHOOK] GET test response:`, testText);
-      } catch (testError) {
-        console.error(`[WEBHOOK] GET test error:`, testError);
-      }
     }
   } catch (error) {
+    const errorLog = {
+      timestamp: new Date().toISOString(),
+      productId: product.id,
+      error: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined
+    };
+    
+    fs.writeFileSync('/tmp/webhook-error.log', JSON.stringify(errorLog, null, 2) + '\n', { flag: 'a' });
     console.error(`[WEBHOOK] Error sending product ${product.id} to webhook:`, error);
-    console.error(`[WEBHOOK] Error details:`, error.message, error.stack);
   }
 }
 
