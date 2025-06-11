@@ -121,8 +121,46 @@ const upload = multer({
 });
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Serve static files from uploads directory
-  app.use('/uploads', express.static('uploads'));
+  // Download endpoint with proper file type detection
+  app.get('/uploads/:filename', (req, res) => {
+    const filename = req.params.filename;
+    const filePath = path.join('uploads', filename);
+    
+    // Check if file exists
+    if (!fs.existsSync(filePath)) {
+      return res.status(404).json({ message: 'Arquivo não encontrado' });
+    }
+    
+    try {
+      const buffer = fs.readFileSync(filePath, { encoding: null });
+      let contentType = 'application/octet-stream';
+      let downloadName = filename;
+      
+      // Detect file type by content
+      if (buffer.length >= 4 && buffer.toString('ascii', 0, 4) === '%PDF') {
+        contentType = 'application/pdf';
+        downloadName = filename.includes('.pdf') ? filename : `${filename}.pdf`;
+      } else if (buffer.length >= 2 && buffer[0] === 0xFF && buffer[1] === 0xD8) {
+        contentType = 'image/jpeg';
+        downloadName = filename.includes('.jpg') ? filename : `${filename}.jpg`;
+      } else if (buffer.length >= 8 && buffer.toString('ascii', 1, 4) === 'PNG') {
+        contentType = 'image/png';
+        downloadName = filename.includes('.png') ? filename : `${filename}.png`;
+      } else if (buffer.length >= 6 && buffer.toString('ascii', 0, 6) === 'GIF87a' || buffer.toString('ascii', 0, 6) === 'GIF89a') {
+        contentType = 'image/gif';
+        downloadName = filename.includes('.gif') ? filename : `${filename}.gif`;
+      }
+      
+      res.setHeader('Content-Type', contentType);
+      res.setHeader('Content-Disposition', `attachment; filename="${downloadName}"`);
+      res.setHeader('Content-Length', buffer.length);
+      res.send(buffer);
+      
+    } catch (error) {
+      console.error('Error serving file:', error);
+      res.status(500).json({ message: 'Erro ao servir arquivo' });
+    }
+  });
 
   // Test database connection on startup
   try {
