@@ -13,6 +13,62 @@ app.set('trust proxy', 1);
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
+// Add webhook endpoint BEFORE other routes to avoid Vite interception
+app.patch('/api/webhook/products/:id/status', async (req, res) => {
+  try {
+    const { storage } = await import("./storage");
+    const productId = parseInt(req.params.id);
+    const { status, publicUrl } = req.body;
+    
+    if (!productId || isNaN(productId)) {
+      return res.status(400).json({ message: 'ID do produto inválido' });
+    }
+    
+    if (!status) {
+      return res.status(400).json({ message: 'Status é obrigatório' });
+    }
+    
+    // Valid status values
+    const validStatuses = ['pending', 'published', 'rejected', 'archived'];
+    if (!validStatuses.includes(status)) {
+      return res.status(400).json({ 
+        message: 'Status inválido. Valores permitidos: pending, published, rejected, archived' 
+      });
+    }
+    
+    // Check if product exists
+    const product = await storage.getProduct(productId);
+    if (!product) {
+      return res.status(404).json({ message: 'Produto não encontrado' });
+    }
+    
+    // Update product status and public URL
+    const updates: any = { status };
+    if (publicUrl) {
+      updates.publicUrl = publicUrl;
+    }
+    
+    const updatedProduct = await storage.updateProduct(productId, updates);
+    
+    console.log(`[WEBHOOK] Product ${productId} status updated to ${status}${publicUrl ? ` with URL ${publicUrl}` : ''}`);
+    
+    res.json({
+      message: 'Status do produto atualizado com sucesso',
+      product: {
+        id: updatedProduct.id,
+        status: updatedProduct.status,
+        publicUrl: updatedProduct.publicUrl,
+        title: updatedProduct.title,
+        author: updatedProduct.author
+      }
+    });
+    
+  } catch (error) {
+    console.error('Error updating product status:', error);
+    res.status(500).json({ message: 'Erro interno do servidor' });
+  }
+});
+
 app.use((req, res, next) => {
   const start = Date.now();
   const path = req.path;
