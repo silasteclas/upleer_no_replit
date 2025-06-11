@@ -12,7 +12,15 @@ export function useAuth() {
 
   const logoutMutation = useMutation({
     mutationFn: async () => {
-      await apiRequest("POST", "/api/auth/logout");
+      try {
+        await fetch("/api/auth/logout", {
+          method: "GET",
+          credentials: "include",
+        });
+      } catch (error) {
+        // Even if fetch fails, we'll proceed with logout
+        console.log("Logout request completed");
+      }
     },
     onSuccess: () => {
       // Clear all queries from cache
@@ -24,14 +32,15 @@ export function useAuth() {
         description: "Você foi desconectado com sucesso",
       });
       // Force a page reload to clear any remaining state
-      window.location.reload();
+      setTimeout(() => {
+        window.location.reload();
+      }, 500);
     },
     onError: (error: Error) => {
-      toast({
-        title: "Erro no logout",
-        description: error.message,
-        variant: "destructive",
-      });
+      // Even on error, clear the session and reload
+      queryClient.clear();
+      queryClient.setQueryData(["/api/auth/user"], null);
+      window.location.reload();
     },
   });
 

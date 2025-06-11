@@ -266,10 +266,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Logout endpoint - accessible without auth since user might already be logged out
-  app.post("/api/auth/logout", (req, res) => {
+  // Logout endpoints - support both GET and POST
+  const logoutHandler = (req: any, res: any) => {
     if (req.session) {
-      req.session.destroy((err) => {
+      req.session.destroy((err: any) => {
         if (err) {
           console.error('Logout error:', err);
           return res.status(500).json({ message: "Erro ao fazer logout" });
@@ -279,7 +279,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } else {
       res.json({ message: "Logout realizado com sucesso" });
     }
-  });
+  };
+
+  app.get("/api/auth/logout", logoutHandler);
+  app.post("/api/auth/logout", logoutHandler);
 
   const httpServer = createServer(app);
   return httpServer;
