@@ -10,7 +10,7 @@ import { registerUser, loginUser, getCurrentUser, logoutUser, requireAuth } from
 
 // Webhook function to send product data to N8N
 async function sendProductToWebhook(product: any) {
-  const webhookUrl = 'https://auton8n.upleer.com.br/webhook/c29d8318-4c2c-4d9f-a1ee-a2b21e7cd4ff';
+  const webhookUrl = 'https://auton8n.upleer.com.br/webhook/5b04bf83-a7d2-4eec-9d85-dfa14f2e3e00';
   
   try {
     console.log(`[WEBHOOK] Sending product ${product.id} to webhook...`);
@@ -43,6 +43,8 @@ async function sendProductToWebhook(product: any) {
       }
     };
 
+    console.log(`[WEBHOOK] Sending data:`, JSON.stringify(webhookData, null, 2));
+    
     const response = await fetch(webhookUrl, {
       method: 'POST',
       headers: {
@@ -51,10 +53,15 @@ async function sendProductToWebhook(product: any) {
       body: JSON.stringify(webhookData)
     });
 
+    const responseText = await response.text();
+    
     if (response.ok) {
       console.log(`[WEBHOOK] Product ${product.id} sent successfully to webhook`);
+      console.log(`[WEBHOOK] Response:`, responseText);
     } else {
       console.error(`[WEBHOOK] Failed to send product ${product.id}:`, response.status, response.statusText);
+      console.error(`[WEBHOOK] Response body:`, responseText);
+      console.error(`[WEBHOOK] Request URL:`, webhookUrl);
     }
   } catch (error) {
     console.error(`[WEBHOOK] Error sending product ${product.id} to webhook:`, error);
