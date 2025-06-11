@@ -266,15 +266,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Logout endpoint
-  app.post("/api/auth/logout", requireAuth, (req, res) => {
-    req.session.destroy((err) => {
-      if (err) {
-        console.error('Logout error:', err);
-        return res.status(500).json({ message: "Erro ao fazer logout" });
-      }
+  // Logout endpoint - accessible without auth since user might already be logged out
+  app.post("/api/auth/logout", (req, res) => {
+    if (req.session) {
+      req.session.destroy((err) => {
+        if (err) {
+          console.error('Logout error:', err);
+          return res.status(500).json({ message: "Erro ao fazer logout" });
+        }
+        res.json({ message: "Logout realizado com sucesso" });
+      });
+    } else {
       res.json({ message: "Logout realizado com sucesso" });
-    });
+    }
   });
 
   const httpServer = createServer(app);
