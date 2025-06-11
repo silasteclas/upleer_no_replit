@@ -495,18 +495,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Upload profile image endpoint (using multer for file upload)
+  app.post("/api/settings/profile-image", requireAuth, upload.single('profileImage'), async (req, res) => {
+    try {
+      const userId = (req as any).userId;
+      
+      if (!req.file) {
+        return res.status(400).json({ message: "Nenhuma imagem foi enviada" });
+      }
+
+      // Generate the profile image URL
+      const profileImageUrl = `/uploads/${req.file.filename}`;
+      
+      // Update user profile with new image
+      const updatedUser = await storage.updateUserProfileImage(userId, profileImageUrl);
+      
+      res.json({ 
+        message: "Foto de perfil atualizada com sucesso",
+        user: updatedUser,
+        profileImageUrl: profileImageUrl
+      });
+    } catch (error) {
+      console.error("Error updating profile image:", error);
+      res.status(500).json({ message: "Erro interno do servidor" });
+    }
+  });
+
   app.post("/api/settings/profile", requireAuth, async (req, res) => {
     try {
       const userId = (req as any).userId;
-      const { firstName, lastName, email, phone, bio, profileImage } = req.body;
+      const { firstName, lastName, email, phone, bio } = req.body;
       
-      // Update user profile
+      // Update user profile (without image)
       const updatedUser = await storage.updateUserProfile(userId, {
         firstName,
         lastName,
         email,
-        phone,
-        profileImageUrl: profileImage || null
+        phone
       });
       
       res.json({ 

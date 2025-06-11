@@ -60,16 +60,55 @@ export default function Settings() {
     },
   });
 
-  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const imageData = e.target?.result as string;
-        setProfileImage(imageData);
-        console.log("Image loaded, size:", imageData.length);
-      };
-      reader.readAsDataURL(file);
+      // Check file size (2MB limit as shown in UI)
+      if (file.size > 2 * 1024 * 1024) {
+        toast({
+          title: "Arquivo muito grande",
+          description: "A imagem deve ter no máximo 2MB.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      try {
+        const formData = new FormData();
+        formData.append('profileImage', file);
+
+        const response = await fetch('/api/settings/profile-image', {
+          method: 'POST',
+          body: formData,
+          credentials: 'include',
+        });
+
+        if (response.ok) {
+          const result = await response.json();
+          setProfileImage(result.profileImageUrl);
+          
+          // Update user cache immediately
+          queryClient.setQueryData(["/api/auth/user"], (oldData: any) => ({
+            ...oldData,
+            profileImageUrl: result.profileImageUrl
+          }));
+          
+          toast({
+            title: "Foto atualizada",
+            description: "Sua foto de perfil foi atualizada com sucesso.",
+          });
+        } else {
+          const errorData = await response.json();
+          throw new Error(errorData.message || 'Erro ao enviar imagem');
+        }
+      } catch (error) {
+        console.error("Error uploading image:", error);
+        toast({
+          title: "Erro",
+          description: error instanceof Error ? error.message : "Falha ao enviar a imagem.",
+          variant: "destructive",
+        });
+      }
     }
   };
 
@@ -79,11 +118,9 @@ export default function Settings() {
 
   const updateProfileMutation = useMutation({
     mutationFn: async (data: any) => {
-      const payload = {
-        ...data,
-        profileImage: profileImage
-      };
-      const response = await apiRequest("/api/settings/profile", "POST", payload);
+      // Remove profileImage from the data since it's handled separately
+      const { profileImage, ...profileData } = data;
+      const response = await apiRequest("/api/settings/profile", "POST", profileData);
       return response;
     },
     onSuccess: (responseData) => {
@@ -100,9 +137,6 @@ export default function Settings() {
       // Always invalidate to trigger a fresh fetch
       queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
       queryClient.invalidateQueries({ queryKey: ["/api/settings"] });
-      
-      // Clear the profile image state since it's now saved
-      setProfileImage(null);
     },
     onError: (error: Error) => {
       console.error("Profile update error:", error);

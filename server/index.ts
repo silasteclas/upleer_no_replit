@@ -10,8 +10,8 @@ if (!process.env.REPLIT_DOMAINS || process.env.REPLIT_DOMAINS.includes("prompt-f
 
 const app = express();
 app.set('trust proxy', 1);
-app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ extended: false, limit: '50mb' }));
 
 // Add webhook endpoints BEFORE any other middleware to avoid Vite interception
 // Sales webhook endpoint
