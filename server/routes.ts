@@ -176,6 +176,66 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // New endpoint that matches frontend expectations
+  app.post("/api/products", requireAuth, upload.fields([
+    { name: "pdf", maxCount: 1 },
+    { name: "cover", maxCount: 1 }
+  ]), async (req, res) => {
+    try {
+      const files = req.files as { [fieldname: string]: Express.Multer.File[] };
+      const {
+        title, description, isbn, author, coAuthors, genre, language,
+        targetAudience, pageCount, baseCost, salePrice
+      } = req.body;
+
+      if (!title || !author || !genre || !salePrice) {
+        return res.status(400).json({
+          message: "Campos obrigatórios: title, author, genre, salePrice"
+        });
+      }
+
+      const userId = (req as any).userId;
+      
+      let pdfUrl = null;
+      let coverImageUrl = null;
+
+      if (files.pdf && files.pdf[0]) {
+        pdfUrl = `/uploads/${files.pdf[0].filename}`;
+      }
+
+      if (files.cover && files.cover[0]) {
+        coverImageUrl = `/uploads/${files.cover[0].filename}`;
+      }
+
+      const product = await storage.createProduct({
+        title,
+        description: description || "",
+        author,
+        isbn: isbn || undefined,
+        coAuthors: coAuthors || undefined,
+        genre,
+        language: language || "português",
+        targetAudience: targetAudience || undefined,
+        pdfUrl: pdfUrl || "/uploads/placeholder.pdf",
+        coverImageUrl: coverImageUrl || undefined,
+        pageCount: parseInt(pageCount) || 1,
+        baseCost: baseCost?.toString() || "0.00",
+        salePrice: salePrice.toString(),
+        marginPercent: 150,
+        status: "pending",
+        authorId: userId
+      });
+
+      // Send to webhook
+      await sendProductToWebhook(product);
+
+      res.status(201).json(product);
+    } catch (error) {
+      console.error("Error creating product:", error);
+      res.status(500).json({ message: "Erro interno do servidor" });
+    }
+  });
+
   app.get("/api/products", requireAuth, async (req, res) => {
     try {
       const userId = (req as any).userId;

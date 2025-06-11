@@ -118,6 +118,7 @@ export default function UploadModal() {
       formData.append("marginPercent", "150"); // Keep backend compatibility
       formData.append("salePrice", salePrice.toString());
 
+      // Use fetch directly for FormData uploads since apiRequest may not handle FormData properly
       const response = await fetch("/api/products", {
         method: "POST",
         body: formData,
@@ -125,8 +126,15 @@ export default function UploadModal() {
       });
 
       if (!response.ok) {
-        const error = await response.text();
-        throw new Error(`${response.status}: ${error}`);
+        const errorText = await response.text();
+        let errorMessage = errorText;
+        try {
+          const errorJson = JSON.parse(errorText);
+          errorMessage = errorJson.message || errorText;
+        } catch (e) {
+          // Keep original error text if not JSON
+        }
+        throw new Error(errorMessage);
       }
 
       return response.json();
