@@ -14,46 +14,32 @@ async function sendProductToWebhook(product: any) {
   
   try {
     console.log(`[WEBHOOK] Sending product ${product.id} to webhook...`);
+    console.log(`[WEBHOOK] Full product data:`, JSON.stringify(product, null, 2));
     
-    const pdfFilename = product.pdfUrl ? product.pdfUrl.split('/').pop() : null;
-    const coverFilename = product.coverImageUrl ? product.coverImageUrl.split('/').pop() : null;
-    
-    const webhookData = {
+    // Primeiro teste com dados simplificados que funcionaram no teste manual
+    const simpleData = {
       id: product.id,
-      title: product.title,
-      description: product.description,
-      author: product.author,
-      isbn: product.isbn,
-      coAuthors: product.coAuthors,
-      category: product.category,
-      originalPrice: product.originalPrice,
-      salePrice: product.salePrice,
-      profitMargin: product.profitMargin,
-      tags: product.tags,
-      status: product.status,
-      authorId: product.authorId,
-      pdfUrl: product.pdfUrl,
-      coverImageUrl: product.coverImageUrl,
-      createdAt: product.createdAt,
-      updatedAt: product.updatedAt,
-      downloadUrls: {
-        productDetails: `https://bbf3fd2f-5839-4fea-9611-af32c6e20f91-00-2j7vwbakpk3p3.kirk.replit.dev/api/products/${product.id}`,
-        pdfDownload: pdfFilename ? `https://bbf3fd2f-5839-4fea-9611-af32c6e20f91-00-2j7vwbakpk3p3.kirk.replit.dev/uploads/${pdfFilename}` : null,
-        coverDownload: coverFilename ? `https://bbf3fd2f-5839-4fea-9611-af32c6e20f91-00-2j7vwbakpk3p3.kirk.replit.dev/uploads/${coverFilename}` : null
-      }
+      title: product.title || 'Produto sem título',
+      author: product.author || 'Autor não informado',
+      salePrice: product.salePrice || '0.00',
+      status: product.status || 'pending',
+      test: true
     };
 
-    console.log(`[WEBHOOK] Sending data:`, JSON.stringify(webhookData, null, 2));
+    console.log(`[WEBHOOK] Sending simplified data:`, JSON.stringify(simpleData, null, 2));
     
     const response = await fetch(webhookUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        'User-Agent': 'Upleer-Webhook/1.0'
       },
-      body: JSON.stringify(webhookData)
+      body: JSON.stringify(simpleData)
     });
 
     const responseText = await response.text();
+    console.log(`[WEBHOOK] Response status:`, response.status);
+    console.log(`[WEBHOOK] Response headers:`, JSON.stringify([...response.headers.entries()]));
     
     if (response.ok) {
       console.log(`[WEBHOOK] Product ${product.id} sent successfully to webhook`);
@@ -62,9 +48,25 @@ async function sendProductToWebhook(product: any) {
       console.error(`[WEBHOOK] Failed to send product ${product.id}:`, response.status, response.statusText);
       console.error(`[WEBHOOK] Response body:`, responseText);
       console.error(`[WEBHOOK] Request URL:`, webhookUrl);
+      
+      // Teste adicional para verificar se a URL está acessível
+      try {
+        const testResponse = await fetch(webhookUrl, {
+          method: 'GET',
+          headers: {
+            'User-Agent': 'Upleer-Test/1.0'
+          }
+        });
+        console.log(`[WEBHOOK] GET test status:`, testResponse.status);
+        const testText = await testResponse.text();
+        console.log(`[WEBHOOK] GET test response:`, testText);
+      } catch (testError) {
+        console.error(`[WEBHOOK] GET test error:`, testError);
+      }
     }
   } catch (error) {
     console.error(`[WEBHOOK] Error sending product ${product.id} to webhook:`, error);
+    console.error(`[WEBHOOK] Error details:`, error.message, error.stack);
   }
 }
 
