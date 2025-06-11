@@ -1,23 +1,15 @@
 import { Link, useLocation } from "wouter";
 import { BookOpen, BarChart3, Upload, Package, Settings, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/hooks/useAuth";
 import logoPath from "@assets/Logotipo para site upleer (1).png";
 
 export function Sidebar() {
   const [location] = useLocation();
+  const { logout, isLoggingOut } = useAuth();
 
-  const handleLogout = async () => {
-    try {
-      await fetch('/api/logout', { method: 'POST' });
-      localStorage.removeItem('upleer_public_auth');
-      localStorage.removeItem('upleer_user');
-      window.location.href = '/';
-    } catch (error) {
-      console.error('Logout error:', error);
-      localStorage.removeItem('upleer_public_auth');
-      localStorage.removeItem('upleer_user');
-      window.location.href = '/';
-    }
+  const handleLogout = () => {
+    logout();
   };
 
   const navItems = [
@@ -68,10 +60,11 @@ export function Sidebar() {
           <Button 
             variant="ghost" 
             onClick={handleLogout}
+            disabled={isLoggingOut}
             className="w-full justify-start text-gray-600 hover:text-gray-800"
           >
             <LogOut className="w-5 h-5 mr-3" />
-            Sair
+            {isLoggingOut ? "Saindo..." : "Sair"}
           </Button>
         </div>
       </nav>
