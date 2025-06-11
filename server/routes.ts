@@ -5,6 +5,7 @@ import multer from "multer";
 import path from "path";
 import fs from "fs";
 import express from "express";
+import crypto from "crypto";
 import { registerUser, loginUser, getCurrentUser, logoutUser, requireAuth } from "./real-auth";
 
 // Webhook function to send product data to N8N
@@ -64,7 +65,6 @@ const upload = multer({
   storage: multer.diskStorage({
     destination: "uploads/",
     filename: (req, file, cb) => {
-      const crypto = require('crypto');
       const hash = crypto.createHash('md5').update(file.originalname + Date.now()).digest('hex');
       cb(null, hash);
     }
