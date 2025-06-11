@@ -120,6 +120,27 @@ const upload = multer({
   },
 });
 
+// Separate multer configuration for profile images
+const profileImageUpload = multer({
+  storage: multer.diskStorage({
+    destination: "uploads/",
+    filename: (req, file, cb) => {
+      const hash = crypto.createHash('md5').update(file.originalname + Date.now()).digest('hex');
+      cb(null, hash);
+    }
+  }),
+  limits: {
+    fileSize: 2 * 1024 * 1024, // 2MB for profile images
+  },
+  fileFilter: (req, file, cb) => {
+    if (file.fieldname === "profileImage" && file.mimetype.startsWith("image/")) {
+      cb(null, true);
+    } else {
+      cb(new Error("Invalid file type for profile image"));
+    }
+  },
+});
+
 export async function registerRoutes(app: Express): Promise<Server> {
   // Public download endpoint for webhooks/N8N integration - MUST BE BEFORE OTHER ROUTES
   app.get('/api/download/:type/:filename', (req, res) => {
@@ -496,7 +517,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Upload profile image endpoint (using multer for file upload)
-  app.post("/api/settings/profile-image", requireAuth, upload.single('profileImage'), async (req, res) => {
+  app.post("/api/settings/profile-image", requireAuth, profileImageUpload.single('profileImage'), async (req, res) => {
     try {
       const userId = (req as any).userId;
       
