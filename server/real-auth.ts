@@ -33,6 +33,8 @@ export const requireAuth: RequestHandler = (req, res, next) => {
   if (!req.session?.userId) {
     return res.status(401).json({ message: "Não autenticado" });
   }
+  // Set userId in request object for other handlers
+  (req as any).userId = req.session.userId;
   next();
 };
 
