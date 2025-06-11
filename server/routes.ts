@@ -179,7 +179,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/products", requireAuth, async (req, res) => {
     try {
       const userId = (req as any).userId;
+      console.log("🔍 DEBUG - Buscando produtos para userId:", userId);
       const products = await storage.getProductsByAuthor(userId);
+      console.log("🔍 DEBUG - Produtos encontrados:", products.length);
       res.json(products);
     } catch (error) {
       console.error("Error fetching products:", error);
