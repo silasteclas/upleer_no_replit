@@ -51,8 +51,8 @@ async function sendProductToWebhook(product: any) {
       updatedAt: product.updatedAt,
       downloadUrls: {
         productDetails: `https://bbf3fd2f-5839-4fea-9611-af32c6e20f91-00-2j7vwbakpk3p3.kirk.replit.dev/api/products/${product.id}`,
-        pdfDownload: pdfFilename ? `https://bbf3fd2f-5839-4fea-9611-af32c6e20f91-00-2j7vwbakpk3p3.kirk.replit.dev/uploads/${pdfFilename}` : null,
-        coverDownload: coverFilename ? `https://bbf3fd2f-5839-4fea-9611-af32c6e20f91-00-2j7vwbakpk3p3.kirk.replit.dev/uploads/${coverFilename}` : null
+        pdfDownload: pdfFilename ? `https://bbf3fd2f-5839-4fea-9611-af32c6e20f91-00-2j7vwbakpk3p3.kirk.replit.dev/api/download/pdf/${pdfFilename}` : null,
+        coverDownload: coverFilename ? `https://bbf3fd2f-5839-4fea-9611-af32c6e20f91-00-2j7vwbakpk3p3.kirk.replit.dev/api/download/cover/${coverFilename}` : null
       }
     };
     
@@ -121,6 +121,55 @@ const upload = multer({
 });
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Public download endpoint for webhooks/N8N integration - MUST BE BEFORE OTHER ROUTES
+  app.get('/api/download/:type/:filename', (req, res) => {
+    const { type, filename } = req.params;
+    const filePath = path.join('uploads', filename);
+    
+    // Validate file type
+    if (!['pdf', 'cover', 'image'].includes(type)) {
+      return res.status(400).json({ message: 'Tipo de arquivo inválido' });
+    }
+    
+    // Check if file exists
+    if (!fs.existsSync(filePath)) {
+      return res.status(404).json({ message: 'Arquivo não encontrado' });
+    }
+    
+    try {
+      const buffer = fs.readFileSync(filePath, { encoding: null });
+      let contentType = 'application/octet-stream';
+      let downloadName = filename;
+      
+      // Set content type based on file type parameter and content detection
+      if (type === 'pdf' || (buffer.length >= 4 && buffer.toString('ascii', 0, 4) === '%PDF')) {
+        contentType = 'application/pdf';
+        downloadName = filename.includes('.pdf') ? filename : `${filename}.pdf`;
+      } else if (type === 'cover' || type === 'image') {
+        if (buffer.length >= 2 && buffer[0] === 0xFF && buffer[1] === 0xD8) {
+          contentType = 'image/jpeg';
+          downloadName = filename.includes('.jpg') ? filename : `${filename}.jpg`;
+        } else if (buffer.length >= 8 && buffer.toString('ascii', 1, 4) === 'PNG') {
+          contentType = 'image/png';
+          downloadName = filename.includes('.png') ? filename : `${filename}.png`;
+        } else {
+          contentType = 'image/jpeg'; // default for covers
+          downloadName = filename.includes('.jpg') ? filename : `${filename}.jpg`;
+        }
+      }
+      
+      res.setHeader('Content-Type', contentType);
+      res.setHeader('Content-Disposition', `attachment; filename="${downloadName}"`);
+      res.setHeader('Content-Length', buffer.length);
+      res.setHeader('Cache-Control', 'public, max-age=3600');
+      res.send(buffer);
+      
+    } catch (error) {
+      console.error('Error serving download file:', error);
+      res.status(500).json({ message: 'Erro ao servir arquivo' });
+    }
+  });
+
   // Download endpoint with proper file type detection
   app.get('/uploads/:filename', (req, res) => {
     const filename = req.params.filename;
@@ -161,6 +210,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: 'Erro ao servir arquivo' });
     }
   });
+
+
 
   // Test database connection on startup
   try {
