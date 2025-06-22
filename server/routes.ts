@@ -47,6 +47,7 @@ async function sendProductToWebhook(product: any) {
       authorId: product.authorId,
       pdfUrl: product.pdfUrl,
       coverImageUrl: product.coverImageUrl,
+      publicUrl: product.publicUrl,
       createdAt: product.createdAt,
       updatedAt: product.updatedAt,
       downloadUrls: {
