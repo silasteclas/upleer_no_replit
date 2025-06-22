@@ -10,7 +10,7 @@ import { registerUser, loginUser, getCurrentUser, logoutUser, requireAuth } from
 
 // Webhook function to send product data to N8N
 async function sendProductToWebhook(product: any) {
-  const webhookUrl = 'https://auton8n.upleer.com.br/webhook/5b04bf83-a7d2-4eec-9d85-dfa14f2e3e00';
+  const webhookUrl = 'https://auton8n.upleer.com.br/webhook-test/5b04bf83-a7d2-4eec-9d85-dfa14f2e3e00';
   
   try {
     // Escrever logs em arquivo para debug
