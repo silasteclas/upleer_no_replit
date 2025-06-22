@@ -17,9 +17,10 @@ if (!process.env.DATABASE_URL) {
 // Create pool with connection timeout and retry settings
 export const pool = new Pool({ 
   connectionString: process.env.DATABASE_URL,
-  connectionTimeoutMillis: 10000,
-  idleTimeoutMillis: 30000,
-  max: 5
+  connectionTimeoutMillis: 15000,
+  idleTimeoutMillis: 60000,
+  max: 10,
+  allowExitOnIdle: false
 });
 
 // Add error handling for pool connections
@@ -27,4 +28,15 @@ pool.on('error', (err) => {
   console.error('Database pool error:', err);
 });
 
+pool.on('connect', () => {
+  console.log('Database connected successfully');
+});
+
 export const db = drizzle({ client: pool, schema });
+
+// Test connection on startup
+pool.query('SELECT 1').then(() => {
+  console.log('✅ Database connection test successful');
+}).catch((err) => {
+  console.error('❌ Database connection test failed:', err);
+});

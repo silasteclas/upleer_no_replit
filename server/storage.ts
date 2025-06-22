@@ -17,8 +17,22 @@ import {
   type InsertApiEndpoint,
   type ApiLog,
 } from "@shared/schema";
-import { db } from "./db";
-import { eq, desc, and, sum, count } from "drizzle-orm";
+import { db, pool } from "./db";
+import { desc, eq, and, sum, count } from "drizzle-orm";
+
+// Helper function to retry database operations
+async function withRetry<T>(operation: () => Promise<T>, retries = 3): Promise<T> {
+  for (let i = 0; i < retries; i++) {
+    try {
+      return await operation();
+    } catch (error) {
+      if (i === retries - 1) throw error;
+      console.log(`Database operation failed, retrying (${i + 1}/${retries})...`);
+      await new Promise(resolve => setTimeout(resolve, 1000 * (i + 1)));
+    }
+  }
+  throw new Error('All retries failed');
+}
 
 // Interface for storage operations
 export interface IStorage {
@@ -29,10 +43,10 @@ export interface IStorage {
   upsertUser(user: UpsertUser): Promise<User>;
   updateUserProfileImage(id: string, profileImageUrl: string): Promise<User>;
   updateUserProfile(id: string, updates: Partial<UpsertUser>): Promise<User>;
-  
+
   // Admin operations
   getAllUsers(): Promise<User[]>;
-  
+
   // Product operations
   createProduct(product: InsertProduct): Promise<Product>;
   getProductsByAuthor(authorId: string): Promise<Product[]>;
@@ -40,11 +54,11 @@ export interface IStorage {
   getProduct(id: number): Promise<Product | undefined>;
   updateProduct(id: number, updates: Partial<InsertProduct>): Promise<Product>;
   updateProductStatus(id: number, status: string): Promise<Product>;
-  
+
   // Sales operations
   createSale(sale: InsertSale): Promise<Sale>;
   getSalesByAuthor(authorId: string): Promise<Sale[]>;
-  
+
   // Analytics operations
   getAuthorStats(authorId: string): Promise<{
     totalSales: number;
@@ -57,20 +71,20 @@ export interface IStorage {
     sales: number;
     revenue: number;
   }[]>;
-  
+
   // API Integration operations
   createApiIntegration(integration: InsertApiIntegration): Promise<ApiIntegration>;
   getApiIntegrations(): Promise<ApiIntegration[]>;
   getApiIntegration(id: number): Promise<ApiIntegration | undefined>;
   updateApiIntegration(id: number, updates: Partial<InsertApiIntegration>): Promise<ApiIntegration>;
   deleteApiIntegration(id: number): Promise<void>;
-  
+
   // API Endpoint operations
   createApiEndpoint(endpoint: InsertApiEndpoint): Promise<ApiEndpoint>;
   getApiEndpoints(integrationId: number): Promise<ApiEndpoint[]>;
   updateApiEndpoint(id: number, updates: Partial<InsertApiEndpoint>): Promise<ApiEndpoint>;
   deleteApiEndpoint(id: number): Promise<void>;
-  
+
   // API Logs operations
   createApiLog(log: Partial<ApiLog>): Promise<ApiLog>;
   getApiLogs(limit?: number): Promise<ApiLog[]>;
@@ -81,25 +95,25 @@ export class DatabaseStorage implements IStorage {
   // (IMPORTANT) these user operations are mandatory for Replit Auth.
 
   async getUser(id: string): Promise<User | undefined> {
-    const [user] = await db.select().from(users).where(eq(users.id, id));
+    const [user] = await withRetry(() => db.select().from(users).where(eq(users.id, id)));
     return user;
   }
 
   async getUserByEmail(email: string): Promise<User | undefined> {
-    const [user] = await db.select().from(users).where(eq(users.email, email));
+    const [user] = await withRetry(() => db.select().from(users).where(eq(users.email, email)));
     return user;
   }
 
   async createUser(userData: UpsertUser): Promise<User> {
-    const [user] = await db
+    const [user] = await withRetry(() => db
       .insert(users)
       .values(userData)
-      .returning();
+      .returning());
     return user;
   }
 
   async upsertUser(userData: UpsertUser): Promise<User> {
-    const [user] = await db
+    const [user] = await withRetry(() => db
       .insert(users)
       .values(userData)
       .onConflictDoUpdate({
@@ -109,103 +123,103 @@ export class DatabaseStorage implements IStorage {
           updatedAt: new Date(),
         },
       })
-      .returning();
+      .returning());
     return user;
   }
 
   async updateUserProfileImage(id: string, profileImageUrl: string): Promise<User> {
-    const [user] = await db
+    const [user] = await withRetry(() => db
       .update(users)
       .set({ 
         profileImageUrl,
         updatedAt: new Date()
       })
       .where(eq(users.id, id))
-      .returning();
+      .returning());
     return user;
   }
 
   async updateUserProfile(id: string, updates: Partial<UpsertUser>): Promise<User> {
-    const [user] = await db
+    const [user] = await withRetry(() => db
       .update(users)
       .set({ 
         ...updates,
         updatedAt: new Date()
       })
       .where(eq(users.id, id))
-      .returning();
+      .returning());
     return user;
   }
 
   // Admin operations
   async getAllUsers(): Promise<User[]> {
-    return await db.select().from(users).orderBy(desc(users.createdAt));
+    return await withRetry(() => db.select().from(users).orderBy(desc(users.createdAt)));
   }
 
   // Product operations
   async createProduct(product: InsertProduct): Promise<Product> {
-    const [newProduct] = await db
+    const [newProduct] = await withRetry(() => db
       .insert(products)
       .values(product)
-      .returning();
+      .returning());
     return newProduct;
   }
 
   async getProductsByAuthor(authorId: string): Promise<Product[]> {
-    return await db
+    return await withRetry(() => db
       .select()
       .from(products)
       .where(eq(products.authorId, authorId))
-      .orderBy(desc(products.createdAt));
+      .orderBy(desc(products.createdAt)));
   }
 
   async getAllProducts(): Promise<Product[]> {
-    return await db
+    return await withRetry(() => db
       .select()
       .from(products)
-      .orderBy(desc(products.createdAt));
+      .orderBy(desc(products.createdAt)));
   }
 
   async getProduct(id: number): Promise<Product | undefined> {
-    const [product] = await db
+    const [product] = await withRetry(() => db
       .select()
       .from(products)
-      .where(eq(products.id, id));
+      .where(eq(products.id, id)));
     return product;
   }
 
   async updateProduct(id: number, updates: Partial<InsertProduct>): Promise<Product> {
-    const [updatedProduct] = await db
+    const [updatedProduct] = await withRetry(() => db
       .update(products)
       .set({
         ...updates,
         updatedAt: new Date(),
       })
       .where(eq(products.id, id))
-      .returning();
+      .returning());
     return updatedProduct;
   }
 
   async updateProductStatus(id: number, status: string): Promise<Product> {
-    const [updatedProduct] = await db
+    const [updatedProduct] = await withRetry(() => db
       .update(products)
       .set({ status, updatedAt: new Date() })
       .where(eq(products.id, id))
-      .returning();
+      .returning());
     return updatedProduct;
   }
 
   // Sales operations
   async createSale(sale: InsertSale): Promise<Sale> {
-    const [newSale] = await db
+    const [newSale] = await withRetry(() => db
       .insert(sales)
       .values(sale)
-      .returning();
+      .returning());
     return newSale;
   }
 
   async getSalesByAuthor(authorId: string): Promise<(Sale & { product: { title: string; author: string } })[]> {
-    return await db
+    return await withRetry(() => db
       .select({
         id: sales.id,
         productId: sales.productId,
@@ -238,7 +252,7 @@ export class DatabaseStorage implements IStorage {
       .from(sales)
       .innerJoin(products, eq(sales.productId, products.id))
       .where(eq(products.authorId, authorId))
-      .orderBy(desc(sales.createdAt));
+      .orderBy(desc(sales.createdAt)));
   }
 
   // Analytics operations
@@ -249,25 +263,25 @@ export class DatabaseStorage implements IStorage {
     pendingProducts: number;
   }> {
     // Get sales stats
-    const [salesStats] = await db
+    const [salesStats] = await withRetry(() => db
       .select({
         totalSales: count(sales.id),
         totalRevenue: sum(sales.salePrice),
       })
       .from(sales)
       .innerJoin(products, eq(sales.productId, products.id))
-      .where(eq(products.authorId, authorId));
+      .where(eq(products.authorId, authorId)));
 
     // Get product counts
-    const [activeCount] = await db
+    const [activeCount] = await withRetry(() => db
       .select({ count: count() })
       .from(products)
-      .where(and(eq(products.authorId, authorId), eq(products.status, "approved")));
+      .where(and(eq(products.authorId, authorId), eq(products.status, "approved"))));
 
-    const [pendingCount] = await db
+    const [pendingCount] = await withRetry(() => db
       .select({ count: count() })
       .from(products)
-      .where(and(eq(products.authorId, authorId), eq(products.status, "pending")));
+      .where(and(eq(products.authorId, authorId), eq(products.status, "pending"))));
 
     return {
       totalSales: salesStats.totalSales || 0,
@@ -283,7 +297,7 @@ export class DatabaseStorage implements IStorage {
     revenue: number;
   }[]> {
     // This is a simplified implementation - in production you'd want proper date handling
-    const data = await db
+    const data = await withRetry(() => db
       .select({
         month: sales.createdAt,
         sales: count(sales.id),
@@ -294,7 +308,7 @@ export class DatabaseStorage implements IStorage {
       .where(eq(products.authorId, authorId))
       .groupBy(sales.createdAt)
       .orderBy(desc(sales.createdAt))
-      .limit(months);
+      .limit(months));
 
     return data.map(item => ({
       month: item.month?.toISOString().slice(0, 7) || '',
@@ -305,102 +319,106 @@ export class DatabaseStorage implements IStorage {
 
   // API Integration operations
   async createApiIntegration(integration: InsertApiIntegration): Promise<ApiIntegration> {
-    const [result] = await db
+    const [result] = await withRetry(() => db
       .insert(apiIntegrations)
       .values(integration)
-      .returning();
+      .returning());
     return result;
   }
 
   async getApiIntegrations(): Promise<ApiIntegration[]> {
-    return await db.select().from(apiIntegrations).orderBy(desc(apiIntegrations.createdAt));
+    return await withRetry(() => db.select().from(apiIntegrations).orderBy(desc(apiIntegrations.createdAt)));
   }
 
   async getApiIntegration(id: number): Promise<ApiIntegration | undefined> {
-    const [integration] = await db
+    const [integration] = await withRetry(() => db
       .select()
       .from(apiIntegrations)
-      .where(eq(apiIntegrations.id, id));
+      .where(eq(apiIntegrations.id, id)));
     return integration;
   }
 
   async updateApiIntegration(id: number, updates: Partial<InsertApiIntegration>): Promise<ApiIntegration> {
-    const [updated] = await db
+    const [updated] = await withRetry(() => db
       .update(apiIntegrations)
       .set({ ...updates, updatedAt: new Date() })
       .where(eq(apiIntegrations.id, id))
-      .returning();
+      .returning());
     return updated;
   }
 
   async deleteApiIntegration(id: number): Promise<void> {
-    await db.delete(apiIntegrations).where(eq(apiIntegrations.id, id));
+    await withRetry(() => db.delete(apiIntegrations).where(eq(apiIntegrations.id, id)));
   }
 
   // API Endpoint operations
   async createApiEndpoint(endpoint: InsertApiEndpoint): Promise<ApiEndpoint> {
-    const [result] = await db
+    const [result] = await withRetry(() => db
       .insert(apiEndpoints)
       .values(endpoint)
-      .returning();
+      .returning());
     return result;
   }
 
   async getApiEndpoints(integrationId: number): Promise<ApiEndpoint[]> {
-    return await db
+    return await withRetry(() => db
       .select()
       .from(apiEndpoints)
       .where(eq(apiEndpoints.integrationId, integrationId))
-      .orderBy(desc(apiEndpoints.createdAt));
+      .orderBy(desc(apiEndpoints.createdAt)));
   }
 
   async updateApiEndpoint(id: number, updates: Partial<InsertApiEndpoint>): Promise<ApiEndpoint> {
-    const [updated] = await db
+    const [updated] = await withRetry(() => db
       .update(apiEndpoints)
       .set({ ...updates, updatedAt: new Date() })
       .where(eq(apiEndpoints.id, id))
-      .returning();
+      .returning());
     return updated;
   }
 
   async deleteApiEndpoint(id: number): Promise<void> {
-    await db.delete(apiEndpoints).where(eq(apiEndpoints.id, id));
+    await withRetry(() => db.delete(apiEndpoints).where(eq(apiEndpoints.id, id)));
   }
 
   // API Logs operations
   async createApiLog(log: Partial<ApiLog>): Promise<ApiLog> {
-    const [result] = await db
+    const [result] = await withRetry(() => db
       .insert(apiLogs)
       .values(log as any)
-      .returning();
+      .returning());
     return result;
   }
 
   async getApiLogs(limit: number = 100): Promise<ApiLog[]> {
-    const logs = await db
-      .select({
-        id: apiLogs.id,
-        integrationId: apiLogs.integrationId,
-        endpointId: apiLogs.endpointId,
-        method: apiLogs.method,
-        url: apiLogs.url,
-        responseStatus: apiLogs.responseStatus,
-        responseTime: apiLogs.responseTime,
-        errorMessage: apiLogs.errorMessage,
-        createdAt: apiLogs.createdAt,
-      })
-      .from(apiLogs)
-      .orderBy(desc(apiLogs.createdAt))
-      .limit(limit);
+    const logs = await withRetry(async () => {
+      const logs = await db
+        .select({
+          id: apiLogs.id,
+          integrationId: apiLogs.integrationId,
+          endpointId: apiLogs.endpointId,
+          method: apiLogs.method,
+          url: apiLogs.url,
+          responseStatus: apiLogs.responseStatus,
+          responseTime: apiLogs.responseTime,
+          errorMessage: apiLogs.errorMessage,
+          createdAt: apiLogs.createdAt,
+        })
+        .from(apiLogs)
+        .orderBy(desc(apiLogs.createdAt))
+        .limit(limit);
+
+      return logs;
+    });
 
     // Get integration names separately
     const logsWithIntegrations = await Promise.all(
       logs.map(async (log) => {
-        const [integration] = await db
+        const [integration] = await withRetry(() => db
           .select({ name: apiIntegrations.name })
           .from(apiIntegrations)
-          .where(eq(apiIntegrations.id, log.integrationId));
-        
+          .where(eq(apiIntegrations.id, log.integrationId)));
+
         return {
           ...log,
           integration: {
