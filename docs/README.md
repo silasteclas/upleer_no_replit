@@ -16,6 +16,7 @@ O Upleer é uma plataforma completa para autores publicarem e venderem seus livr
 8. [Integrações e Webhooks](./08-integracoes-webhooks.md)
 9. [Guia de Instalação](./09-instalacao.md)
 10. [Guia de Desenvolvimento](./10-desenvolvimento.md)
+11. [Setup Local Windows](./11-setup-local-windows.md)
 
 ## Características Principais
 
