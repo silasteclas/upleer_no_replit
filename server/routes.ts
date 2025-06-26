@@ -52,7 +52,8 @@ async function sendProductToWebhook(product: any) {
       updatedAt: product.updatedAt,
       downloadUrls: {
         productDetails: `https://bbf3fd2f-5839-4fea-9611-af32c6e20f91-00-2j7vwbakpk3p3.kirk.replit.dev/api/products/${product.id}`,
-        pdfDownload: pdfFilename ? `https://bbf3fd2f-5839-4fea-9611-af32c6e20f91-00-2j7vwbakpk3p3.kirk.replit.dev/api/download/pdf/${pdfFilename}` : null,
+        pdfDownload: pdfFilename ? `https://bbf3fd2f-5839-4fea-9611-af32c6e20f91-00-2j7vwbakpk3p3.kirk.replit.dev/api/pdf/${pdfFilename}` : null,
+        pdfDirect: pdfFilename ? `https://bbf3fd2f-5839-4fea-9611-af32c6e20f91-00-2j7vwbakpk3p3.kirk.replit.dev/uploads/${pdfFilename}` : null,
         coverDownload: coverFilename ? `https://bbf3fd2f-5839-4fea-9611-af32c6e20f91-00-2j7vwbakpk3p3.kirk.replit.dev/api/download/cover/${coverFilename}` : null
       }
     };
@@ -203,6 +204,47 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('[DOWNLOAD] Error serving download file:', error);
       res.status(500).json({ message: 'Erro ao servir arquivo' });
+    }
+  });
+
+  // Direct PDF access endpoint - serves PDFs directly from uploads folder
+  app.get('/api/pdf/:filename', (req, res) => {
+    const { filename } = req.params;
+    const filePath = path.join('uploads', filename);
+    
+    console.log(`[PDF] Request for PDF: ${filename}`);
+    console.log(`[PDF] File path: ${filePath}`);
+    console.log(`[PDF] File exists: ${fs.existsSync(filePath)}`);
+    
+    // Check if file exists
+    if (!fs.existsSync(filePath)) {
+      console.log(`[PDF] File not found: ${filePath}`);
+      return res.status(404).json({ message: 'PDF não encontrado' });
+    }
+    
+    try {
+      const buffer = fs.readFileSync(filePath);
+      
+      // Verify it's actually a PDF file
+      if (buffer.length < 4 || buffer.toString('ascii', 0, 4) !== '%PDF') {
+        console.log(`[PDF] File is not a valid PDF: ${filename}`);
+        return res.status(400).json({ message: 'Arquivo não é um PDF válido' });
+      }
+      
+      console.log(`[PDF] Serving PDF file: ${filename} (${buffer.length} bytes)`);
+      
+      // Set proper headers for PDF viewing
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader('Content-Disposition', `inline; filename="${filename}.pdf"`);
+      res.setHeader('Content-Length', buffer.length);
+      res.setHeader('Cache-Control', 'public, max-age=3600');
+      res.setHeader('Accept-Ranges', 'bytes');
+      
+      res.send(buffer);
+      
+    } catch (error) {
+      console.error('[PDF] Error serving PDF file:', error);
+      res.status(500).json({ message: 'Erro ao servir PDF' });
     }
   });
 
