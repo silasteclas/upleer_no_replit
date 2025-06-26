@@ -148,25 +148,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
     const { type, filename } = req.params;
     const filePath = path.join('uploads', filename);
     
+    console.log(`[DOWNLOAD] Request for ${type}/${filename}`);
+    console.log(`[DOWNLOAD] File path: ${filePath}`);
+    console.log(`[DOWNLOAD] File exists: ${fs.existsSync(filePath)}`);
+    
     // Validate file type
     if (!['pdf', 'cover', 'image'].includes(type)) {
+      console.log(`[DOWNLOAD] Invalid file type: ${type}`);
       return res.status(400).json({ message: 'Tipo de arquivo inválido' });
     }
     
     // Check if file exists
     if (!fs.existsSync(filePath)) {
+      console.log(`[DOWNLOAD] File not found: ${filePath}`);
       return res.status(404).json({ message: 'Arquivo não encontrado' });
     }
     
     try {
-      const buffer = fs.readFileSync(filePath, { encoding: null });
+      const buffer = fs.readFileSync(filePath);
       let contentType = 'application/octet-stream';
       let downloadName = filename;
       
+      console.log(`[DOWNLOAD] File size: ${buffer.length} bytes`);
+      
       // Set content type based on file type parameter and content detection
-      if (type === 'pdf' || (buffer.length >= 4 && buffer.toString('ascii', 0, 4) === '%PDF')) {
+      if (type === 'pdf') {
         contentType = 'application/pdf';
         downloadName = filename.includes('.pdf') ? filename : `${filename}.pdf`;
+        console.log(`[DOWNLOAD] Serving as PDF: ${downloadName}`);
       } else if (type === 'cover' || type === 'image') {
         if (buffer.length >= 2 && buffer[0] === 0xFF && buffer[1] === 0xD8) {
           contentType = 'image/jpeg';
@@ -178,16 +187,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
           contentType = 'image/jpeg'; // default for covers
           downloadName = filename.includes('.jpg') ? filename : `${filename}.jpg`;
         }
+        console.log(`[DOWNLOAD] Serving as image: ${contentType} - ${downloadName}`);
       }
       
+      // Set headers for proper file serving
       res.setHeader('Content-Type', contentType);
-      res.setHeader('Content-Disposition', `attachment; filename="${downloadName}"`);
+      res.setHeader('Content-Disposition', `inline; filename="${downloadName}"`);
       res.setHeader('Content-Length', buffer.length);
       res.setHeader('Cache-Control', 'public, max-age=3600');
+      res.setHeader('Accept-Ranges', 'bytes');
+      
+      console.log(`[DOWNLOAD] Successfully serving file ${filename}`);
       res.send(buffer);
       
     } catch (error) {
-      console.error('Error serving download file:', error);
+      console.error('[DOWNLOAD] Error serving download file:', error);
       res.status(500).json({ message: 'Erro ao servir arquivo' });
     }
   });
