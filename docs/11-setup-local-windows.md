@@ -177,6 +177,20 @@ set PORT=3000 && npm run dev
 - **Problema**: Espaços e caracteres especiais quebrando o parsing
 - **Solução**: Arquivo limpo sem comentários ou espaços extras
 
+### 5. Erro 500 no Cadastro de Produtos ✅ RESOLVIDO
+- **Problema**: Webhook tentando escrever em `/tmp/` (inexistente no Windows)
+- **Causa**: Função `sendProductToWebhook` usando `fs.writeFileSync('/tmp/...')` + webhook bloqueando resposta
+- **Solução**: 
+  - Webhook movido para `setImmediate()` (não-bloqueante)
+  - Logs de arquivo substituídos por `console.log`
+  - URLs corrigidas para localhost
+  - Tratamento robusto de erro no webhook
+
+### 6. Webhook N8N Não Aparecendo no Dashboard ✅ RESOLVIDO
+- **Problema**: Payloads chegando ao N8N mas não aparecendo no dashboard
+- **Causa**: Cache/atualização da interface do N8N
+- **Solução**: Atualizar manualmente a aba do N8N (F5) para ver os dados
+
 ## 📊 Verificações de Funcionamento
 
 ### Status dos Serviços
@@ -205,6 +219,11 @@ curl http://localhost:3000
 3. **Login**: ✅ Autenticação ativa
 4. **Dashboard**: ✅ Interface carregando
 5. **Navegação**: ✅ Todas as rotas funcionais
+6. **Cadastro de produtos**: ✅ Upload de PDF e capa funcionando
+7. **Banco de dados**: ✅ Produtos salvos no Neon corretamente
+8. **Tela de confirmação**: ✅ Feedback visual após upload
+9. **Webhook N8N**: ✅ Payload enviado e recebido corretamente
+10. **Integração completa**: ✅ Fluxo completo Upleer → N8N funcionando
 
 ## 📝 Comandos Finais de Execução
 

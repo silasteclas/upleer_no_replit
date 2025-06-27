@@ -8,24 +8,27 @@ import express from "express";
 import crypto from "crypto";
 import { registerUser, loginUser, getCurrentUser, logoutUser, requireAuth } from "./real-auth";
 
+// Helper function to get base URL based on environment
+function getBaseUrl(): string {
+  const isDevelopment = process.env.NODE_ENV === 'development';
+  const port = process.env.PORT || 3000;
+  
+  if (isDevelopment) {
+    return `http://localhost:${port}`;
+  }
+  
+  // Para produção, usar domínio real quando disponível
+  return process.env.BASE_URL || `http://localhost:${port}`;
+}
+
 // Webhook function to send product data to N8N
 async function sendProductToWebhook(product: any) {
-  const webhookUrl = 'https://auton8n.upleer.com.br/webhook-test/5b04bf83-a7d2-4eec-9d85-dfa14f2e3e00';
+  const webhookUrl = 'https://auton8n.upleer.com.br/webhook/novo_produto';
   
   try {
-    // Escrever logs em arquivo para debug
-    const logData = {
-      timestamp: new Date().toISOString(),
-      productId: product.id,
-      webhookUrl: webhookUrl,
-      fullProduct: product
-    };
+    console.log(`[WEBHOOK] Sending product ${product.id} to N8N webhook...`);
     
-    fs.writeFileSync('/tmp/webhook-debug.log', JSON.stringify(logData, null, 2) + '\n', { flag: 'a' });
-    
-    console.log(`[WEBHOOK] Sending product ${product.id} to webhook...`);
-    
-    // Tentar primeiro com dados completos do produto
+    // Preparar dados do produto para webhook
     const pdfFilename = product.pdfUrl ? product.pdfUrl.split('/').pop() : null;
     const coverFilename = product.coverImageUrl ? product.coverImageUrl.split('/').pop() : null;
     
@@ -50,53 +53,74 @@ async function sendProductToWebhook(product: any) {
       publicUrl: product.publicUrl,
       createdAt: product.createdAt,
       updatedAt: product.updatedAt,
+      // URLs para download e integração
       downloadUrls: {
-        productDetails: `https://bbf3fd2f-5839-4fea-9611-af32c6e20f91-00-2j7vwbakpk3p3.kirk.replit.dev/api/products/${product.id}`,
-        pdfDownload: pdfFilename ? `https://bbf3fd2f-5839-4fea-9611-af32c6e20f91-00-2j7vwbakpk3p3.kirk.replit.dev/api/pdf/${pdfFilename}` : null,
-        pdfDirect: pdfFilename ? `https://bbf3fd2f-5839-4fea-9611-af32c6e20f91-00-2j7vwbakpk3p3.kirk.replit.dev/uploads/${pdfFilename}` : null,
-        coverDownload: coverFilename ? `https://bbf3fd2f-5839-4fea-9611-af32c6e20f91-00-2j7vwbakpk3p3.kirk.replit.dev/api/download/cover/${coverFilename}` : null
+        productDetails: `${getBaseUrl()}/api/products/${product.id}`,
+        pdfDownload: pdfFilename ? `${getBaseUrl()}/api/pdf/${pdfFilename}` : null,
+        pdfDirect: pdfFilename ? `${getBaseUrl()}/uploads/${pdfFilename}` : null,
+        coverDownload: coverFilename ? `${getBaseUrl()}/api/download/cover/${coverFilename}` : null
+      },
+      // Metadata adicional para N8N
+      metadata: {
+        source: 'upleer_local',
+        environment: 'development',
+        timestamp: new Date().toISOString(),
+        fileInfo: {
+          pdfSize: pdfFilename ? 'unknown' : null,
+          coverSize: coverFilename ? 'unknown' : null,
+          pdfFilename: pdfFilename,
+          coverFilename: coverFilename
+        }
       }
     };
+    
+    console.log(`[WEBHOOK] Sending to: ${webhookUrl}`);
+    console.log(`[WEBHOOK] Product data summary:`, {
+      id: product.id,
+      title: product.title,
+      author: product.author,
+      genre: product.genre,
+      status: product.status,
+      hasFiles: {
+        pdf: !!pdfFilename,
+        cover: !!coverFilename
+      }
+    });
     
     const response = await fetch(webhookUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'User-Agent': 'Upleer-Webhook/1.0'
+        'User-Agent': 'Upleer-Webhook/1.0',
+        'X-Webhook-Source': 'upleer-local',
+        'X-Product-ID': product.id.toString()
       },
-      body: JSON.stringify(webhookData)
+      body: JSON.stringify(webhookData),
+      // Timeout de 10 segundos
+      signal: AbortSignal.timeout(10000)
     });
 
     const responseText = await response.text();
     
-    // Log da resposta
-    const responseLog = {
-      timestamp: new Date().toISOString(),
-      productId: product.id,
-      status: response.status,
-      statusText: response.statusText,
-      headers: Object.fromEntries(response.headers),
-      responseBody: responseText,
-      sentData: webhookData
-    };
-    
-    fs.writeFileSync('/tmp/webhook-response.log', JSON.stringify(responseLog, null, 2) + '\n', { flag: 'a' });
+    console.log(`[WEBHOOK] Response status: ${response.status}`);
+    console.log(`[WEBHOOK] Response headers:`, Object.fromEntries(response.headers));
     
     if (response.ok) {
-      console.log(`[WEBHOOK] Product ${product.id} sent successfully to webhook`);
+      console.log(`[WEBHOOK] ✅ Product ${product.id} sent successfully to N8N`);
+      console.log(`[WEBHOOK] Response body:`, responseText);
     } else {
-      console.error(`[WEBHOOK] Failed to send product ${product.id}:`, response.status, response.statusText);
+      console.error(`[WEBHOOK] ❌ Failed to send product ${product.id}:`, response.status, response.statusText);
+      console.error(`[WEBHOOK] Error response:`, responseText);
     }
+
+
   } catch (error) {
-    const errorLog = {
-      timestamp: new Date().toISOString(),
-      productId: product.id,
-      error: error instanceof Error ? error.message : String(error),
-      stack: error instanceof Error ? error.stack : undefined
-    };
-    
-    fs.writeFileSync('/tmp/webhook-error.log', JSON.stringify(errorLog, null, 2) + '\n', { flag: 'a' });
-    console.error(`[WEBHOOK] Error sending product ${product.id} to webhook:`, error);
+    if (error instanceof Error && error.name === 'TimeoutError') {
+      console.error(`[WEBHOOK] ⏰ Timeout sending product ${product.id} to webhook (>10s)`);
+    } else {
+      console.error(`[WEBHOOK] ❌ Error sending product ${product.id} to webhook:`, error);
+    }
+    // Não falhar o produto se o webhook falhar
   }
 }
 
@@ -310,6 +334,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+
+
   // Setup session config for auth
   const { createSessionConfig } = await import("./session-config");
   app.use(createSessionConfig());
@@ -370,8 +396,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         authorId: userId
       });
 
-      // Send to webhook
-      await sendProductToWebhook(product);
+      // Send to webhook de forma assíncrona (não bloquear resposta)
+      setImmediate(async () => {
+        try {
+          await sendProductToWebhook(product);
+        } catch (webhookError) {
+          console.error("[UPLOAD] Webhook failed but continuing:", webhookError);
+        }
+      });
 
       res.status(201).json(product);
     } catch (error) {
@@ -386,32 +418,44 @@ export async function registerRoutes(app: Express): Promise<Server> {
     { name: "cover", maxCount: 1 }
   ]), async (req, res) => {
     try {
+      console.log("[PRODUCTS] POST /api/products - Starting...");
+      console.log("[PRODUCTS] Request body:", req.body);
+      console.log("[PRODUCTS] Request files:", req.files);
+      
       const files = req.files as { [fieldname: string]: Express.Multer.File[] };
       const {
         title, description, isbn, author, coAuthors, genre, language,
         targetAudience, pageCount, baseCost, salePrice
       } = req.body;
 
+      console.log("[PRODUCTS] Extracted fields:", {
+        title, author, genre, salePrice, pageCount, baseCost
+      });
+
       if (!title || !author || !genre || !salePrice) {
+        console.log("[PRODUCTS] Missing required fields");
         return res.status(400).json({
           message: "Campos obrigatórios: title, author, genre, salePrice"
         });
       }
 
       const userId = (req as any).userId;
+      console.log("[PRODUCTS] User ID:", userId);
       
       let pdfUrl = null;
       let coverImageUrl = null;
 
       if (files.pdf && files.pdf[0]) {
         pdfUrl = `/uploads/${files.pdf[0].filename}`;
+        console.log("[PRODUCTS] PDF uploaded:", pdfUrl);
       }
 
       if (files.cover && files.cover[0]) {
         coverImageUrl = `/uploads/${files.cover[0].filename}`;
+        console.log("[PRODUCTS] Cover uploaded:", coverImageUrl);
       }
 
-      const product = await storage.createProduct({
+      const productData = {
         title,
         description: description || "",
         author,
@@ -428,15 +472,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
         marginPercent: 150,
         status: "pending",
         authorId: userId
+      };
+
+      console.log("[PRODUCTS] Creating product with data:", productData);
+
+      const product = await storage.createProduct(productData);
+      console.log("[PRODUCTS] Product created successfully:", product.id);
+
+      // Send to webhook de forma assíncrona (não bloquear resposta)
+      setImmediate(async () => {
+        try {
+          await sendProductToWebhook(product);
+        } catch (webhookError) {
+          console.error("[PRODUCTS] Webhook failed but continuing:", webhookError);
+        }
       });
 
-      // Send to webhook
-      await sendProductToWebhook(product);
-
+      console.log("[PRODUCTS] Returning product response:", product.id);
       res.status(201).json(product);
     } catch (error) {
-      console.error("Error creating product:", error);
-      res.status(500).json({ message: "Erro interno do servidor" });
+      console.error("[PRODUCTS] Error creating product:", error);
+      console.error("[PRODUCTS] Error stack:", error instanceof Error ? error.stack : 'No stack trace');
+      res.status(500).json({ 
+        message: "Erro interno do servidor",
+        error: error instanceof Error ? error.message : String(error)
+      });
     }
   });
 
@@ -444,7 +504,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userId = (req as any).userId;
       const products = await storage.getProductsByAuthor(userId);
-      res.json(products);
+      
+      // Adicionar URLs de acesso a todos os produtos
+      const baseUrl = getBaseUrl();
+      const productsWithUrls = products.map(product => {
+        const pdfFilename = product.pdfUrl ? product.pdfUrl.split('/').pop() : null;
+        const coverFilename = product.coverImageUrl ? product.coverImageUrl.split('/').pop() : null;
+        
+        return {
+          ...product,
+          accessUrls: {
+            pdfDirect: pdfFilename ? `${baseUrl}/uploads/${pdfFilename}` : null,
+            pdfDownload: pdfFilename ? `${baseUrl}/api/pdf/${pdfFilename}` : null,
+            coverDirect: coverFilename ? `${baseUrl}/uploads/${coverFilename}` : null,
+            coverDownload: coverFilename ? `${baseUrl}/api/download/cover/${coverFilename}` : null,
+            productDetails: `${baseUrl}/api/products/${product.id}`
+          }
+        };
+      });
+      
+      res.json(productsWithUrls);
     } catch (error) {
       console.error("Error fetching products:", error);
       res.status(500).json({ message: "Erro interno do servidor" });
@@ -466,9 +545,68 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "Acesso negado" });
       }
       
-      res.json(product);
+      // Adicionar URLs de acesso completas ao produto
+      const baseUrl = getBaseUrl();
+      const pdfFilename = product.pdfUrl ? product.pdfUrl.split('/').pop() : null;
+      const coverFilename = product.coverImageUrl ? product.coverImageUrl.split('/').pop() : null;
+      
+      const productWithUrls = {
+        ...product,
+        accessUrls: {
+          pdfDirect: pdfFilename ? `${baseUrl}/uploads/${pdfFilename}` : null,
+          pdfDownload: pdfFilename ? `${baseUrl}/api/pdf/${pdfFilename}` : null,
+          coverDirect: coverFilename ? `${baseUrl}/uploads/${coverFilename}` : null,
+          coverDownload: coverFilename ? `${baseUrl}/api/download/cover/${coverFilename}` : null,
+          productDetails: `${baseUrl}/api/products/${productId}`
+        }
+      };
+      
+      res.json(productWithUrls);
     } catch (error) {
       console.error("Error fetching product:", error);
+      res.status(500).json({ message: "Erro interno do servidor" });
+    }
+  });
+
+  // Endpoint específico para obter URLs de acesso de um produto (público)
+  app.get("/api/products/:id/urls", async (req, res) => {
+    try {
+      const productId = parseInt(req.params.id);
+      
+      const product = await storage.getProduct(productId);
+      
+      if (!product) {
+        return res.status(404).json({ message: "Produto não encontrado" });
+      }
+      
+      const baseUrl = getBaseUrl();
+      const pdfFilename = product.pdfUrl ? product.pdfUrl.split('/').pop() : null;
+      const coverFilename = product.coverImageUrl ? product.coverImageUrl.split('/').pop() : null;
+      
+      const urls = {
+        productId: product.id,
+        title: product.title,
+        author: product.author,
+        status: product.status,
+        urls: {
+          pdfDirect: pdfFilename ? `${baseUrl}/uploads/${pdfFilename}` : null,
+          pdfDownload: pdfFilename ? `${baseUrl}/api/pdf/${pdfFilename}` : null,
+          coverDirect: coverFilename ? `${baseUrl}/uploads/${coverFilename}` : null,
+          coverDownload: coverFilename ? `${baseUrl}/api/download/cover/${coverFilename}` : null,
+          productDetails: `${baseUrl}/api/products/${productId}`
+        },
+        metadata: {
+          pdfFilename,
+          coverFilename,
+          baseUrl,
+          generatedAt: new Date().toISOString()
+        }
+      };
+      
+      console.log(`[PRODUCT-URLS] Generated URLs for product ${productId}:`, urls);
+      res.json(urls);
+    } catch (error) {
+      console.error("Error fetching product URLs:", error);
       res.status(500).json({ message: "Erro interno do servidor" });
     }
   });
