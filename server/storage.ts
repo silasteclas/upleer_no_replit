@@ -2,6 +2,8 @@ import {
   users,
   products,
   sales,
+  orders,
+  saleItems,
   apiIntegrations,
   apiEndpoints,
   apiLogs,
@@ -11,6 +13,10 @@ import {
   type InsertProduct,
   type Sale,
   type InsertSale,
+  type Order,
+  type InsertOrder,
+  type SaleItem,
+  type InsertSaleItem,
   type ApiIntegration,
   type InsertApiIntegration,
   type ApiEndpoint,
@@ -41,9 +47,21 @@ export interface IStorage {
   updateProduct(id: number, updates: Partial<InsertProduct>): Promise<Product>;
   updateProductStatus(id: number, status: string): Promise<Product>;
   
+  // Order operations (NOVO - FASE 3)
+  createOrder(order: InsertOrder): Promise<Order>;
+  getOrder(id: string): Promise<Order | undefined>;
+  
   // Sales operations
   createSale(sale: InsertSale): Promise<Sale>;
-  getSalesByAuthor(authorId: string): Promise<Sale[]>;
+  getSalesByAuthor(authorId: string): Promise<(Sale & { 
+    product: { title: string; author: string };
+    order: { cliente_nome: string; cliente_email: string; valor_total: number };
+    saleItems: { product_name: string; quantity: number; price: number }[];
+  })[]>;
+  
+  // Sale Items operations (NOVO - FASE 3)
+  createSaleItem(saleItem: InsertSaleItem): Promise<SaleItem>;
+  getSaleItemsBySale(saleId: number): Promise<SaleItem[]>;
   
   // Analytics operations
   getAuthorStats(authorId: string): Promise<{
@@ -195,6 +213,23 @@ export class DatabaseStorage implements IStorage {
     return updatedProduct;
   }
 
+  // Order operations (NOVO - FASE 3)
+  async createOrder(order: InsertOrder): Promise<Order> {
+    const [newOrder] = await db
+      .insert(orders)
+      .values(order)
+      .returning();
+    return newOrder;
+  }
+
+  async getOrder(id: string): Promise<Order | undefined> {
+    const [order] = await db
+      .select()
+      .from(orders)
+      .where(eq(orders.id, id));
+    return order;
+  }
+
   // Sales operations
   async createSale(sale: InsertSale): Promise<Sale> {
     const [newSale] = await db
@@ -204,10 +239,19 @@ export class DatabaseStorage implements IStorage {
     return newSale;
   }
 
-  async getSalesByAuthor(authorId: string): Promise<(Sale & { product: { title: string; author: string } })[]> {
-    return await db
+  async getSalesByAuthor(authorId: string): Promise<(Sale & { 
+    product: { title: string; author: string };
+    order: { cliente_nome: string; cliente_email: string; valor_total: number };
+    saleItems: { product_name: string; quantity: number; price: number }[];
+  })[]> {
+    // FASE 4: NOVA ESTRUTURA MARKETPLACE
+    // Buscar vendas do autor com relacionamentos para orders e sale_items
+    const authorSales = await db
       .select({
+        // Campos da venda
         id: sales.id,
+        orderId: sales.orderId,
+        authorId: sales.authorId,
         productId: sales.productId,
         buyerEmail: sales.buyerEmail,
         buyerName: sales.buyerName,
@@ -229,16 +273,99 @@ export class DatabaseStorage implements IStorage {
         shippingCost: sales.shippingCost,
         shippingCarrier: sales.shippingCarrier,
         deliveryDays: sales.deliveryDays,
+        quantity: sales.quantity,
         createdAt: sales.createdAt,
-        product: {
-          title: products.title,
-          author: products.author,
-        }
+        
+        // Campos do produto
+        productTitle: products.title,
+        productAuthor: products.author,
+        
+        // Campos do pedido
+        orderClienteNome: orders.clienteNome,
+        orderClienteEmail: orders.clienteEmail,
+        orderValorTotal: orders.valorTotal,
       })
       .from(sales)
       .innerJoin(products, eq(sales.productId, products.id))
-      .where(eq(products.authorId, authorId))
+      .innerJoin(orders, eq(sales.orderId, orders.id))
+      .where(eq(sales.authorId, authorId))
       .orderBy(desc(sales.createdAt));
+
+    // Para cada venda, buscar os sale_items relacionados
+    const salesWithItems = await Promise.all(
+      authorSales.map(async (sale) => {
+        const items = await db
+          .select({
+            product_name: saleItems.productName,
+            quantity: saleItems.quantity,
+            price: saleItems.price,
+          })
+          .from(saleItems)
+          .where(eq(saleItems.saleId, sale.id));
+
+        return {
+          id: sale.id,
+          orderId: sale.orderId,
+          authorId: sale.authorId,
+          productId: sale.productId,
+          buyerEmail: sale.buyerEmail,
+          buyerName: sale.buyerName,
+          buyerPhone: sale.buyerPhone,
+          buyerCpf: sale.buyerCpf,
+          buyerAddress: sale.buyerAddress,
+          buyerCity: sale.buyerCity,
+          buyerState: sale.buyerState,
+          buyerZipCode: sale.buyerZipCode,
+          salePrice: sale.salePrice,
+          commission: sale.commission,
+          authorEarnings: sale.authorEarnings,
+          orderDate: sale.orderDate,
+          paymentStatus: sale.paymentStatus,
+          paymentMethod: sale.paymentMethod,
+          installments: sale.installments,
+          discountCoupon: sale.discountCoupon,
+          discountAmount: sale.discountAmount,
+          shippingCost: sale.shippingCost,
+          shippingCarrier: sale.shippingCarrier,
+          deliveryDays: sale.deliveryDays,
+          quantity: sale.quantity,
+          createdAt: sale.createdAt,
+          product: {
+            title: sale.productTitle,
+            author: sale.productAuthor,
+          },
+          order: {
+            cliente_nome: sale.orderClienteNome || '',
+            cliente_email: sale.orderClienteEmail || '',
+            valor_total: Number(sale.orderValorTotal) || 0,
+          },
+          saleItems: items.map(item => ({
+            product_name: item.product_name,
+            quantity: item.quantity,
+            price: Number(item.price),
+          })),
+        };
+      })
+    );
+
+    return salesWithItems;
+  }
+
+  // Sale Items operations (NOVO - FASE 3)
+  async createSaleItem(saleItem: InsertSaleItem): Promise<SaleItem> {
+    const [newSaleItem] = await db
+      .insert(saleItems)
+      .values(saleItem)
+      .returning();
+    return newSaleItem;
+  }
+
+  async getSaleItemsBySale(saleId: number): Promise<SaleItem[]> {
+    return await db
+      .select()
+      .from(saleItems)
+      .where(eq(saleItems.saleId, saleId))
+      .orderBy(desc(saleItems.createdAt));
   }
 
   // Analytics operations
@@ -248,15 +375,15 @@ export class DatabaseStorage implements IStorage {
     activeProducts: number;
     pendingProducts: number;
   }> {
-    // Get sales stats
+    // FASE 4: NOVA ESTRUTURA MARKETPLACE
+    // Get sales stats - agora usando authorId diretamente na tabela sales
     const [salesStats] = await db
       .select({
         totalSales: count(sales.id),
         totalRevenue: sum(sales.salePrice),
       })
       .from(sales)
-      .innerJoin(products, eq(sales.productId, products.id))
-      .where(eq(products.authorId, authorId));
+      .where(eq(sales.authorId, authorId));
 
     // Get product counts
     const [activeCount] = await db
@@ -282,7 +409,8 @@ export class DatabaseStorage implements IStorage {
     sales: number;
     revenue: number;
   }[]> {
-    // This is a simplified implementation - in production you'd want proper date handling
+    // FASE 4: NOVA ESTRUTURA MARKETPLACE
+    // Usar authorId diretamente da tabela sales
     const data = await db
       .select({
         month: sales.createdAt,
@@ -290,8 +418,7 @@ export class DatabaseStorage implements IStorage {
         revenue: sum(sales.authorEarnings),
       })
       .from(sales)
-      .innerJoin(products, eq(sales.productId, products.id))
-      .where(eq(products.authorId, authorId))
+      .where(eq(sales.authorId, authorId))
       .groupBy(sales.createdAt)
       .orderBy(desc(sales.createdAt))
       .limit(months);

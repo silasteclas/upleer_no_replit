@@ -7,11 +7,12 @@ import fs from "fs";
 import express from "express";
 import crypto from "crypto";
 import { registerUser, loginUser, getCurrentUser, logoutUser, requireAuth } from "./real-auth";
+import { uploadFileToSupabase, deleteFileFromSupabase, extractFileNameFromSupabaseUrl } from "./supabase";
 
 // Helper function to get base URL based on environment
 function getBaseUrl(): string {
   const isDevelopment = process.env.NODE_ENV === 'development';
-  const port = process.env.PORT || 3000;
+  const port = process.env.PORT || 5000;
   
   if (isDevelopment) {
     return `http://localhost:${port}`;
@@ -28,15 +29,25 @@ async function sendProductToWebhook(product: any) {
   try {
     console.log(`[WEBHOOK] Sending product ${product.id} to N8N webhook...`);
     
-    // Preparar dados do produto para webhook
-    const pdfFilename = product.pdfUrl ? product.pdfUrl.split('/').pop() : null;
-    const coverFilename = product.coverImageUrl ? product.coverImageUrl.split('/').pop() : null;
-    
-    const webhookData = {
-      id: product.id,
-      title: product.title,
-      description: product.description,
-      author: product.author,
+      // Preparar dados do produto para webhook
+  const pdfFilename = product.pdfUrl ? product.pdfUrl.split('/').pop() : null;
+  const coverFilename = product.coverImageUrl ? product.coverImageUrl.split('/').pop() : null;
+  
+  // Limpar e formatar descrição
+  const cleanDescription = product.description 
+    ? product.description
+        .replace(/\\n/g, ' ')           // Remover \n literais
+        .replace(/\n/g, ' ')            // Remover quebras de linha reais
+        .replace(/\r/g, ' ')            // Remover retornos de carro
+        .replace(/\s+/g, ' ')           // Múltiplos espaços vira um só
+        .trim()                         // Remove espaços no início/fim
+    : '';
+  
+  const webhookData = {
+    id: product.id,
+    title: product.title,
+    description: cleanDescription,
+    author: product.author,
       isbn: product.isbn,
       coAuthors: product.coAuthors,
       genre: product.genre,
@@ -49,6 +60,7 @@ async function sendProductToWebhook(product: any) {
       status: product.status,
       authorId: product.authorId,
       pdfUrl: product.pdfUrl,
+      // Usar URL do Supabase diretamente (já é URL pública)
       coverImageUrl: product.coverImageUrl,
       publicUrl: product.publicUrl,
       createdAt: product.createdAt,
@@ -81,6 +93,7 @@ async function sendProductToWebhook(product: any) {
       author: product.author,
       genre: product.genre,
       status: product.status,
+      description: cleanDescription.substring(0, 100) + (cleanDescription.length > 100 ? '...' : ''),
       hasFiles: {
         pdf: !!pdfFilename,
         cover: !!coverFilename
@@ -125,13 +138,7 @@ async function sendProductToWebhook(product: any) {
 }
 
 const upload = multer({
-  storage: multer.diskStorage({
-    destination: "uploads/",
-    filename: (req, file, cb) => {
-      const hash = crypto.createHash('md5').update(file.originalname + Date.now()).digest('hex');
-      cb(null, hash);
-    }
-  }),
+  storage: multer.memoryStorage(), // Usar memory storage para enviar direto ao Supabase
   limits: {
     fileSize: 100 * 1024 * 1024, // 100MB
   },
@@ -148,13 +155,7 @@ const upload = multer({
 
 // Separate multer configuration for profile images
 const profileImageUpload = multer({
-  storage: multer.diskStorage({
-    destination: "uploads/",
-    filename: (req, file, cb) => {
-      const hash = crypto.createHash('md5').update(file.originalname + Date.now()).digest('hex');
-      cb(null, hash);
-    }
-  }),
+  storage: multer.memoryStorage(), // Usar memory storage para enviar direto ao Supabase
   limits: {
     fileSize: 2 * 1024 * 1024, // 2MB for profile images
   },
@@ -445,14 +446,44 @@ export async function registerRoutes(app: Express): Promise<Server> {
       let pdfUrl = null;
       let coverImageUrl = null;
 
+      // Upload PDF para Supabase se fornecido
       if (files.pdf && files.pdf[0]) {
-        pdfUrl = `/uploads/${files.pdf[0].filename}`;
-        console.log("[PRODUCTS] PDF uploaded:", pdfUrl);
+        console.log("[PRODUCTS] Uploading PDF to Supabase...");
+        const pdfFile = files.pdf[0];
+        const pdfFileName = `pdf_${userId}_${Date.now()}.pdf`;
+        
+        pdfUrl = await uploadFileToSupabase(
+          pdfFile.buffer,
+          pdfFileName,
+          pdfFile.mimetype
+        );
+        
+        if (pdfUrl) {
+          console.log("[PRODUCTS] PDF uploaded to Supabase:", pdfUrl);
+        } else {
+          console.error("[PRODUCTS] Failed to upload PDF to Supabase");
+          return res.status(500).json({ message: "Erro ao fazer upload do PDF" });
+        }
       }
 
+      // Upload da capa para Supabase se fornecida
       if (files.cover && files.cover[0]) {
-        coverImageUrl = `/uploads/${files.cover[0].filename}`;
-        console.log("[PRODUCTS] Cover uploaded:", coverImageUrl);
+        console.log("[PRODUCTS] Uploading cover image to Supabase...");
+        const coverFile = files.cover[0];
+        const coverFileName = `cover_${userId}_${Date.now()}.${coverFile.mimetype.split('/')[1]}`;
+        
+        coverImageUrl = await uploadFileToSupabase(
+          coverFile.buffer,
+          coverFileName,
+          coverFile.mimetype
+        );
+        
+        if (coverImageUrl) {
+          console.log("[PRODUCTS] Cover uploaded to Supabase:", coverImageUrl);
+        } else {
+          console.error("[PRODUCTS] Failed to upload cover to Supabase");
+          return res.status(500).json({ message: "Erro ao fazer upload da capa" });
+        }
       }
 
       const productData = {
@@ -464,7 +495,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         genre,
         language: language || "português",
         targetAudience: targetAudience || undefined,
-        pdfUrl: pdfUrl || "/uploads/placeholder.pdf",
+        pdfUrl: pdfUrl || "",
         coverImageUrl: coverImageUrl || undefined,
         pageCount: parseInt(pageCount) || 1,
         baseCost: baseCost?.toString() || "0.00",

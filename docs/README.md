@@ -20,6 +20,7 @@ O Upleer é uma plataforma completa para autores publicarem e venderem seus livr
 12. [Webhook N8N - Payload](./12-webhook-n8n-payload.md)
 13. [Acesso aos PDFs](./13-acesso-pdfs.md)
 14. [Testes de Integração N8N](./14-testes-integracao-n8n.md)
+15. [Endpoints de Produtos e Vendas](./15-endpoints-produtos-vendas.md)
 
 ## Características Principais
 

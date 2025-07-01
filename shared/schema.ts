@@ -64,8 +64,23 @@ export const products = pgTable("products", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+// NOVA TABELA: Orders - Pedidos completos da Nuvem Shop
+export const orders = pgTable("orders", {
+  id: varchar("id").primaryKey(), // ID original da Nuvem Shop
+  clienteNome: varchar("cliente_nome").notNull(),
+  clienteEmail: varchar("cliente_email").notNull(),
+  valorTotal: decimal("valor_total", { precision: 10, scale: 2 }),
+  status: varchar("status").default("pending"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// TABELA MODIFICADA: Sales - Uma venda para cada vendedor dentro de um pedido
 export const sales = pgTable("sales", {
   id: serial("id").primaryKey(),
+  // NOVOS CAMPOS para marketplace
+  orderId: varchar("order_id").references(() => orders.id), // Referência ao pedido
+  authorId: varchar("author_id").references(() => users.id), // ID do autor/vendedor
+  // Campos existentes
   productId: integer("product_id").notNull().references(() => products.id),
   buyerEmail: varchar("buyer_email"),
   buyerName: varchar("buyer_name"),
@@ -88,12 +103,29 @@ export const sales = pgTable("sales", {
   shippingCost: decimal("shipping_cost", { precision: 10, scale: 2 }).default("0.00"),
   shippingCarrier: varchar("shipping_carrier"),
   deliveryDays: integer("delivery_days"),
+  quantity: integer("quantity").default(1), // Quantidade de produtos comprados
   createdAt: timestamp("created_at").defaultNow(),
 });
 
-// Relations
+// NOVA TABELA: Sale Items - Produtos específicos de cada venda
+export const saleItems = pgTable("sale_items", {
+  id: serial("id").primaryKey(),
+  saleId: integer("sale_id").notNull().references(() => sales.id),
+  productId: varchar("product_id").notNull(),
+  productName: varchar("product_name").notNull(),
+  price: decimal("price", { precision: 10, scale: 2 }).notNull(),
+  quantity: integer("quantity").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// RELACIONAMENTOS ATUALIZADOS para o modelo marketplace
 export const usersRelations = relations(users, ({ many }) => ({
   products: many(products),
+  sales: many(sales), // Um usuário pode ter muitas vendas
+}));
+
+export const ordersRelations = relations(orders, ({ many }) => ({
+  sales: many(sales), // Um pedido pode ter muitas vendas (uma por vendedor)
 }));
 
 export const productsRelations = relations(products, ({ one, many }) => ({
@@ -104,10 +136,26 @@ export const productsRelations = relations(products, ({ one, many }) => ({
   sales: many(sales),
 }));
 
-export const salesRelations = relations(sales, ({ one }) => ({
+export const salesRelations = relations(sales, ({ one, many }) => ({
+  order: one(orders, {
+    fields: [sales.orderId],
+    references: [orders.id],
+  }),
+  author: one(users, {
+    fields: [sales.authorId],
+    references: [users.id],
+  }),
   product: one(products, {
     fields: [sales.productId],
     references: [products.id],
+  }),
+  saleItems: many(saleItems), // Uma venda pode ter muitos itens
+}));
+
+export const saleItemsRelations = relations(saleItems, ({ one }) => ({
+  sale: one(sales, {
+    fields: [saleItems.saleId],
+    references: [sales.id],
   }),
 }));
 
@@ -119,6 +167,15 @@ export const insertProductSchema = createInsertSchema(products).omit({
 });
 
 export const insertSaleSchema = createInsertSchema(sales).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertOrderSchema = createInsertSchema(orders).omit({
+  createdAt: true,
+});
+
+export const insertSaleItemSchema = createInsertSchema(saleItems).omit({
   id: true,
   createdAt: true,
 });
@@ -206,12 +263,17 @@ export const insertApiEndpointSchema = createInsertSchema(apiEndpoints).omit({
   updatedAt: true,
 });
 
+// TIPOS ATUALIZADOS para o novo modelo marketplace
 export type UpsertUser = typeof users.$inferInsert;
 export type User = typeof users.$inferSelect;
 export type InsertProduct = z.infer<typeof insertProductSchema>;
 export type Product = typeof products.$inferSelect;
 export type InsertSale = z.infer<typeof insertSaleSchema>;
 export type Sale = typeof sales.$inferSelect;
+export type InsertOrder = z.infer<typeof insertOrderSchema>;
+export type Order = typeof orders.$inferSelect;
+export type InsertSaleItem = z.infer<typeof insertSaleItemSchema>;
+export type SaleItem = typeof saleItems.$inferSelect;
 export type ApiIntegration = typeof apiIntegrations.$inferSelect;
 export type InsertApiIntegration = z.infer<typeof insertApiIntegrationSchema>;
 export type ApiEndpoint = typeof apiEndpoints.$inferSelect;

@@ -39,7 +39,7 @@ O webhook envia um payload JSON com todas as informações do produto:
   "status": "pending",
   "authorId": "user_1750970151254_5uo1e69u5",
   "pdfUrl": "/uploads/760d2369032fc23ca6889633507ab949",
-  "coverImageUrl": "/uploads/cc559d19bc8b675060b9db4cf3dcd562",
+  "coverImageUrl": "http://localhost:5000/uploads/cc559d19bc8b675060b9db4cf3dcd562",
   "publicUrl": null,
   "createdAt": "2025-06-26T20:55:23.727Z",
   "updatedAt": "2025-06-26T20:55:23.727Z",
@@ -85,7 +85,7 @@ O webhook envia um payload JSON com todas as informações do produto:
 
 ### Arquivos e URLs
 - **pdfUrl**: Caminho relativo do arquivo PDF
-- **coverImageUrl**: Caminho relativo da capa
+- **coverImageUrl**: URL pública completa da capa (convertida automaticamente)
 - **downloadUrls**: URLs completas para download
   - **productDetails**: Endpoint para detalhes do produto
   - **pdfDownload**: URL para download do PDF
@@ -122,6 +122,24 @@ O webhook envia um payload JSON com todas as informações do produto:
 ### Erro (4xx/5xx)
 - O erro é logado mas não impede o salvamento do produto
 - Produto fica disponível para reprocessamento
+
+## Conversão de URLs
+
+### Campo coverImageUrl
+
+O campo `coverImageUrl` é automaticamente convertido de um caminho relativo para uma URL pública completa:
+
+- **Valor no banco**: `/uploads/cc559d19bc8b675060b9db4cf3dcd562`
+- **Valor enviado no webhook**: `http://localhost:5000/uploads/cc559d19bc8b675060b9db4cf3dcd562`
+
+Essa conversão permite que o N8N acesse diretamente a imagem da capa sem precisar construir a URL manualmente.
+
+### Como funciona
+
+1. O sistema extrai o nome do arquivo do caminho relativo
+2. Constrói a URL base usando `getBaseUrl()`
+3. Combina base + caminho para criar URL pública
+4. Envia no payload do webhook
 
 ## Logs de Debug
 

@@ -121,6 +121,266 @@ app.post('/api/webhook/sales', async (req, res) => {
   }
 });
 
+// NOVO ENDPOINT MARKETPLACE: Multiple sales webhook endpoint - FASE 3
+app.post('/api/webhook/sales/batch', async (req, res) => {
+  try {
+    const { storage } = await import("./storage");
+    let salesData = req.body;
+    
+    console.log('[WEBHOOK-BATCH-V3] 🚀 NOVO MODELO MARKETPLACE - Raw payload received:', JSON.stringify(salesData, null, 2));
+    console.log('[WEBHOOK-BATCH-V3] Payload type:', typeof salesData);
+    console.log('[WEBHOOK-BATCH-V3] Is array:', Array.isArray(salesData));
+    console.log('[WEBHOOK-BATCH-V3] Length:', salesData?.length);
+    
+    // Handle different payload structures from N8N
+    if (Array.isArray(salesData) && salesData.length === 1 && salesData[0].data) {
+      // N8N sends: [{ "data": [...] }]
+      salesData = salesData[0].data;
+      console.log('[WEBHOOK-BATCH-V3] Extracted data from N8N wrapper');
+    } else if (salesData.data && Array.isArray(salesData.data)) {
+      // N8N sends: { "data": [...] }
+      salesData = salesData.data;
+      console.log('[WEBHOOK-BATCH-V3] Extracted data from object wrapper');
+    } else if (Array.isArray(salesData) && salesData.length > 0 && salesData[0].order_id) {
+      // N8N sends directly: [{ "order_id": ..., "id_autor": ... }]
+      console.log('[WEBHOOK-BATCH-V3] Using direct array format');
+    }
+    
+    if (!Array.isArray(salesData)) {
+      return res.status(400).json({ 
+        message: 'Payload deve ser um array de vendas ou objeto com campo "data"',
+        received: typeof salesData,
+        example: 'Esperado: [{"order_id": 123, ...}] ou {"data": [{"order_id": 123, ...}]}'
+      });
+    }
+    
+    if (salesData.length === 0) {
+      return res.status(400).json({ message: 'Array de vendas não pode estar vazio' });
+    }
+    
+    const results = [];
+    const errors = [];
+    
+    // Extract order information from first item
+    const firstItem = salesData[0];
+    const orderId = firstItem.order_id;
+    const clienteNome = firstItem.cliente_nome || 'Cliente Não Informado';
+    const clienteEmail = firstItem.cliente_email || 'nao-informado@email.com';
+    
+    if (!orderId) {
+      return res.status(400).json({ message: 'order_id é obrigatório no payload' });
+    }
+    
+    console.log(`[WEBHOOK-BATCH-V3] 📦 Processing order ${orderId} with ${salesData.length} vendors`);
+    
+    // FASE 3: IMPLEMENTAR MODELO MARKETPLACE
+    // 1. Create ORDER record (one per order)
+    try {
+      // Calculate total order value
+      let valorTotalOrder = 0;
+      for (const saleItem of salesData) {
+        if (saleItem.produtos && Array.isArray(saleItem.produtos)) {
+          for (const produto of saleItem.produtos) {
+            const unitPrice = parseFloat(produto.preco.toString().replace(',', '.'));
+            valorTotalOrder += unitPrice * produto.quantidade;
+          }
+        }
+      }
+      
+      // Create order record
+      await storage.createOrder({
+        id: orderId.toString(),
+        clienteNome: clienteNome,
+        clienteEmail: clienteEmail,
+        valorTotal: valorTotalOrder.toFixed(2),
+        status: 'pending'
+      });
+      
+      console.log(`[WEBHOOK-BATCH-V3] ✅ Order created: ${orderId} - R$ ${valorTotalOrder.toFixed(2)}`);
+      
+    } catch (orderError: unknown) {
+      const errorMessage = orderError instanceof Error ? orderError.message : 'Erro desconhecido';
+      if (errorMessage.includes('duplicate key')) {
+        console.log(`[WEBHOOK-BATCH-V3] ⚠️ Order ${orderId} already exists, continuing...`);
+      } else {
+        console.error(`[WEBHOOK-BATCH-V3] ❌ Error creating order:`, orderError);
+        return res.status(500).json({ message: 'Erro ao criar pedido', error: errorMessage });
+      }
+    }
+    
+    // 2. Create SALES records (one per vendor per order)
+    for (const saleItem of salesData) {
+      try {
+        console.log('[WEBHOOK-BATCH-V3] 📤 Processing vendor item:', JSON.stringify(saleItem, null, 2));
+        const { order_id, id_autor, produtos, valor_total, cliente_nome, cliente_email } = saleItem;
+        
+        console.log('[WEBHOOK-BATCH-V3] Extracted vendor fields:', {
+          order_id, id_autor, produtos: produtos?.length, valor_total, cliente_nome, cliente_email
+        });
+        
+        if (!order_id || !id_autor || !produtos || !Array.isArray(produtos)) {
+          errors.push({
+            author: id_autor || 'unknown',
+            error: `Dados obrigatórios: order_id (${!!order_id}), id_autor (${!!id_autor}), produtos array (${Array.isArray(produtos)})`
+          });
+          continue;
+        }
+        
+        // Calculate total for this vendor
+        let vendorTotal = 0;
+        const vendorProducts = [];
+        
+        for (const produto of produtos) {
+          const { id_produto_interno, nome, preco, quantidade } = produto;
+          
+          if (!id_produto_interno || !preco || !quantidade) {
+            errors.push({
+              author: id_autor,
+              product: nome,
+              error: 'Dados obrigatórios do produto: id_produto_interno, preco, quantidade'
+            });
+            continue;
+          }
+          
+          // Check if product exists
+          const product = await storage.getProduct(parseInt(id_produto_interno));
+          if (!product) {
+            errors.push({
+              author: id_autor,
+              product: nome,
+              error: `Produto ${id_produto_interno} não encontrado`
+            });
+            continue;
+          }
+          
+          // Calculate values for this product
+          const unitPrice = parseFloat(preco.toString().replace(',', '.'));
+          const totalPrice = unitPrice * quantidade;
+          vendorTotal += totalPrice;
+          
+          vendorProducts.push({
+            product,
+            unitPrice,
+            totalPrice,
+            quantidade,
+            id_produto_interno
+          });
+        }
+        
+        if (vendorProducts.length === 0) {
+          errors.push({
+            author: id_autor,
+            error: 'Nenhum produto válido encontrado para este vendedor'
+          });
+          continue;
+        }
+        
+        // Calculate commission and author earnings for vendor total
+        const commissionRate = 0.15;
+        const vendorCommission = vendorTotal * commissionRate;
+        const vendorEarnings = vendorTotal - vendorCommission;
+        
+        // Create SALE record for this vendor
+        const saleData = {
+          orderId: orderId.toString(),
+          authorId: id_autor,
+          productId: vendorProducts[0].product.id, // Use first product as reference
+          buyerName: cliente_nome,
+          buyerEmail: cliente_email,
+          buyerPhone: '',
+          buyerCpf: '',
+          buyerAddress: '',
+          buyerCity: '',
+          buyerState: '',
+          buyerZipCode: '',
+          salePrice: vendorTotal.toFixed(2),
+          commission: vendorCommission.toFixed(2),
+          authorEarnings: vendorEarnings.toFixed(2),
+          orderDate: new Date(),
+          paymentStatus: 'pending',
+          paymentMethod: '',
+          installments: 1,
+          discountCoupon: `ORDER_${order_id}`,
+          discountAmount: '0.00',
+          shippingCost: '0.00',
+          shippingCarrier: '',
+          deliveryDays: 0,
+          quantity: vendorProducts.reduce((sum, p) => sum + p.quantidade, 0)
+        };
+        
+        const newSale = await storage.createSale(saleData);
+        console.log(`[WEBHOOK-BATCH-V3] ✅ Sale created: ID ${newSale.id} for vendor ${id_autor}`);
+        
+        // 3. Create SALE_ITEMS records for each product
+        for (const vendorProduct of vendorProducts) {
+          await storage.createSaleItem({
+            saleId: newSale.id,
+            productId: vendorProduct.id_produto_interno.toString(),
+            productName: vendorProduct.product.title,
+            price: vendorProduct.totalPrice.toFixed(2),
+            quantity: vendorProduct.quantidade
+          });
+          
+          console.log(`[WEBHOOK-BATCH-V3] ✅ Sale item created: ${vendorProduct.product.title} (${vendorProduct.quantidade}x)`);
+        }
+        
+        results.push({
+          saleId: newSale.id,
+          orderId: order_id,
+          authorId: id_autor,
+          vendorTotal: vendorTotal.toFixed(2),
+          vendorCommission: vendorCommission.toFixed(2),
+          vendorEarnings: vendorEarnings.toFixed(2),
+          productCount: vendorProducts.length,
+          totalQuantity: vendorProducts.reduce((sum, p) => sum + p.quantidade, 0),
+          products: vendorProducts.map(vp => ({
+            productId: vp.id_produto_interno,
+            productTitle: vp.product.title,
+            quantity: vp.quantidade,
+            unitPrice: vp.unitPrice.toFixed(2),
+            totalPrice: vp.totalPrice.toFixed(2)
+          })),
+          buyerName: cliente_nome,
+          buyerEmail: cliente_email
+        });
+        
+      } catch (error: unknown) {
+        const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+        console.error(`[WEBHOOK-BATCH-V3] ❌ Error processing vendor ${saleItem.id_autor}:`, error);
+        errors.push({
+          author: saleItem.id_autor,
+          error: errorMessage
+        });
+      }
+    }
+    
+    const response = {
+      message: `🎉 MARKETPLACE V3: Processamento concluído`,
+      orderId: orderId,
+      totalVendors: results.length,
+      totalProducts: results.reduce((sum, r) => sum + r.productCount, 0),
+      totalQuantity: results.reduce((sum, r) => sum + r.totalQuantity, 0),
+      totalValue: results.reduce((sum, r) => sum + parseFloat(r.vendorTotal), 0).toFixed(2),
+      totalErrors: errors.length,
+      vendors: results,
+      ...(errors.length > 0 && { errors })
+    };
+    
+    console.log(`[WEBHOOK-BATCH-V3] 🎉 Completed: ${results.length} vendors processed, ${errors.length} errors`);
+    
+    if (errors.length > 0 && results.length === 0) {
+      return res.status(400).json(response);
+    }
+    
+    res.json(response);
+    
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+    console.error('[WEBHOOK-BATCH-V3] ❌ Error processing batch sales:', error);
+    res.status(500).json({ message: 'Erro interno do servidor', error: errorMessage });
+  }
+});
+
 // Product status webhook endpoint
 app.patch('/api/webhook/products/:id/status', async (req, res) => {
   try {
@@ -244,7 +504,16 @@ app.use((req, res, next) => {
   // Serve the app on configurable port
   // this serves both the API and the client.
   const port = process.env.PORT ? parseInt(process.env.PORT) : 5000;
-  server.listen(port, "127.0.0.1", () => {
-    log(`serving on port ${port}`);
+  const host = process.env.HOST || "0.0.0.0"; // Permite conexões externas
+  
+  server.listen(port, host, () => {
+    console.log(`\n🚀 Servidor rodando com sucesso!`);
+    console.log(`📍 Acesse localmente: http://localhost:${port}`);
+    console.log(`📍 Acesse pela rede: http://127.0.0.1:${port}`);
+    if (host === "0.0.0.0") {
+      console.log(`📍 Aceita conexões externas na porta ${port}`);
+    }
+    console.log(`\n💡 Para parar o servidor, pressione Ctrl+C\n`);
+    log(`serving on port ${port} host ${host}`);
   });
 })();

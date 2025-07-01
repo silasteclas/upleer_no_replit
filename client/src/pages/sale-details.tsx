@@ -20,6 +20,29 @@ export default function SaleDetails() {
 
   const sale = Array.isArray(sales) ? sales.find((s: any) => s.id.toString() === id) : null;
 
+  // Calculate total products in this order
+  const getProductCount = () => {
+    if (!sale || !Array.isArray(sales)) return 1;
+    
+    // FASE 4: NOVA ESTRUTURA MARKETPLACE
+    // Usar saleItems para contar produtos reais
+    if (sale.saleItems && sale.saleItems.length > 0) {
+      return sale.saleItems.reduce((total: number, item: any) => total + item.quantity, 0);
+    }
+    
+    // Fallback: se não há saleItems, usar quantity da venda
+    return sale.quantity || 1;
+  };
+
+  const productCount = getProductCount();
+
+  // Obter informações do pedido
+  const orderInfo = sale?.order || {
+    cliente_nome: sale?.buyerName || '',
+    cliente_email: sale?.buyerEmail || '',
+    valor_total: Number(sale?.salePrice) || 0,
+  };
+
   if (isLoading) {
     return (
       <div className="flex h-screen bg-gray-50">
@@ -120,14 +143,18 @@ export default function SaleDetails() {
                     <User className="w-8 h-8 text-purple-600 mx-auto mb-2" />
                     <div className="text-sm text-gray-600">Cliente</div>
                     <div className="font-semibold text-gray-900 truncate">
-                      {sale.buyerName ? sale.buyerName.split(' ')[0] : sale.buyerEmail.split('@')[0]}
+                      {/* FASE 4: Usar dados do order quando disponível */}
+                      {orderInfo.cliente_nome 
+                        ? orderInfo.cliente_nome.split(' ')[0] 
+                        : (sale.buyerName ? sale.buyerName.split(' ')[0] : sale.buyerEmail.split('@')[0])
+                      }
                     </div>
                   </div>
                   
                   <div className="text-center p-4 bg-orange-50 rounded-lg">
                     <ShoppingBag className="w-8 h-8 text-orange-600 mx-auto mb-2" />
                     <div className="text-sm text-gray-600">Produtos</div>
-                    <div className="text-2xl font-bold text-orange-600">1</div>
+                    <div className="text-2xl font-bold text-orange-600">{productCount}</div>
                   </div>
                 </div>
               </CardContent>
@@ -147,7 +174,10 @@ export default function SaleDetails() {
                     <User className="w-4 h-4 text-gray-400 mt-1" />
                     <div className="flex-1">
                       <div className="text-sm text-gray-600">Nome completo</div>
-                      <div className="font-medium">{sale.buyerName || "Não informado"}</div>
+                      <div className="font-medium">
+                        {/* FASE 4: Priorizar dados do order */}
+                        {orderInfo.cliente_nome || sale.buyerName || "Não informado"}
+                      </div>
                     </div>
                   </div>
 
@@ -163,7 +193,10 @@ export default function SaleDetails() {
                     <Mail className="w-4 h-4 text-gray-400 mt-1" />
                     <div className="flex-1">
                       <div className="text-sm text-gray-600">Email</div>
-                      <div className="font-medium">{sale.buyerEmail || "Não informado"}</div>
+                      <div className="font-medium">
+                        {/* FASE 4: Priorizar dados do order */}
+                        {orderInfo.cliente_email || sale.buyerEmail || "Não informado"}
+                      </div>
                     </div>
                   </div>
 
@@ -292,28 +325,62 @@ export default function SaleDetails() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="border rounded-lg p-4 bg-white">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-4">
-                      <div className="w-16 h-20 bg-gray-100 rounded flex items-center justify-center">
-                        <FileText className="w-8 h-8 text-gray-400" />
+                {/* FASE 4: NOVA ESTRUTURA MARKETPLACE - Mostrar saleItems */}
+                {sale.saleItems && sale.saleItems.length > 0 ? (
+                  <div className="space-y-4">
+                    {sale.saleItems.map((item: any, index: number) => (
+                      <div key={index} className="border rounded-lg p-4 bg-white">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center space-x-4">
+                            <div className="w-16 h-20 bg-gray-100 rounded flex items-center justify-center">
+                              <FileText className="w-8 h-8 text-gray-400" />
+                            </div>
+                            <div>
+                              <h4 className="font-semibold text-gray-900">{item.product_name}</h4>
+                              <p className="text-sm text-gray-600">por {sale.product?.author}</p>
+                              <div className="flex items-center space-x-4 mt-2">
+                                <span className="text-xs bg-gray-100 px-2 py-1 rounded">Produto Digital</span>
+                                <span className="text-xs text-gray-500">Quantidade: {item.quantity}</span>
+                              </div>
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <div className="text-lg font-bold text-gray-900">
+                              R$ {Number(item.price).toFixed(2)}
+                            </div>
+                            <div className="text-sm text-gray-500">
+                              Unitário: R$ {(Number(item.price) / item.quantity).toFixed(2)}
+                            </div>
+                          </div>
+                        </div>
                       </div>
-                      <div>
-                        <h4 className="font-semibold text-gray-900">{sale.product?.title}</h4>
-                        <p className="text-sm text-gray-600">por {sale.product?.author}</p>
-                        <div className="flex items-center space-x-4 mt-2">
-                          <span className="text-xs bg-gray-100 px-2 py-1 rounded">Produto Físico</span>
-                          <span className="text-xs text-gray-500">Quantidade: 1</span>
+                    ))}
+                  </div>
+                ) : (
+                  // Fallback: mostrar produto principal se não há saleItems
+                  <div className="border rounded-lg p-4 bg-white">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-4">
+                        <div className="w-16 h-20 bg-gray-100 rounded flex items-center justify-center">
+                          <FileText className="w-8 h-8 text-gray-400" />
+                        </div>
+                        <div>
+                          <h4 className="font-semibold text-gray-900">{sale.product?.title}</h4>
+                          <p className="text-sm text-gray-600">por {sale.product?.author}</p>
+                          <div className="flex items-center space-x-4 mt-2">
+                            <span className="text-xs bg-gray-100 px-2 py-1 rounded">Produto Digital</span>
+                            <span className="text-xs text-gray-500">Quantidade: {sale.quantity || 1}</span>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-lg font-bold text-gray-900">
+                          R$ {parseFloat(sale.salePrice).toFixed(2)}
                         </div>
                       </div>
                     </div>
-                    <div className="text-right">
-                      <div className="text-lg font-bold text-gray-900">
-                        R$ {parseFloat(sale.salePrice).toFixed(2)}
-                      </div>
-                    </div>
                   </div>
-                </div>
+                )}
               </CardContent>
             </Card>
 
