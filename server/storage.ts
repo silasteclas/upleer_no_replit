@@ -24,7 +24,7 @@ import {
   type ApiLog,
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, desc, and, sum, count } from "drizzle-orm";
+import { eq, desc, and, sum, count, max } from "drizzle-orm";
 
 // Interface for storage operations
 export interface IStorage {
@@ -55,9 +55,10 @@ export interface IStorage {
   createSale(sale: InsertSale): Promise<Sale>;
   getSalesByAuthor(authorId: string): Promise<(Sale & { 
     product: { title: string; author: string };
-    order: { cliente_nome: string; cliente_email: string; valor_total: number };
-    saleItems: { product_name: string; quantity: number; price: number }[];
+    order: { cliente_nome: string; cliente_email: string; valor_total: number; status_envio: string };
+    saleItems: { product_name: string; quantity: number; price: number; foto_produto: string | null }[];
   })[]>;
+  getNextVendorOrderNumber(authorId: string): Promise<number>;
   
   // Sale Items operations (NOVO - FASE 3)
   createSaleItem(saleItem: InsertSaleItem): Promise<SaleItem>;
@@ -239,10 +240,20 @@ export class DatabaseStorage implements IStorage {
     return newSale;
   }
 
+  async getNextVendorOrderNumber(authorId: string): Promise<number> {
+    // Get the highest vendor_order_number for this author using max()
+    const [result] = await db
+      .select({ maxNumber: max(sales.vendorOrderNumber) })
+      .from(sales)
+      .where(eq(sales.authorId, authorId));
+    
+    return (result.maxNumber || 0) + 1;
+  }
+
   async getSalesByAuthor(authorId: string): Promise<(Sale & { 
     product: { title: string; author: string };
-    order: { cliente_nome: string; cliente_email: string; valor_total: number };
-    saleItems: { product_name: string; quantity: number; price: number }[];
+    order: { cliente_nome: string; cliente_email: string; valor_total: number; status_envio: string };
+    saleItems: { product_name: string; quantity: number; price: number; foto_produto: string | null }[];
   })[]> {
     // FASE 4: NOVA ESTRUTURA MARKETPLACE
     // Buscar vendas do autor com relacionamentos para orders e sale_items
@@ -252,6 +263,7 @@ export class DatabaseStorage implements IStorage {
         id: sales.id,
         orderId: sales.orderId,
         authorId: sales.authorId,
+        vendorOrderNumber: sales.vendorOrderNumber,
         productId: sales.productId,
         buyerEmail: sales.buyerEmail,
         buyerName: sales.buyerName,
@@ -284,6 +296,7 @@ export class DatabaseStorage implements IStorage {
         orderClienteNome: orders.clienteNome,
         orderClienteEmail: orders.clienteEmail,
         orderValorTotal: orders.valorTotal,
+        orderStatusEnvio: orders.statusEnvio,
       })
       .from(sales)
       .innerJoin(products, eq(sales.productId, products.id))
@@ -299,6 +312,7 @@ export class DatabaseStorage implements IStorage {
             product_name: saleItems.productName,
             quantity: saleItems.quantity,
             price: saleItems.price,
+            foto_produto: saleItems.fotoProduto,
           })
           .from(saleItems)
           .where(eq(saleItems.saleId, sale.id));
@@ -307,6 +321,7 @@ export class DatabaseStorage implements IStorage {
           id: sale.id,
           orderId: sale.orderId,
           authorId: sale.authorId,
+          vendorOrderNumber: sale.vendorOrderNumber,
           productId: sale.productId,
           buyerEmail: sale.buyerEmail,
           buyerName: sale.buyerName,
@@ -338,11 +353,13 @@ export class DatabaseStorage implements IStorage {
             cliente_nome: sale.orderClienteNome || '',
             cliente_email: sale.orderClienteEmail || '',
             valor_total: Number(sale.orderValorTotal) || 0,
+            status_envio: sale.orderStatusEnvio || 'unpacked',
           },
           saleItems: items.map(item => ({
             product_name: item.product_name,
             quantity: item.quantity,
             price: Number(item.price),
+            foto_produto: item.foto_produto,
           })),
         };
       })

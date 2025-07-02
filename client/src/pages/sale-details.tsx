@@ -20,6 +20,9 @@ export default function SaleDetails() {
 
   const sale = Array.isArray(sales) ? sales.find((s: any) => s.id.toString() === id) : null;
 
+  // Debug: Log completo dos dados da venda
+  console.log('🔍 DADOS COMPLETOS DA VENDA:', JSON.stringify(sale, null, 2));
+
   // Calculate total products in this order
   const getProductCount = () => {
     if (!sale || !Array.isArray(sales)) return 1;
@@ -87,7 +90,7 @@ export default function SaleDetails() {
   return (
     <div className="min-h-screen bg-gray-50">
       <Header 
-        title={`Pedido #${sale.id.toString().padStart(5, '0')}`}
+        title={`Pedido #${String(sale.vendorOrderNumber || 1).padStart(3, '0')}`}
         subtitle="Detalhes completos do pedido"
       />
       <Sidebar />
@@ -110,16 +113,18 @@ export default function SaleDetails() {
               <CardHeader>
                 <CardTitle className="flex items-center justify-between">
                   <span>Resumo do Pedido</span>
-                  <div className="flex items-center space-x-2">
-                    <Badge variant="secondary" className="bg-green-100 text-green-700">
-                      <CreditCard className="w-3 h-3 mr-1" />
-                      Pago
-                    </Badge>
-                  </div>
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-6 gap-6">
+                  <div className="text-center p-4 bg-purple-50 rounded-lg">
+                    <Package className="w-8 h-8 text-purple-600 mx-auto mb-2" />
+                    <div className="text-sm text-gray-600">Número do pedido</div>
+                    <div className="text-2xl font-bold text-purple-600">
+                      #{String(sale.vendorOrderNumber || 1).padStart(3, '0')}
+                    </div>
+                  </div>
+                  
                   <div className="text-center p-4 bg-blue-50 rounded-lg">
                     <Calendar className="w-8 h-8 text-blue-600 mx-auto mb-2" />
                     <div className="text-sm text-gray-600">Data do pedido</div>
@@ -139,8 +144,8 @@ export default function SaleDetails() {
                     </div>
                   </div>
                   
-                  <div className="text-center p-4 bg-purple-50 rounded-lg">
-                    <User className="w-8 h-8 text-purple-600 mx-auto mb-2" />
+                  <div className="text-center p-4 bg-indigo-50 rounded-lg">
+                    <User className="w-8 h-8 text-indigo-600 mx-auto mb-2" />
                     <div className="text-sm text-gray-600">Cliente</div>
                     <div className="font-semibold text-gray-900 truncate">
                       {/* FASE 4: Usar dados do order quando disponível */}
@@ -155,6 +160,54 @@ export default function SaleDetails() {
                     <ShoppingBag className="w-8 h-8 text-orange-600 mx-auto mb-2" />
                     <div className="text-sm text-gray-600">Produtos</div>
                     <div className="text-2xl font-bold text-orange-600">{productCount}</div>
+                  </div>
+                  
+                  <div className="text-center p-4 bg-teal-50 rounded-lg">
+                    <Truck className="w-8 h-8 text-teal-600 mx-auto mb-2" />
+                    <div className="text-sm text-gray-600">Status do envio</div>
+                    <div className="font-semibold text-gray-900">
+                      {(() => {
+                        // Tradução dinâmica do status de envio para português do Brasil
+                        const statusEnvio = sale.order?.status_envio || 'unpacked';
+                        switch(statusEnvio) {
+                          case 'unpacked':
+                          case 'not_packed':
+                          case 'pending':
+                            return 'Preparando';
+                          case 'packed':
+                          case 'ready':
+                          case 'ready_to_ship':
+                            return 'Pronto';
+                          case 'shipped':
+                          case 'sent':
+                          case 'dispatched':
+                            return 'Enviado';
+                          case 'in_transit':
+                          case 'transit':
+                          case 'on_the_way':
+                            return 'Em trânsito';
+                          case 'out_for_delivery':
+                          case 'delivering':
+                            return 'Saiu para entrega';
+                          case 'delivered':
+                          case 'completed':
+                            return 'Entregue';
+                          case 'returned':
+                          case 'return':
+                            return 'Devolvido';
+                          case 'cancelled':
+                          case 'canceled':
+                            return 'Cancelado';
+                          case 'failed':
+                          case 'failed_delivery':
+                            return 'Falha na entrega';
+                          case 'lost':
+                            return 'Extraviado';
+                          default:
+                            return 'Preparando';
+                        }
+                      })()}
+                    </div>
                   </div>
                 </div>
               </CardContent>
@@ -188,23 +241,32 @@ export default function SaleDetails() {
                       <div className="font-medium">{sale.buyerCpf || "Não informado"}</div>
                     </div>
                   </div>
-                  
-                  <div className="flex items-start space-x-3">
-                    <Mail className="w-4 h-4 text-gray-400 mt-1" />
-                    <div className="flex-1">
-                      <div className="text-sm text-gray-600">Email</div>
-                      <div className="font-medium">
-                        {/* FASE 4: Priorizar dados do order */}
-                        {orderInfo.cliente_email || sale.buyerEmail || "Não informado"}
-                      </div>
-                    </div>
-                  </div>
 
                   <div className="flex items-start space-x-3">
-                    <Phone className="w-4 h-4 text-gray-400 mt-1" />
+                    <User className="w-4 h-4 text-blue-400 mt-1" />
                     <div className="flex-1">
-                      <div className="text-sm text-gray-600">Telefone</div>
-                      <div className="font-medium">{sale.buyerPhone || "Não informado"}</div>
+                      <div className="text-sm text-gray-600">Tipo de cliente</div>
+                      <div className="font-medium">
+                        {(() => {
+                          // Verificar se é cliente novo baseado no nome e CPF
+                          const hasFullName = (orderInfo.cliente_nome || sale.buyerName);
+                          const hasCpf = sale.buyerCpf;
+                          
+                          if (hasFullName && hasCpf) {
+                            return (
+                              <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                Cliente Recorrente
+                              </span>
+                            );
+                          } else {
+                            return (
+                              <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                Cliente Novo
+                              </span>
+                            );
+                          }
+                        })()}
+                      </div>
                     </div>
                   </div>
 
@@ -225,8 +287,6 @@ export default function SaleDetails() {
                       </div>
                     </div>
                   </div>
-                  
-
                 </CardContent>
               </Card>
 
@@ -243,22 +303,109 @@ export default function SaleDetails() {
                     <span className="text-gray-600">Status</span>
                     <Badge className={`${
                       sale.paymentStatus === 'aprovado' ? 'bg-green-100 text-green-700' :
+                      sale.paymentStatus === 'pendente' ? 'bg-yellow-100 text-yellow-700' :
                       sale.paymentStatus === 'devolvido' ? 'bg-red-100 text-red-700' :
+                      sale.paymentStatus === 'cancelado' ? 'bg-gray-100 text-gray-700' :
+                      sale.paymentStatus === 'processando' ? 'bg-blue-100 text-blue-700' :
+                      sale.paymentStatus === 'estornado' ? 'bg-orange-100 text-orange-700' :
                       'bg-yellow-100 text-yellow-700'
                     }`}>
-                      {sale.paymentStatus === 'aprovado' ? 'Aprovado' :
-                       sale.paymentStatus === 'devolvido' ? 'Devolvido' :
-                       'Pendente'}
+                      {(() => {
+                        // Tradução dinâmica do status para português do Brasil
+                        switch(sale.paymentStatus) {
+                          case 'aprovado':
+                          case 'approved':
+                          case 'paid':
+                            return 'Aprovado';
+                          case 'pendente':
+                          case 'pending':
+                            return 'Pendente';
+                          case 'devolvido':
+                          case 'refunded':
+                            return 'Devolvido';
+                          case 'cancelado':
+                          case 'cancelled':
+                          case 'canceled':
+                            return 'Cancelado';
+                          case 'processando':
+                          case 'processing':
+                            return 'Processando';
+                          case 'estornado':
+                          case 'chargeback':
+                            return 'Estornado';
+                          case 'rejeitado':
+                          case 'rejected':
+                          case 'denied':
+                            return 'Rejeitado';
+                          case 'expirado':
+                          case 'expired':
+                            return 'Expirado';
+                          default:
+                            return 'Pendente';
+                        }
+                      })()}
                     </Badge>
                   </div>
                   
                   <div className="flex justify-between items-center">
                     <span className="text-gray-600">Método</span>
                     <span className="font-medium">
-                      {sale.paymentMethod === 'cartao_credito' ? 'Cartão de Crédito' :
-                       sale.paymentMethod === 'boleto' ? 'Boleto' :
-                       sale.paymentMethod === 'pix' ? 'PIX' :
-                       'Simulação'}
+                      {(() => {
+                        // Tradução dinâmica do método de pagamento para português do Brasil
+                        switch(sale.paymentMethod) {
+                          case 'cartao_credito':
+                          case 'credit_card':
+                          case 'creditcard':
+                            return 'Cartão de Crédito';
+                          case 'cartao_debito':
+                          case 'debit_card':
+                          case 'debitcard':
+                            return 'Cartão de Débito';
+                          case 'pix':
+                          case 'PIX':
+                            return 'PIX';
+                          case 'boleto':
+                          case 'bank_slip':
+                          case 'bankslip':
+                            return 'Boleto Bancário';
+                          case 'transferencia':
+                          case 'bank_transfer':
+                          case 'transfer':
+                            return 'Transferência Bancária';
+                          case 'dinheiro':
+                          case 'cash':
+                          case 'money':
+                            return 'Dinheiro';
+                          case 'paypal':
+                          case 'PayPal':
+                            return 'PayPal';
+                          case 'mercadopago':
+                          case 'mercado_pago':
+                          case 'MercadoPago':
+                            return 'Mercado Pago';
+                          case 'pagseguro':
+                          case 'pag_seguro':
+                          case 'PagSeguro':
+                            return 'PagSeguro';
+                          case 'cielo':
+                          case 'Cielo':
+                            return 'Cielo';
+                          case 'stone':
+                          case 'Stone':
+                            return 'Stone';
+                          case 'simulacao':
+                          case 'simulation':
+                          case 'test':
+                            return 'Simulação';
+                          case '':
+                          case null:
+                          case undefined:
+                            return 'Não informado';
+                          default:
+                            // Se não reconhecer, capitaliza a primeira letra
+                            return sale.paymentMethod.charAt(0).toUpperCase() + sale.paymentMethod.slice(1);
+                        }
+                      })()}
                     </span>
                   </div>
 
@@ -269,15 +416,18 @@ export default function SaleDetails() {
                     </div>
                   )}
                   
-                  <div className="flex justify-between items-center">
-                    <span className="text-gray-600">Data do pagamento</span>
-                    <span className="font-medium">
-                      {sale.orderDate ? 
-                        format(new Date(sale.orderDate), "dd/MM/yyyy HH:mm", { locale: ptBR }) :
-                        format(new Date(sale.createdAt), "dd/MM/yyyy HH:mm", { locale: ptBR })
-                      }
-                    </span>
-                  </div>
+                  {/* Mostrar data do pagamento apenas quando o pagamento estiver aprovado */}
+                  {(sale.paymentStatus === 'aprovado' || sale.paymentStatus === 'approved' || sale.paymentStatus === 'paid') && (
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-600">Data do pagamento</span>
+                      <span className="font-medium">
+                        {sale.orderDate ? 
+                          format(new Date(sale.orderDate), "dd/MM/yyyy HH:mm", { locale: ptBR }) :
+                          format(new Date(sale.createdAt), "dd/MM/yyyy HH:mm", { locale: ptBR })
+                        }
+                      </span>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
 
@@ -328,41 +478,75 @@ export default function SaleDetails() {
                 {/* FASE 4: NOVA ESTRUTURA MARKETPLACE - Mostrar saleItems */}
                 {sale.saleItems && sale.saleItems.length > 0 ? (
                   <div className="space-y-4">
-                    {sale.saleItems.map((item: any, index: number) => (
-                      <div key={index} className="border rounded-lg p-4 bg-white">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center space-x-4">
-                            <div className="w-16 h-20 bg-gray-100 rounded flex items-center justify-center">
-                              <FileText className="w-8 h-8 text-gray-400" />
+                    {sale.saleItems.map((item: any, index: number) => {
+                      // DEBUG: Verificar se foto_produto existe
+                      console.log('🖼️ DEBUG foto_produto:', item.foto_produto);
+                      
+                      return (
+                        <div key={index} className="border rounded-lg p-4 bg-white">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center space-x-4">
+                              <div className="w-16 h-20 bg-gray-100 rounded flex items-center justify-center overflow-hidden">
+                                {item.foto_produto ? (
+                                  <img 
+                                    src={item.foto_produto} 
+                                    alt={item.product_name}
+                                    className="w-full h-full object-cover rounded"
+                                    onLoad={() => console.log('✅ Imagem carregada:', item.foto_produto)}
+                                    onError={(e) => {
+                                      console.log('❌ Erro ao carregar imagem:', item.foto_produto);
+                                      e.currentTarget.style.display = 'none';
+                                      e.currentTarget.nextElementSibling.style.display = 'flex';
+                                    }}
+                                  />
+                                ) : (
+                                  <>
+                                    {console.log('📄 Usando ícone FileText - foto_produto não existe')}
+                                    <FileText className="w-8 h-8 text-gray-400" />
+                                  </>
+                                )}
+                              </div>
+                              <div>
+                                <h4 className="font-semibold text-gray-900">{item.product_name}</h4>
+                                <p className="text-sm text-gray-600">por {sale.product?.author}</p>
+                                <div className="flex items-center space-x-4 mt-2">
+                                  <span className="text-xs bg-gray-100 px-2 py-1 rounded">Produto Digital</span>
+                                  <span className="text-xs text-gray-500">Quantidade: {item.quantity}</span>
+                                </div>
+                              </div>
                             </div>
-                            <div>
-                              <h4 className="font-semibold text-gray-900">{item.product_name}</h4>
-                              <p className="text-sm text-gray-600">por {sale.product?.author}</p>
-                              <div className="flex items-center space-x-4 mt-2">
-                                <span className="text-xs bg-gray-100 px-2 py-1 rounded">Produto Digital</span>
-                                <span className="text-xs text-gray-500">Quantidade: {item.quantity}</span>
+                            <div className="text-right">
+                              <div className="text-lg font-bold text-gray-900">
+                                R$ {Number(item.price).toFixed(2)}
+                              </div>
+                              <div className="text-sm text-gray-500">
+                                Unitário: R$ {(Number(item.price) / item.quantity).toFixed(2)}
                               </div>
                             </div>
                           </div>
-                          <div className="text-right">
-                            <div className="text-lg font-bold text-gray-900">
-                              R$ {Number(item.price).toFixed(2)}
-                            </div>
-                            <div className="text-sm text-gray-500">
-                              Unitário: R$ {(Number(item.price) / item.quantity).toFixed(2)}
-                            </div>
-                          </div>
                         </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 ) : (
                   // Fallback: mostrar produto principal se não há saleItems
                   <div className="border rounded-lg p-4 bg-white">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-4">
-                        <div className="w-16 h-20 bg-gray-100 rounded flex items-center justify-center">
-                          <FileText className="w-8 h-8 text-gray-400" />
+                        <div className="w-16 h-20 bg-gray-100 rounded flex items-center justify-center overflow-hidden">
+                          {sale.product?.foto_produto ? (
+                            <img 
+                              src={sale.product?.foto_produto} 
+                              alt={sale.product?.title}
+                              className="w-full h-full object-cover rounded"
+                              onError={(e) => {
+                                // Fallback para ícone se a imagem não carregar
+                                e.currentTarget.style.display = 'none';
+                                e.currentTarget.nextElementSibling.style.display = 'flex';
+                              }}
+                            />
+                          ) : null}
+                          <FileText className={`w-8 h-8 text-gray-400 ${sale.product?.foto_produto ? 'hidden' : 'block'}`} />
                         </div>
                         <div>
                           <h4 className="font-semibold text-gray-900">{sale.product?.title}</h4>

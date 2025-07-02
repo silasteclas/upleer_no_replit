@@ -147,6 +147,10 @@ export default function Sales() {
                       {/* Desktop Layout */}
                       <div className="hidden lg:flex items-center justify-between">
                         <div className="flex items-center space-x-6 flex-1">
+                          <div className="flex-shrink-0 w-20">
+                            <p className="text-xs text-gray-500 uppercase tracking-wide">Pedido</p>
+                            <p className="font-bold text-lg text-blue-600">#{String(sale.vendorOrderNumber || 1).padStart(3, '0')}</p>
+                          </div>
                           <div className="flex-1 min-w-0">
                             <h4 className="font-medium text-gray-900 truncate">{sale.product?.title || 'Produto'}</h4>
                             <p className="text-sm text-gray-600 truncate">por {sale.product?.author || 'Autor'}</p>
@@ -182,7 +186,10 @@ export default function Sales() {
                       <div className="hidden md:flex lg:hidden flex-col space-y-2">
                         <div className="flex items-center justify-between">
                           <div className="flex-1 min-w-0">
-                            <h4 className="font-medium text-gray-900 truncate">{sale.product?.title || 'Produto'}</h4>
+                            <div className="flex items-center space-x-3 mb-1">
+                              <span className="font-bold text-blue-600">#{String(sale.vendorOrderNumber || 1).padStart(3, '0')}</span>
+                              <h4 className="font-medium text-gray-900 truncate">{sale.product?.title || 'Produto'}</h4>
+                            </div>
                             <p className="text-sm text-gray-600 truncate">por {sale.product?.author || 'Autor'}</p>
                           </div>
                           <div className="flex items-center space-x-4">
@@ -210,7 +217,10 @@ export default function Sales() {
                       <div className="flex md:hidden flex-col space-y-2">
                         <div className="flex items-start justify-between">
                           <div className="flex-1 min-w-0">
-                            <h4 className="font-medium text-gray-900 truncate">{sale.product?.title || 'Produto'}</h4>
+                            <div className="flex items-center space-x-3 mb-1">
+                              <span className="font-bold text-blue-600">#{String(sale.vendorOrderNumber || 1).padStart(3, '0')}</span>
+                              <h4 className="font-medium text-gray-900 truncate">{sale.product?.title || 'Produto'}</h4>
+                            </div>
                             <p className="text-sm text-gray-600 truncate">por {sale.product?.author || 'Autor'}</p>
                           </div>
                           <ChevronRight className="w-4 h-4 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity mt-1" />

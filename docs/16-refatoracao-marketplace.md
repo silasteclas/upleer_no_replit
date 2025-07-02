@@ -40,6 +40,7 @@ CREATE TABLE orders (
 -- Adicionar colunas à tabela atual:
 ALTER TABLE sales ADD COLUMN order_id VARCHAR;
 ALTER TABLE sales ADD COLUMN author_id VARCHAR;
+ALTER TABLE sales ADD COLUMN vendor_order_number INT NOT NULL DEFAULT 1;
 -- Renomear/ajustar outras colunas conforme necessário
 ```
 
@@ -57,6 +58,67 @@ CREATE TABLE sale_items (
   FOREIGN KEY (sale_id) REFERENCES sales(id)
 );
 ```
+
+## 🔢 Numeração Sequencial de Pedidos por Vendedor
+
+### 🎯 **Objetivo**
+Implementar um número sequencial único para cada pedido no dashboard do vendedor. Cada vendedor terá sua própria sequência independente começando em #001.
+
+**Exemplo**: 
+- Vendedor A vê seus pedidos como #001, #002, #003...
+- Vendedor B vê seus pedidos como #001, #002, #003...
+
+### 💡 **Por que?**
+- Dar identidade visual profissional aos pedidos
+- Facilitar referenciamento entre vendedor e clientes
+- Melhorar experiência do usuário no dashboard
+
+### 🔧 **Implementação**
+
+#### 1. Modificação na Tabela `sales`
+```sql
+ALTER TABLE sales ADD COLUMN vendor_order_number INT NOT NULL DEFAULT 1;
+```
+
+#### 2. Lógica no Backend (endpoint batch)
+```javascript
+// Para cada venda do vendedor no loop:
+const ultimoNumero = await db.sales
+  .select({ max: max(sales.vendor_order_number) })
+  .where(eq(sales.author_id, authorId));
+
+const proximoNumero = (ultimoNumero.max || 0) + 1;
+
+await db.sales.insert({
+  order_id: orderData.order_id,
+  author_id: authorId,
+  vendor_order_number: proximoNumero,  // Auto-incrementa por vendedor
+  valor_total: vendaData.valor_total,
+  // ... outros campos
+});
+```
+
+#### 3. Frontend - Query
+```javascript
+const vendas = await db.sales
+  .where(eq(sales.author_id, vendorId))
+  .orderBy(desc(sales.vendor_order_number));
+```
+
+#### 4. Frontend - Display
+```jsx
+<div>Pedido #{String(venda.vendor_order_number).padStart(3, '0')}</div>
+// Resultado: #001, #002, #003...
+```
+
+### ✅ **Benefícios**
+- **Identidade Visual**: Cada pedido tem um número único e profissional
+- **Independência**: Cada vendedor tem sua própria sequência
+- **Simplicidade**: Fácil de implementar e manter
+- **Escalabilidade**: Funciona com qualquer quantidade de vendedores
+
+### 📝 **Implementação na Refatoração**
+Esta funcionalidade será implementada durante a **FASE 1** (Criação das Novas Tabelas) como parte da modificação da tabela `sales`.
 
 ## 🔄 Fluxo de Dados com Nova Estrutura
 

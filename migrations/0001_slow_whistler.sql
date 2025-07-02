@@ -1,0 +1,1 @@
+ALTER TABLE "sales" ADD COLUMN "vendor_order_number" integer DEFAULT 1 NOT NULL;

@@ -69,7 +69,24 @@ export const orders = pgTable("orders", {
   id: varchar("id").primaryKey(), // ID original da Nuvem Shop
   clienteNome: varchar("cliente_nome").notNull(),
   clienteEmail: varchar("cliente_email").notNull(),
+  // NOVOS CAMPOS DO CLIENTE
+  clienteCpf: varchar("cliente_cpf"),
+  clienteTelefone: varchar("cliente_telefone"),
+  // CAMPOS DE ENDEREÇO
+  enderecoRua: varchar("endereco_rua"),
+  enderecoNumero: varchar("endereco_numero"),
+  enderecoBairro: varchar("endereco_bairro"),
+  enderecoCidade: varchar("endereco_cidade"),
+  enderecoEstado: varchar("endereco_estado"),
+  enderecoCep: varchar("endereco_cep"),
+  enderecoComplemento: varchar("endereco_complemento"),
   valorTotal: decimal("valor_total", { precision: 10, scale: 2 }),
+  // NOVOS CAMPOS DE PAGAMENTO/ENVIO
+  formaPagamento: varchar("forma_pagamento"),
+  bandeiraCartao: varchar("bandeira_cartao"),
+  parcelas: varchar("parcelas"),
+  statusPagamento: varchar("status_pagamento"),
+  statusEnvio: varchar("status_envio"),
   status: varchar("status").default("pending"),
   createdAt: timestamp("created_at").defaultNow(),
 });
@@ -80,6 +97,7 @@ export const sales = pgTable("sales", {
   // NOVOS CAMPOS para marketplace
   orderId: varchar("order_id").references(() => orders.id), // Referência ao pedido
   authorId: varchar("author_id").references(() => users.id), // ID do autor/vendedor
+  vendorOrderNumber: integer("vendor_order_number").notNull().default(1), // Número sequencial por vendedor
   // Campos existentes
   productId: integer("product_id").notNull().references(() => products.id),
   buyerEmail: varchar("buyer_email"),
@@ -115,7 +133,21 @@ export const saleItems = pgTable("sale_items", {
   productName: varchar("product_name").notNull(),
   price: decimal("price", { precision: 10, scale: 2 }).notNull(),
   quantity: integer("quantity").notNull(),
+  // NOVO CAMPO PARA FOTO DO PRODUTO
+  fotoProduto: varchar("foto_produto"), // URL da imagem do produto
   createdAt: timestamp("created_at").defaultNow(),
+});
+
+// TABELA CRÍTICA: Mapeamento Produto-NuvemShop (PRESERVAR)
+export const produtoNuvemshopMapping = pgTable("produto_nuvemshop_mapping", {
+  id: serial("id").primaryKey(),
+  idProdutoInterno: varchar("id_produto_interno").notNull(),
+  idAutor: varchar("id_autor").notNull(),
+  produtoIdNuvemshop: varchar("produto_id_nuvemshop").notNull(),
+  variantIdNuvemshop: varchar("variant_id_nuvemshop").notNull(),
+  sku: varchar("sku"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
 });
 
 // RELACIONAMENTOS ATUALIZADOS para o modelo marketplace
@@ -159,6 +191,17 @@ export const saleItemsRelations = relations(saleItems, ({ one }) => ({
   }),
 }));
 
+export const produtoNuvemshopMappingRelations = relations(produtoNuvemshopMapping, ({ one }) => ({
+  product: one(products, {
+    fields: [produtoNuvemshopMapping.idProdutoInterno],
+    references: [products.id],
+  }),
+  author: one(users, {
+    fields: [produtoNuvemshopMapping.idAutor],
+    references: [users.id],
+  }),
+}));
+
 // Schemas
 export const insertProductSchema = createInsertSchema(products).omit({
   id: true,
@@ -178,6 +221,12 @@ export const insertOrderSchema = createInsertSchema(orders).omit({
 export const insertSaleItemSchema = createInsertSchema(saleItems).omit({
   id: true,
   createdAt: true,
+});
+
+export const insertProdutoNuvemshopMappingSchema = createInsertSchema(produtoNuvemshopMapping).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
 });
 
 // API Integrations table
@@ -279,3 +328,5 @@ export type InsertApiIntegration = z.infer<typeof insertApiIntegrationSchema>;
 export type ApiEndpoint = typeof apiEndpoints.$inferSelect;
 export type InsertApiEndpoint = z.infer<typeof insertApiEndpointSchema>;
 export type ApiLog = typeof apiLogs.$inferSelect;
+export type InsertProdutoNuvemshopMapping = z.infer<typeof insertProdutoNuvemshopMappingSchema>;
+export type ProdutoNuvemshopMapping = typeof produtoNuvemshopMapping.$inferSelect;

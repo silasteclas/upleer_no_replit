@@ -127,23 +127,23 @@ app.post('/api/webhook/sales/batch', async (req, res) => {
     const { storage } = await import("./storage");
     let salesData = req.body;
     
-    console.log('[WEBHOOK-BATCH-V3] 🚀 NOVO MODELO MARKETPLACE - Raw payload received:', JSON.stringify(salesData, null, 2));
-    console.log('[WEBHOOK-BATCH-V3] Payload type:', typeof salesData);
-    console.log('[WEBHOOK-BATCH-V3] Is array:', Array.isArray(salesData));
-    console.log('[WEBHOOK-BATCH-V3] Length:', salesData?.length);
+    console.log('[WEBHOOK-BATCH-V4] 🚀 NOVO MODELO MARKETPLACE COM DADOS COMPLETOS - Raw payload received:', JSON.stringify(salesData, null, 2));
+    console.log('[WEBHOOK-BATCH-V4] Payload type:', typeof salesData);
+    console.log('[WEBHOOK-BATCH-V4] Is array:', Array.isArray(salesData));
+    console.log('[WEBHOOK-BATCH-V4] Length:', salesData?.length);
     
     // Handle different payload structures from N8N
     if (Array.isArray(salesData) && salesData.length === 1 && salesData[0].data) {
       // N8N sends: [{ "data": [...] }]
       salesData = salesData[0].data;
-      console.log('[WEBHOOK-BATCH-V3] Extracted data from N8N wrapper');
+      console.log('[WEBHOOK-BATCH-V4] Extracted data from N8N wrapper');
     } else if (salesData.data && Array.isArray(salesData.data)) {
       // N8N sends: { "data": [...] }
       salesData = salesData.data;
-      console.log('[WEBHOOK-BATCH-V3] Extracted data from object wrapper');
+      console.log('[WEBHOOK-BATCH-V4] Extracted data from object wrapper');
     } else if (Array.isArray(salesData) && salesData.length > 0 && salesData[0].order_id) {
       // N8N sends directly: [{ "order_id": ..., "id_autor": ... }]
-      console.log('[WEBHOOK-BATCH-V3] Using direct array format');
+      console.log('[WEBHOOK-BATCH-V4] Using direct array format');
     }
     
     if (!Array.isArray(salesData)) {
@@ -167,14 +167,38 @@ app.post('/api/webhook/sales/batch', async (req, res) => {
     const clienteNome = firstItem.cliente_nome || 'Cliente Não Informado';
     const clienteEmail = firstItem.cliente_email || 'nao-informado@email.com';
     
+    // NOVOS CAMPOS DO CLIENTE
+    const clienteCpf = firstItem.cliente_cpf || '';
+    const clienteTelefone = firstItem.cliente_telefone || '';
+    
+    // NOVOS CAMPOS DE ENDEREÇO
+    const endereco = firstItem.endereco || {};
+    const enderecoRua = endereco.rua || '';
+    const enderecoNumero = endereco.numero || '';
+    const enderecoBairro = endereco.bairro || '';
+    const enderecoCidade = endereco.cidade || '';
+    const enderecoEstado = endereco.estado || '';
+    const enderecoCep = endereco.cep || '';
+    const enderecoComplemento = endereco.complemento || '';
+    
+    // NOVOS CAMPOS DE PAGAMENTO/ENVIO
+    const formaPagamento = firstItem.forma_pagamento || '';
+    const bandeiraCartao = firstItem.bandeira_cartao || '';
+    const parcelas = firstItem.parcelas || '1';
+    const statusPagamento = firstItem.status_pagamento || 'pending';
+    const statusEnvio = firstItem.status_envio || 'unpacked';
+    
     if (!orderId) {
       return res.status(400).json({ message: 'order_id é obrigatório no payload' });
     }
     
-    console.log(`[WEBHOOK-BATCH-V3] 📦 Processing order ${orderId} with ${salesData.length} vendors`);
+    console.log(`[WEBHOOK-BATCH-V4] 📦 Processing order ${orderId} with ${salesData.length} vendors`);
+    console.log(`[WEBHOOK-BATCH-V4] 📋 Cliente: ${clienteNome} (${clienteEmail})`);
+    console.log(`[WEBHOOK-BATCH-V4] 💳 Pagamento: ${formaPagamento} ${parcelas}x`);
+    console.log(`[WEBHOOK-BATCH-V4] 📍 Endereço: ${enderecoCidade}/${enderecoEstado}`);
     
-    // FASE 3: IMPLEMENTAR MODELO MARKETPLACE
-    // 1. Create ORDER record (one per order)
+    // FASE 4: IMPLEMENTAR MODELO MARKETPLACE COM NOVOS CAMPOS
+    // 1. Create ORDER record (one per order) with complete data
     try {
       // Calculate total order value
       let valorTotalOrder = 0;
@@ -187,12 +211,29 @@ app.post('/api/webhook/sales/batch', async (req, res) => {
         }
       }
       
-      // Create order record
+      // Create order record with all new fields
       await storage.createOrder({
         id: orderId.toString(),
         clienteNome: clienteNome,
         clienteEmail: clienteEmail,
+        // NOVOS CAMPOS DO CLIENTE
+        clienteCpf: clienteCpf,
+        clienteTelefone: clienteTelefone,
+        // CAMPOS DE ENDEREÇO
+        enderecoRua: enderecoRua,
+        enderecoNumero: enderecoNumero,
+        enderecoBairro: enderecoBairro,
+        enderecoCidade: enderecoCidade,
+        enderecoEstado: enderecoEstado,
+        enderecoCep: enderecoCep,
+        enderecoComplemento: enderecoComplemento,
         valorTotal: valorTotalOrder.toFixed(2),
+        // NOVOS CAMPOS DE PAGAMENTO/ENVIO
+        formaPagamento: formaPagamento,
+        bandeiraCartao: bandeiraCartao,
+        parcelas: parcelas,
+        statusPagamento: statusPagamento,
+        statusEnvio: statusEnvio,
         status: 'pending'
       });
       
@@ -280,26 +321,44 @@ app.post('/api/webhook/sales/batch', async (req, res) => {
         const vendorCommission = vendorTotal * commissionRate;
         const vendorEarnings = vendorTotal - vendorCommission;
         
-        // Create SALE record for this vendor
+        // Get next vendor order number for this author
+        const nextVendorOrderNumber = await storage.getNextVendorOrderNumber(id_autor);
+        
+        // 🔍 DEBUG: Log payment data extraction
+        console.log(`[WEBHOOK-BATCH-V4] 🔍 PAYMENT DEBUG for vendor ${id_autor}:`);
+        console.log(`   Raw firstItem.forma_pagamento: "${firstItem.forma_pagamento}"`);
+        console.log(`   Extracted formaPagamento: "${formaPagamento}"`);
+        console.log(`   Raw firstItem.status_pagamento: "${firstItem.status_pagamento}"`);
+        console.log(`   Extracted statusPagamento: "${statusPagamento}"`);
+        console.log(`   Raw firstItem.parcelas: "${firstItem.parcelas}"`);
+        console.log(`   Extracted parcelas: "${parcelas}"`);
+        
+        // Create SALE record for this vendor with complete data
         const saleData = {
           orderId: orderId.toString(),
           authorId: id_autor,
+          vendorOrderNumber: nextVendorOrderNumber,
           productId: vendorProducts[0].product.id, // Use first product as reference
           buyerName: cliente_nome,
           buyerEmail: cliente_email,
-          buyerPhone: '',
-          buyerCpf: '',
-          buyerAddress: '',
-          buyerCity: '',
-          buyerState: '',
-          buyerZipCode: '',
+          // NOVOS CAMPOS DO CLIENTE
+          buyerPhone: clienteTelefone,
+          buyerCpf: clienteCpf,
+          buyerAddress: `${enderecoRua}, ${enderecoNumero}${enderecoComplemento ? ', ' + enderecoComplemento : ''}`,
+          buyerCity: enderecoCidade,
+          buyerState: enderecoEstado,
+          buyerZipCode: enderecoCep,
           salePrice: vendorTotal.toFixed(2),
           commission: vendorCommission.toFixed(2),
           authorEarnings: vendorEarnings.toFixed(2),
           orderDate: new Date(),
-          paymentStatus: 'pending',
-          paymentMethod: '',
-          installments: 1,
+          // NOVOS CAMPOS DE PAGAMENTO
+          paymentStatus: statusPagamento === 'pending' ? 'pendente' : 
+                        statusPagamento === 'approved' ? 'aprovado' : 'pendente',
+          paymentMethod: formaPagamento === 'pix' ? 'pix' :
+                        formaPagamento === 'cartao_credito' ? 'cartao_credito' :
+                        formaPagamento === 'boleto' ? 'boleto' : 'pix',
+          installments: parseInt(parcelas) || 1,
           discountCoupon: `ORDER_${order_id}`,
           discountAmount: '0.00',
           shippingCost: '0.00',
@@ -308,20 +367,44 @@ app.post('/api/webhook/sales/batch', async (req, res) => {
           quantity: vendorProducts.reduce((sum, p) => sum + p.quantidade, 0)
         };
         
+        // 🔍 DEBUG: Log final saleData before saving
+        console.log(`[WEBHOOK-BATCH-V4] 🔍 SALE DATA FINAL for vendor ${id_autor}:`);
+        console.log(`   paymentStatus: "${saleData.paymentStatus}"`);
+        console.log(`   paymentMethod: "${saleData.paymentMethod}" ${saleData.paymentMethod ? '✅' : '❌ VAZIO'}`);
+        console.log(`   installments: ${saleData.installments}`);
+        console.log(`   buyerPhone: "${saleData.buyerPhone}"`);
+        console.log(`   buyerCpf: "${saleData.buyerCpf}"`);
+        
         const newSale = await storage.createSale(saleData);
         console.log(`[WEBHOOK-BATCH-V3] ✅ Sale created: ID ${newSale.id} for vendor ${id_autor}`);
         
-        // 3. Create SALE_ITEMS records for each product
-        for (const vendorProduct of vendorProducts) {
+        // 🔍 DEBUG: Log what was actually saved to database
+        console.log(`[WEBHOOK-BATCH-V4] 🔍 SAVED TO DB - Sale ID ${newSale.id}:`);
+        console.log(`   Saved paymentStatus: "${newSale.paymentStatus}"`);
+        console.log(`   Saved paymentMethod: "${newSale.paymentMethod}" ${newSale.paymentMethod ? '✅' : '❌ VAZIO'}`);
+        console.log(`   Saved installments: ${newSale.installments}`);
+        console.log(`   Saved buyerPhone: "${newSale.buyerPhone}"`);
+        console.log(`   Saved buyerCpf: "${newSale.buyerCpf}"`);
+        
+        // 3. Create SALE_ITEMS records for each product with foto_produto
+        for (let i = 0; i < vendorProducts.length; i++) {
+          const vendorProduct = vendorProducts[i];
+          const originalProduct = produtos[i]; // Get original product data from N8N
+          
           await storage.createSaleItem({
             saleId: newSale.id,
             productId: vendorProduct.id_produto_interno.toString(),
             productName: vendorProduct.product.title,
             price: vendorProduct.totalPrice.toFixed(2),
-            quantity: vendorProduct.quantidade
+            quantity: vendorProduct.quantidade,
+            // NOVO CAMPO: Foto do produto do N8N
+            fotoProduto: originalProduct?.foto_produto || null
           });
           
-          console.log(`[WEBHOOK-BATCH-V3] ✅ Sale item created: ${vendorProduct.product.title} (${vendorProduct.quantidade}x)`);
+          console.log(`[WEBHOOK-BATCH-V4] ✅ Sale item created: ${vendorProduct.product.title} (${vendorProduct.quantidade}x)`);
+          if (originalProduct?.foto_produto) {
+            console.log(`[WEBHOOK-BATCH-V4] 📸 Product image: ${originalProduct.foto_produto}`);
+          }
         }
         
         results.push({
@@ -355,8 +438,32 @@ app.post('/api/webhook/sales/batch', async (req, res) => {
     }
     
     const response = {
-      message: `🎉 MARKETPLACE V3: Processamento concluído`,
+      message: `🎉 MARKETPLACE V4: Processamento concluído com dados completos`,
       orderId: orderId,
+      clienteInfo: {
+        nome: clienteNome,
+        email: clienteEmail,
+        cpf: clienteCpf,
+        telefone: clienteTelefone,
+        endereco: {
+          rua: enderecoRua,
+          numero: enderecoNumero,
+          bairro: enderecoBairro,
+          cidade: enderecoCidade,
+          estado: enderecoEstado,
+          cep: enderecoCep,
+          complemento: enderecoComplemento
+        }
+      },
+      pagamentoInfo: {
+        forma: formaPagamento,
+        bandeira: bandeiraCartao,
+        parcelas: parcelas,
+        status: statusPagamento
+      },
+      envioInfo: {
+        status: statusEnvio
+      },
       totalVendors: results.length,
       totalProducts: results.reduce((sum, r) => sum + r.productCount, 0),
       totalQuantity: results.reduce((sum, r) => sum + r.totalQuantity, 0),
