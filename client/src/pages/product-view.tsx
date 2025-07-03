@@ -71,8 +71,8 @@ export default function ProductView() {
       setIsDialogOpen(false);
       form.reset();
       queryClient.invalidateQueries({ queryKey: ["/api/sales"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/analytics/stats"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/analytics/sales-data"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/stats"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/sales-data"] });
     },
     onError: (error: any) => {
       toast({
@@ -160,7 +160,7 @@ export default function ProductView() {
       <Header title="Detalhes do Produto" subtitle="Visualizar informações do produto" />
       <Sidebar />
       <main className="ml-64 pt-32 p-6 min-h-screen overflow-auto">
-        <div className="max-w-5xl mx-auto">
+        <div className="max-w-7xl mx-auto">
           <div className="mb-4">
             <Button
                 variant="outline"
@@ -207,138 +207,7 @@ export default function ProductView() {
                           <Edit className="w-4 h-4 mr-2" />
                           Editar Produto
                         </Button>
-                        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-                          <DialogTrigger asChild>
-                            <Button size="sm" className="w-full">
-                              <ShoppingCart className="w-4 h-4 mr-2" />
-                              Simular Compra
-                            </Button>
-                          </DialogTrigger>
-                          <DialogContent className="max-w-md">
-                            <DialogHeader>
-                              <DialogTitle>Simular Compra</DialogTitle>
-                            </DialogHeader>
-                            <Form {...form}>
-                              <form onSubmit={form.handleSubmit((data) => simulatePurchaseMutation.mutate(data))} className="space-y-4">
-                                <FormField
-                                  control={form.control}
-                                  name="buyerName"
-                                  render={({ field }) => (
-                                    <FormItem>
-                                      <FormLabel>Nome Completo</FormLabel>
-                                      <FormControl>
-                                        <Input placeholder="João Silva" {...field} />
-                                      </FormControl>
-                                      <FormMessage />
-                                    </FormItem>
-                                  )}
-                                />
-                                <FormField
-                                  control={form.control}
-                                  name="buyerEmail"
-                                  render={({ field }) => (
-                                    <FormItem>
-                                      <FormLabel>Email</FormLabel>
-                                      <FormControl>
-                                        <Input type="email" placeholder="joao@email.com" {...field} />
-                                      </FormControl>
-                                      <FormMessage />
-                                    </FormItem>
-                                  )}
-                                />
-                                <div className="grid grid-cols-2 gap-2">
-                                  <FormField
-                                    control={form.control}
-                                    name="buyerPhone"
-                                    render={({ field }) => (
-                                      <FormItem>
-                                        <FormLabel>Telefone</FormLabel>
-                                        <FormControl>
-                                          <Input placeholder="11999999999" {...field} />
-                                        </FormControl>
-                                        <FormMessage />
-                                      </FormItem>
-                                    )}
-                                  />
-                                  <FormField
-                                    control={form.control}
-                                    name="buyerCpf"
-                                    render={({ field }) => (
-                                      <FormItem>
-                                        <FormLabel>CPF</FormLabel>
-                                        <FormControl>
-                                          <Input placeholder="12345678901" {...field} />
-                                        </FormControl>
-                                        <FormMessage />
-                                      </FormItem>
-                                    )}
-                                  />
-                                </div>
-                                <FormField
-                                  control={form.control}
-                                  name="buyerAddress"
-                                  render={({ field }) => (
-                                    <FormItem>
-                                      <FormLabel>Endereço</FormLabel>
-                                      <FormControl>
-                                        <Input placeholder="Rua das Flores, 123" {...field} />
-                                      </FormControl>
-                                      <FormMessage />
-                                    </FormItem>
-                                  )}
-                                />
-                                <div className="grid grid-cols-3 gap-2">
-                                  <FormField
-                                    control={form.control}
-                                    name="buyerCity"
-                                    render={({ field }) => (
-                                      <FormItem>
-                                        <FormLabel>Cidade</FormLabel>
-                                        <FormControl>
-                                          <Input placeholder="São Paulo" {...field} />
-                                        </FormControl>
-                                        <FormMessage />
-                                      </FormItem>
-                                    )}
-                                  />
-                                  <FormField
-                                    control={form.control}
-                                    name="buyerState"
-                                    render={({ field }) => (
-                                      <FormItem>
-                                        <FormLabel>Estado</FormLabel>
-                                        <FormControl>
-                                          <Input placeholder="SP" {...field} />
-                                        </FormControl>
-                                        <FormMessage />
-                                      </FormItem>
-                                    )}
-                                  />
-                                  <FormField
-                                    control={form.control}
-                                    name="buyerZipCode"
-                                    render={({ field }) => (
-                                      <FormItem>
-                                        <FormLabel>CEP</FormLabel>
-                                        <FormControl>
-                                          <Input placeholder="01234567" {...field} />
-                                        </FormControl>
-                                        <FormMessage />
-                                      </FormItem>
-                                    )}
-                                  />
-                                </div>
-                                <Button 
-                                  type="submit" 
-                                  className="w-full"
-                                  disabled={simulatePurchaseMutation.isPending}
-                                >
-                                  {simulatePurchaseMutation.isPending ? "Processando..." : "Confirmar Compra"}
-                                </Button>
-                              </form>
-                            </Form>
-                          </DialogContent>
-                        </Dialog>
+
                       </div>
                     </div>
                   </CardContent>
@@ -347,11 +216,11 @@ export default function ProductView() {
 
               {/* Product Details */}
               <div className="lg:col-span-2">
-                <Card className="h-fit">
-                  <CardHeader className="pb-3">
+                <Card className="h-[558.72px]">
+                  <CardHeader className="pb-4">
                     <div className="flex justify-between items-start">
                       <div className="flex-1">
-                        <CardTitle className="text-lg font-bold">{product.title}</CardTitle>
+                        <CardTitle className="text-xl font-bold">{product.title}</CardTitle>
                         <p className="text-sm text-gray-600">por {product.author}</p>
                       </div>
                       {product?.publicUrl && (
@@ -380,23 +249,25 @@ export default function ProductView() {
                       )}
                     </div>
                   </CardHeader>
-                  <CardContent className="space-y-3">
-                    <div className="grid grid-cols-3 gap-3">
-                      <div className="bg-green-50 p-2 rounded">
-                        <h3 className="font-medium text-gray-900 mb-1 text-xs">Ganho do Autor</h3>
-                        <p className="text-sm font-bold text-green-600">R$ {(parseFloat(product.salePrice) - parseFloat(product.baseCost)).toFixed(2)}</p>
+                  <CardContent className="space-y-4 overflow-y-auto h-full">
+                    <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
+                      <div className="bg-green-50 p-3 rounded">
+                        <h3 className="font-medium text-gray-900 mb-1 text-sm">Ganho do Autor</h3>
+                        <p className="text-sm font-bold text-green-600">R$ {parseFloat(product.authorEarnings || "0").toFixed(2)}</p>
                       </div>
-                      <div className="bg-blue-50 p-2 rounded">
-                        <h3 className="font-medium text-gray-900 mb-1 text-xs">Páginas</h3>
-                        <p className="text-sm font-bold text-blue-600">{product.pageCount}</p>
+                      <div className="bg-blue-50 p-3 rounded">
+                        <h3 className="font-medium text-gray-900 mb-1 text-sm">Preço de Venda</h3>
+                        <p className="text-sm font-bold text-blue-600">R$ {parseFloat(product.salePrice).toFixed(2)}</p>
                       </div>
-                      <div className="bg-purple-50 p-2 rounded">
-                        <h3 className="font-medium text-gray-900 mb-1 text-xs">Gênero</h3>
-                        <p className="text-xs text-gray-700 capitalize">{product.genre}</p>
+                      <div className="bg-purple-50 p-3 rounded">
+                        <h3 className="font-medium text-gray-900 mb-1 text-sm">Páginas</h3>
+                        <p className="text-sm font-bold text-purple-600">{product.pageCount}</p>
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-3 text-xs">
+
+
+                    <div className="grid grid-cols-2 gap-4 text-sm">
                       <div>
                         <h3 className="font-medium text-gray-900 mb-1">Idioma</h3>
                         <p className="text-gray-700 capitalize">{product.language}</p>
@@ -411,13 +282,13 @@ export default function ProductView() {
 
                     {product.targetAudience && (
                       <div>
-                        <h3 className="font-medium text-gray-900 mb-1 text-xs">Público-Alvo</h3>
-                        <p className="text-xs text-gray-700">{product.targetAudience}</p>
+                        <h3 className="font-medium text-gray-900 mb-1 text-sm">Público-Alvo</h3>
+                        <p className="text-sm text-gray-700">{product.targetAudience}</p>
                       </div>
                     )}
 
                     {(product.coAuthors || product.isbn) && (
-                      <div className="grid grid-cols-2 gap-3 text-xs">
+                      <div className="grid grid-cols-2 gap-4 text-sm">
                         {product.coAuthors && (
                           <div>
                             <h3 className="font-medium text-gray-900 mb-1">Co-Autores</h3>
@@ -434,9 +305,9 @@ export default function ProductView() {
                     )}
 
                     {product.description && (
-                      <div className="border-t pt-3">
-                        <h3 className="font-medium text-gray-900 mb-1 text-xs">Descrição</h3>
-                        <p className="text-xs text-gray-700 leading-relaxed">{product.description}</p>
+                      <div className="border-t pt-4">
+                        <h3 className="font-medium text-gray-900 mb-2 text-sm">Descrição</h3>
+                        <p className="text-sm text-gray-700 leading-relaxed">{product.description}</p>
                       </div>
                     )}
                   </CardContent>

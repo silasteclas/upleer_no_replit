@@ -58,6 +58,12 @@ export const products = pgTable("products", {
   baseCost: decimal("base_cost", { precision: 10, scale: 2 }).notNull(),
   salePrice: decimal("sale_price", { precision: 10, scale: 2 }).notNull(),
   marginPercent: integer("margin_percent").notNull().default(150),
+  // NOVOS CAMPOS FINANCEIROS - FASE 1
+  authorEarnings: decimal("author_earnings", { precision: 10, scale: 2 }),
+  platformCommission: decimal("platform_commission", { precision: 10, scale: 2 }),
+  fixedFee: decimal("fixed_fee", { precision: 10, scale: 2 }).default("9.90"),
+  printingCostPerPage: decimal("printing_cost_per_page", { precision: 5, scale: 2 }).default("0.10"),
+  commissionRate: decimal("commission_rate", { precision: 5, scale: 2 }).default("30.00"),
   status: varchar("status").notNull().default("pending"), // pending, approved, rejected, published, archived
   publicUrl: varchar("public_url"), // URL do produto na loja oficial
   createdAt: timestamp("created_at").defaultNow(),

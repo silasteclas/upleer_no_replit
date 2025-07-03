@@ -27,7 +27,7 @@ export default function Sales() {
   const handleRefresh = async () => {
     await refetch();
     // Also invalidate related queries
-    queryClient.invalidateQueries({ queryKey: ["/api/analytics/stats"] });
+    queryClient.invalidateQueries({ queryKey: ["/api/stats"] });
   };
 
   if (isLoading) {
@@ -153,16 +153,14 @@ export default function Sales() {
                           </div>
                           <div className="flex-1 min-w-0">
                             <h4 className="font-medium text-gray-900 truncate">{sale.product?.title || 'Produto'}</h4>
-                            <p className="text-sm text-gray-600 truncate">por {sale.product?.author || 'Autor'}</p>
                           </div>
                           <div className="text-left min-w-0 flex-shrink-0 w-48">
                             <p className="text-xs text-gray-500 uppercase tracking-wide">Comprador</p>
                             <p className="font-medium text-sm truncate">{sale.buyerName}</p>
-                            <p className="text-xs text-gray-600 truncate">{sale.buyerEmail}</p>
                           </div>
                           <div className="text-center flex-shrink-0 w-24">
-                            <p className="text-xs text-gray-500 uppercase tracking-wide">Comissão</p>
-                            <p className="text-lg font-bold text-green-600">R$ {(parseFloat(sale.salePrice) * 0.8).toFixed(2)}</p>
+                            <p className="text-xs text-gray-500 uppercase tracking-wide">Seus ganhos</p>
+                            <p className="text-lg font-bold text-green-600">R$ {parseFloat(sale.authorEarnings).toFixed(2)}</p>
                           </div>
                           <div className="text-center flex-shrink-0 w-24">
                             <p className="text-xs text-gray-500 uppercase tracking-wide">Data</p>
@@ -190,11 +188,10 @@ export default function Sales() {
                               <span className="font-bold text-blue-600">#{String(sale.vendorOrderNumber || 1).padStart(3, '0')}</span>
                               <h4 className="font-medium text-gray-900 truncate">{sale.product?.title || 'Produto'}</h4>
                             </div>
-                            <p className="text-sm text-gray-600 truncate">por {sale.product?.author || 'Autor'}</p>
                           </div>
                           <div className="flex items-center space-x-4">
                             <div className="text-right">
-                              <p className="text-lg font-bold text-green-600">R$ {(parseFloat(sale.salePrice) * 0.8).toFixed(2)}</p>
+                              <p className="text-lg font-bold text-green-600">R$ {parseFloat(sale.authorEarnings).toFixed(2)}</p>
                               <Badge variant={sale.paymentStatus === 'paid' ? 'default' : 'secondary'} className="text-xs">
                                 <CreditCard className="w-3 h-3 mr-1" />
                                 {sale.paymentStatus === 'paid' ? 'Pago' : 'Pendente'}
@@ -205,7 +202,7 @@ export default function Sales() {
                         </div>
                         <div className="flex items-center justify-between text-sm">
                           <div className="flex-1 min-w-0">
-                            <p className="text-gray-600 truncate">{sale.buyerName} • {sale.buyerEmail}</p>
+                            <p className="text-gray-600 truncate">{sale.buyerName}</p>
                           </div>
                           <div className="text-gray-500">
                             {format(new Date(sale.createdAt), "dd/MM/yyyy HH:mm", { locale: ptBR })}
@@ -221,17 +218,15 @@ export default function Sales() {
                               <span className="font-bold text-blue-600">#{String(sale.vendorOrderNumber || 1).padStart(3, '0')}</span>
                               <h4 className="font-medium text-gray-900 truncate">{sale.product?.title || 'Produto'}</h4>
                             </div>
-                            <p className="text-sm text-gray-600 truncate">por {sale.product?.author || 'Autor'}</p>
                           </div>
                           <ChevronRight className="w-4 h-4 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity mt-1" />
                         </div>
                         <div className="flex items-center justify-between">
                           <div className="flex-1 min-w-0">
                             <p className="text-sm text-gray-600 truncate">{sale.buyerName}</p>
-                            <p className="text-xs text-gray-500 truncate">{sale.buyerEmail}</p>
                           </div>
                           <div className="text-right">
-                            <p className="text-lg font-bold text-green-600">R$ {(parseFloat(sale.salePrice) * 0.8).toFixed(2)}</p>
+                            <p className="text-lg font-bold text-green-600">R$ {parseFloat(sale.authorEarnings).toFixed(2)}</p>
                             <p className="text-xs text-gray-500">{format(new Date(sale.createdAt), "dd/MM HH:mm", { locale: ptBR })}</p>
                           </div>
                         </div>

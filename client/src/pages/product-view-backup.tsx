@@ -106,9 +106,8 @@ export default function ProductView() {
       setIsDialogOpen(false);
       form.reset();
       // Invalidate relevant queries to refresh data
-      queryClient.invalidateQueries({ queryKey: ["/api/sales"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/analytics/stats"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/analytics/sales-data"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/stats"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/sales-data"] });
     },
     onError: (error: any) => {
       toast({

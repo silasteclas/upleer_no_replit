@@ -1,5 +1,5 @@
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { apiRequest, queryClient } from "@/lib/queryClient";
+import { apiRequest, queryClient, queryOptions } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 
 export function useAuth() {
@@ -8,6 +8,12 @@ export function useAuth() {
   const { data: user, isLoading } = useQuery({
     queryKey: ["/api/auth/user"],
     retry: false,
+    // Usar configurações específicas para dados de usuário
+    staleTime: queryOptions.user.staleTime,
+    gcTime: queryOptions.user.gcTime,
+    // Não refetch automaticamente se já temos dados válidos
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
   });
 
   const logoutMutation = useMutation({

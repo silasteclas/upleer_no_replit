@@ -4,13 +4,16 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Eye, Edit } from "lucide-react";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
+import { useToast } from "@/hooks/use-toast";
 import type { Product } from "@shared/schema";
 
 export default function RecentProducts() {
   const { data: products, isLoading } = useQuery<Product[]>({
     queryKey: ["/api/products"],
   });
+  const { toast } = useToast();
+  const [, navigate] = useLocation();
 
   const recentProducts = products?.slice(0, 5) || [];
 
@@ -169,10 +172,32 @@ export default function RecentProducts() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                       <div className="flex space-x-2">
-                        <Button variant="ghost" size="sm" className="text-primary hover:text-blue-600">
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          className="text-primary hover:text-blue-600"
+                          onClick={() => {
+                            if (product.status === 'published' && product.publicUrl) {
+                              window.open(product.publicUrl, '_blank');
+                            } else {
+                              toast({
+                                title: "Produto não publicado",
+                                description: "Este produto ainda não está publicado e disponível na loja.",
+                                variant: "destructive",
+                              });
+                            }
+                          }}
+                        >
                           <Eye className="w-4 h-4" />
                         </Button>
-                        <Button variant="ghost" size="sm" className="text-gray-600 hover:text-gray-800">
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          className="text-gray-600 hover:text-gray-800"
+                          onClick={() => {
+                            navigate(`/products/${product.id}/edit`);
+                          }}
+                        >
                           <Edit className="w-4 h-4" />
                         </Button>
                       </div>

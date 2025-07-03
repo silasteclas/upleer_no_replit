@@ -63,10 +63,32 @@ app.post('/api/webhook/sales', async (req, res) => {
     const discount = discountAmount ? parseFloat(discountAmount.toString().replace(',', '.')) : 0;
     const shipping = shippingCost ? parseFloat(shippingCost.toString().replace(',', '.')) : 0;
     
-    // Calculate commission and author earnings (assuming 15% commission)
-    const commissionRate = 0.15;
-    const commission = price * commissionRate;
-    const authorEarnings = price - commission;
+    // FASE 4: Usar dados financeiros da tabela products
+    let commission, authorEarnings, platformCommission;
+    
+    if (product.authorEarnings && product.platformCommission) {
+      // Usar dados armazenados na tabela products (FASE 1-3)
+      authorEarnings = parseFloat(product.authorEarnings.toString());
+      platformCommission = parseFloat(product.platformCommission.toString());
+      commission = platformCommission; // Para compatibilidade com código existente
+      
+      console.log(`[SALE] FASE 4 - Usando dados financeiros do produto:`);
+      console.log(`  💰 Ganho do autor: R$ ${authorEarnings.toFixed(2)}`);
+      console.log(`  🏢 Ganho da plataforma: R$ ${platformCommission.toFixed(2)}`);
+      console.log(`  🧮 Taxa fixa: R$ ${product.fixedFee || 9.90}`);
+      console.log(`  📄 Custo por página: R$ ${product.printingCostPerPage || 0.10}`);
+      console.log(`  📊 Taxa de comissão: ${product.commissionRate || 30}%`);
+    } else {
+      // Fallback para produtos antigos sem dados financeiros
+      const commissionRate = 0.15;
+      commission = price * commissionRate;
+      authorEarnings = price - commission;
+      
+      console.log(`[SALE] FASE 4 - Fallback para produto sem dados financeiros:`);
+      console.log(`  💰 Ganho do autor (15%): R$ ${authorEarnings.toFixed(2)}`);
+      console.log(`  🏢 Comissão (85%): R$ ${commission.toFixed(2)}`);
+      console.log(`  ⚠️  Produto ID ${productId} deveria ter dados financeiros atualizados`);
+    }
     
     // Create sale record - the authorId is automatically determined by the product
     const saleData = {
@@ -121,13 +143,15 @@ app.post('/api/webhook/sales', async (req, res) => {
   }
 });
 
-// NOVO ENDPOINT MARKETPLACE: Multiple sales webhook endpoint - FASE 3
+// NOVO ENDPOINT MARKETPLACE: Multiple sales webhook endpoint - FASE 4
 app.post('/api/webhook/sales/batch', async (req, res) => {
   try {
     const { storage } = await import("./storage");
     let salesData = req.body;
     
-    console.log('[WEBHOOK-BATCH-V4] 🚀 NOVO MODELO MARKETPLACE COM DADOS COMPLETOS - Raw payload received:', JSON.stringify(salesData, null, 2));
+    // FASE 4: Log de auditoria para rastreamento
+    console.log('[WEBHOOK-BATCH-V4] 🚀 FASE 4 IMPLEMENTADA - USANDO DADOS FINANCEIROS DA TABELA PRODUCTS');
+    console.log('[WEBHOOK-BATCH-V4] 📋 Raw payload received:', JSON.stringify(salesData, null, 2));
     console.log('[WEBHOOK-BATCH-V4] Payload type:', typeof salesData);
     console.log('[WEBHOOK-BATCH-V4] Is array:', Array.isArray(salesData));
     console.log('[WEBHOOK-BATCH-V4] Length:', salesData?.length);
@@ -316,10 +340,54 @@ app.post('/api/webhook/sales/batch', async (req, res) => {
           continue;
         }
         
-        // Calculate commission and author earnings for vendor total
-        const commissionRate = 0.15;
-        const vendorCommission = vendorTotal * commissionRate;
-        const vendorEarnings = vendorTotal - vendorCommission;
+        // FASE 4: Calcular comissão usando dados financeiros dos produtos
+        let vendorCommission = 0;
+        let vendorEarnings = 0;
+        
+        // Calcular baseado nos dados financeiros de cada produto individualmente
+        for (const vendorProduct of vendorProducts) {
+          const product = vendorProduct.product;
+          
+          if (product.authorEarnings && product.platformCommission) {
+            // Usar dados armazenados na tabela products (FASE 1-3)
+            const productAuthorEarnings = parseFloat(product.authorEarnings.toString());
+            const productPlatformCommission = parseFloat(product.platformCommission.toString());
+            
+            // Proporção baseada na quantidade vendida
+            const quantityRatio = vendorProduct.quantidade;
+            vendorEarnings += productAuthorEarnings * quantityRatio;
+            vendorCommission += productPlatformCommission * quantityRatio;
+            
+            console.log(`[BATCH-SALE] FASE 4 - Produto ${product.id} (${vendorProduct.quantidade}x):`);
+            console.log(`  💰 Ganho autor unitário: R$ ${productAuthorEarnings.toFixed(2)}`);
+            console.log(`  🏢 Ganho plataforma unitário: R$ ${productPlatformCommission.toFixed(2)}`);
+          } else {
+            // Fallback para produtos antigos
+            const commissionRate = 0.15;
+            const productTotal = vendorProduct.totalPrice;
+            const productCommission = productTotal * commissionRate;
+            const productEarnings = productTotal - productCommission;
+            
+            vendorCommission += productCommission;
+            vendorEarnings += productEarnings;
+            
+            console.log(`[BATCH-SALE] FASE 4 - Fallback produto ${product.id}:`);
+            console.log(`  ⚠️  Usando cálculo antigo (15% comissão)`);
+          }
+        }
+        
+        console.log(`[BATCH-SALE] FASE 4 - Total do vendedor ${id_autor}:`);
+        console.log(`  💰 Total ganho autor: R$ ${vendorEarnings.toFixed(2)}`);
+        console.log(`  🏢 Total ganho plataforma: R$ ${vendorCommission.toFixed(2)}`);
+        console.log(`  🔢 Total vendas: R$ ${vendorTotal.toFixed(2)}`);
+        console.log(`  ✅ Verificação: ${(vendorEarnings + vendorCommission).toFixed(2)} = ${vendorTotal.toFixed(2)}`);
+        
+        // Auditoria: verificar se os cálculos batem
+        const calculatedTotal = vendorEarnings + vendorCommission;
+        if (Math.abs(calculatedTotal - vendorTotal) > 0.01) {
+          console.warn(`[BATCH-SALE] ⚠️  ATENÇÃO: Diferença nos cálculos detectada!`);
+          console.warn(`  Calculado: R$ ${calculatedTotal.toFixed(2)} vs Esperado: R$ ${vendorTotal.toFixed(2)}`);
+        }
         
         // Get next vendor order number for this author
         const nextVendorOrderNumber = await storage.getNextVendorOrderNumber(id_autor);

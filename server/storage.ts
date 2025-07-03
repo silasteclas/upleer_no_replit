@@ -24,7 +24,7 @@ import {
   type ApiLog,
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, desc, and, sum, count, max } from "drizzle-orm";
+import { eq, desc, and, sum, count, max, sql } from "drizzle-orm";
 
 // Interface for storage operations
 export interface IStorage {
@@ -392,6 +392,8 @@ export class DatabaseStorage implements IStorage {
     activeProducts: number;
     pendingProducts: number;
   }> {
+    console.log(`[DEBUG] Getting stats for author: ${authorId}`);
+    
     // FASE 4: NOVA ESTRUTURA MARKETPLACE
     // Get sales stats - agora usando authorId diretamente na tabela sales
     const [salesStats] = await db
@@ -402,23 +404,45 @@ export class DatabaseStorage implements IStorage {
       .from(sales)
       .where(eq(sales.authorId, authorId));
 
-    // Get product counts
+    // Debug: verificar produtos do autor PRIMEIRO
+    const allProductsForAuthor = await db
+      .select({ id: products.id, title: products.title, status: products.status })
+      .from(products)
+      .where(eq(products.authorId, authorId));
+
+    console.log(`[DEBUG] Author ${authorId} has ${allProductsForAuthor.length} total products:`);
+    allProductsForAuthor.forEach(p => {
+      console.log(`[DEBUG] - Product ${p.id}: "${p.title}" - Status: "${p.status}"`);
+    });
+
+    // Contar produtos published manualmente
+    const publishedProducts = allProductsForAuthor.filter(p => p.status === "published");
+    const pendingProducts = allProductsForAuthor.filter(p => p.status === "pending");
+    
+    console.log(`[DEBUG] Manual count - Published: ${publishedProducts.length}, Pending: ${pendingProducts.length}`);
+
+    // Get product counts usando a query original para comparar
     const [activeCount] = await db
       .select({ count: count() })
       .from(products)
-      .where(and(eq(products.authorId, authorId), eq(products.status, "approved")));
+      .where(and(eq(products.authorId, authorId), eq(products.status, "published")));
 
     const [pendingCount] = await db
       .select({ count: count() })
       .from(products)
       .where(and(eq(products.authorId, authorId), eq(products.status, "pending")));
 
-    return {
+    console.log(`[DEBUG] Query count - Published: ${activeCount.count}, Pending: ${pendingCount.count}`);
+
+    const result = {
       totalSales: salesStats.totalSales || 0,
       totalRevenue: Number(salesStats.totalRevenue) || 0,
-      activeProducts: activeCount.count || 0,
-      pendingProducts: pendingCount.count || 0,
+      activeProducts: publishedProducts.length, // Usar contagem manual
+      pendingProducts: pendingProducts.length, // Usar contagem manual
     };
+
+    console.log(`[DEBUG] Final stats for author ${authorId}:`, result);
+    return result;
   }
 
   async getSalesData(authorId: string, months: number): Promise<{

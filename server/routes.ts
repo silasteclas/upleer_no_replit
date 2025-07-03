@@ -8,6 +8,9 @@ import express from "express";
 import crypto from "crypto";
 import { registerUser, loginUser, getCurrentUser, logoutUser, requireAuth } from "./real-auth";
 import { uploadFileToSupabase, deleteFileFromSupabase, extractFileNameFromSupabaseUrl } from "./supabase";
+import { eq, and } from "drizzle-orm";
+import { products } from "../shared/schema";
+import { db } from "./db";
 
 // Helper function to get base URL based on environment
 function getBaseUrl(): string {
@@ -426,17 +429,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const files = req.files as { [fieldname: string]: Express.Multer.File[] };
       const {
         title, description, isbn, author, coAuthors, genre, language,
-        targetAudience, pageCount, baseCost, salePrice
+        targetAudience, pageCount, baseCost, salePrice,
+        // FASE 3: Novos campos financeiros
+        authorEarnings, platformCommission, fixedFee, 
+        printingCostPerPage, commissionRate
       } = req.body;
 
       console.log("[PRODUCTS] Extracted fields:", {
-        title, author, genre, salePrice, pageCount, baseCost
+        title, author, genre, salePrice, pageCount, baseCost,
+        // FASE 3: Log dos novos campos financeiros
+        authorEarnings, platformCommission, fixedFee, 
+        printingCostPerPage, commissionRate
       });
 
       if (!title || !author || !genre || !salePrice) {
         console.log("[PRODUCTS] Missing required fields");
         return res.status(400).json({
           message: "Campos obrigatórios: title, author, genre, salePrice"
+        });
+      }
+
+      // FASE 3: Validação dos novos campos financeiros
+      if (authorEarnings !== undefined && (isNaN(parseFloat(authorEarnings)) || parseFloat(authorEarnings) < 0)) {
+        console.log("[PRODUCTS] Invalid authorEarnings:", authorEarnings);
+        return res.status(400).json({
+          message: "authorEarnings deve ser um número válido e não negativo"
+        });
+      }
+
+      if (platformCommission !== undefined && (isNaN(parseFloat(platformCommission)) || parseFloat(platformCommission) < 0)) {
+        console.log("[PRODUCTS] Invalid platformCommission:", platformCommission);
+        return res.status(400).json({
+          message: "platformCommission deve ser um número válido e não negativo"
         });
       }
 
@@ -502,7 +526,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         salePrice: salePrice.toString(),
         marginPercent: 150,
         status: "pending",
-        authorId: userId
+        authorId: userId,
+        
+        // FASE 3: Novos campos financeiros
+        authorEarnings: authorEarnings ? parseFloat(authorEarnings).toString() : undefined,
+        platformCommission: platformCommission ? parseFloat(platformCommission).toString() : undefined,
+        fixedFee: fixedFee ? parseFloat(fixedFee).toString() : "9.90",
+        printingCostPerPage: printingCostPerPage ? parseFloat(printingCostPerPage).toString() : "0.10",
+        commissionRate: commissionRate ? parseFloat(commissionRate).toString() : "30.00"
       };
 
       console.log("[PRODUCTS] Creating product with data:", productData);
@@ -642,10 +673,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.patch("/api/products/:id", requireAuth, async (req, res) => {
+  app.patch("/api/products/:id", requireAuth, upload.fields([
+    { name: "pdf", maxCount: 1 },
+    { name: "cover", maxCount: 1 }
+  ]), async (req, res) => {
     try {
       const productId = parseInt(req.params.id);
       const userId = (req as any).userId;
+      
+      console.log("[PRODUCTS] PATCH /api/products/:id - Starting...");
+      console.log("[PRODUCTS] Product ID:", productId);
+      console.log("[PRODUCTS] Request body:", req.body);
+      console.log("[PRODUCTS] Request files:", req.files);
       
       const product = await storage.getProduct(productId);
       
@@ -657,7 +696,108 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "Acesso negado" });
       }
       
-      const updatedProduct = await storage.updateProduct(productId, req.body);
+      const files = req.files as { [fieldname: string]: Express.Multer.File[] };
+      let updateData = { ...req.body };
+      
+      // Upload de novo PDF se fornecido
+      if (files.pdf && files.pdf[0]) {
+        console.log("[PRODUCTS] Uploading new PDF to Supabase...");
+        const pdfFile = files.pdf[0];
+        const pdfFileName = `pdf_${userId}_${Date.now()}.pdf`;
+        
+        const newPdfUrl = await uploadFileToSupabase(
+          pdfFile.buffer,
+          pdfFileName,
+          pdfFile.mimetype
+        );
+        
+        if (newPdfUrl) {
+          console.log("[PRODUCTS] New PDF uploaded to Supabase:", newPdfUrl);
+          
+          // Deletar PDF antigo se existir
+          if (product.pdfUrl) {
+            const oldPdfName = extractFileNameFromSupabaseUrl(product.pdfUrl);
+            if (oldPdfName) {
+              await deleteFileFromSupabase(oldPdfName);
+              console.log("[PRODUCTS] Old PDF deleted from Supabase");
+            }
+          }
+          
+          updateData.pdfUrl = newPdfUrl;
+        } else {
+          console.error("[PRODUCTS] Failed to upload new PDF to Supabase");
+          return res.status(500).json({ message: "Erro ao fazer upload do PDF" });
+        }
+      }
+      
+      // Upload de nova capa se fornecida
+      if (files.cover && files.cover[0]) {
+        console.log("[PRODUCTS] Uploading new cover image to Supabase...");
+        const coverFile = files.cover[0];
+        const coverFileName = `cover_${userId}_${Date.now()}.${coverFile.mimetype.split('/')[1]}`;
+        
+        const newCoverUrl = await uploadFileToSupabase(
+          coverFile.buffer,
+          coverFileName,
+          coverFile.mimetype
+        );
+        
+        if (newCoverUrl) {
+          console.log("[PRODUCTS] New cover uploaded to Supabase:", newCoverUrl);
+          
+          // Deletar capa antiga se existir
+          if (product.coverImageUrl) {
+            const oldCoverName = extractFileNameFromSupabaseUrl(product.coverImageUrl);
+            if (oldCoverName) {
+              await deleteFileFromSupabase(oldCoverName);
+              console.log("[PRODUCTS] Old cover deleted from Supabase");
+            }
+          }
+          
+          updateData.coverImageUrl = newCoverUrl;
+        } else {
+          console.error("[PRODUCTS] Failed to upload new cover to Supabase");
+          return res.status(500).json({ message: "Erro ao fazer upload da capa" });
+        }
+      }
+      
+      // Converter campos numéricos se necessário
+      if (updateData.pageCount) {
+        updateData.pageCount = parseInt(updateData.pageCount);
+      }
+      if (updateData.authorEarnings) {
+        updateData.authorEarnings = parseFloat(updateData.authorEarnings).toString();
+      }
+      if (updateData.platformCommission) {
+        updateData.platformCommission = parseFloat(updateData.platformCommission).toString();
+      }
+      if (updateData.fixedFee) {
+        updateData.fixedFee = parseFloat(updateData.fixedFee).toString();
+      }
+      if (updateData.printingCostPerPage) {
+        updateData.printingCostPerPage = parseFloat(updateData.printingCostPerPage).toString();
+      }
+      if (updateData.commissionRate) {
+        updateData.commissionRate = parseFloat(updateData.commissionRate).toString();
+      }
+      
+      console.log("[PRODUCTS] Updating product with data:", updateData);
+      
+      const updatedProduct = await storage.updateProduct(productId, updateData);
+      
+      console.log("[PRODUCTS] Product updated successfully:", updatedProduct.id);
+      
+      // Send updated product to webhook de forma assíncrona
+      if (files.pdf || files.cover || Object.keys(req.body).length > 0) {
+        setImmediate(async () => {
+          try {
+            await sendProductToWebhook(updatedProduct);
+          } catch (webhookError) {
+            console.error("[PRODUCTS] Webhook failed but continuing:", webhookError);
+          }
+        });
+      }
+      
       res.json(updatedProduct);
     } catch (error) {
       console.error("Error updating product:", error);
@@ -678,11 +818,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/stats", requireAuth, async (req, res) => {
     try {
+      console.log("[STATS] GET /api/stats - Starting...");
       const userId = (req as any).userId;
+      console.log("[STATS] User ID:", userId);
       const stats = await storage.getAuthorStats(userId);
+      console.log("[STATS] Stats retrieved:", stats);
       res.json(stats);
     } catch (error) {
-      console.error("Error fetching stats:", error);
+      console.error("[STATS] Error fetching stats:", error);
       res.status(500).json({ message: "Erro interno do servidor" });
     }
   });
@@ -798,6 +941,77 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error updating banking:", error);
       res.status(500).json({ message: "Erro interno do servidor" });
+    }
+  });
+
+  app.get("/api/debug-products", requireAuth, async (req, res) => {
+    try {
+      const userId = (req as any).userId;
+      console.log("[DEBUG-PRODUCTS] Getting products for user:", userId);
+      
+      const products = await storage.getProductsByAuthor(userId);
+      
+      const productSummary = products.map(p => ({
+        id: p.id,
+        title: p.title,
+        status: p.status,
+        createdAt: p.createdAt
+      }));
+      
+      console.log("[DEBUG-PRODUCTS] Found products:", productSummary);
+      
+      res.json({
+        total: products.length,
+        products: productSummary,
+        statusCounts: {
+          pending: products.filter(p => p.status === 'pending').length,
+          approved: products.filter(p => p.status === 'approved').length,
+          published: products.filter(p => p.status === 'published').length,
+          rejected: products.filter(p => p.status === 'rejected').length,
+          archived: products.filter(p => p.status === 'archived').length,
+        }
+      });
+    } catch (error) {
+      console.error("[DEBUG-PRODUCTS] Error:", error);
+      res.status(500).json({ message: "Erro interno do servidor" });
+    }
+  });
+
+  app.get("/api/test-products", requireAuth, async (req, res) => {
+    try {
+      const userId = (req as any).userId;
+      
+      // Consulta direta para produtos published
+      const publishedProducts = await db
+        .select({ 
+          id: products.id, 
+          title: products.title, 
+          status: products.status,
+          authorId: products.authorId 
+        })
+        .from(products)
+        .where(and(eq(products.authorId, userId), eq(products.status, "published")));
+
+      // Consulta para TODOS os produtos do autor
+      const allProducts = await db
+        .select({ 
+          id: products.id, 
+          title: products.title, 
+          status: products.status,
+          authorId: products.authorId 
+        })
+        .from(products)
+        .where(eq(products.authorId, userId));
+
+      res.json({
+        userId: userId,
+        publishedCount: publishedProducts.length,
+        totalCount: allProducts.length,
+        publishedProducts: publishedProducts,
+        allProducts: allProducts
+      });
+    } catch (error) {
+      res.status(500).json({ message: "Erro", error: (error as Error).message });
     }
   });
 

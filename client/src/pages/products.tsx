@@ -170,20 +170,7 @@ export default function Products() {
                       </span>
                     </div>
                     
-                    <div className="flex justify-center">
-                      <Button 
-                        variant="outline" 
-                        size="sm" 
-                        className="text-xs px-2 py-1 h-6"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setLocation(`/products/${product.id}/edit`);
-                        }}
-                      >
-                        <Edit className="w-3 h-3 mr-1" />
-                        Editar
-                      </Button>
-                    </div>
+
                   </div>
                 </Card>
               ))}

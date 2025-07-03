@@ -11,17 +11,45 @@ interface StatsData {
 }
 
 export default function StatsCards() {
-  const { data: stats, isLoading } = useQuery<StatsData>({
-    queryKey: ["/api/analytics/stats"],
+  console.log("[FRONTEND] StatsCards component rendering...");
+  
+  const { data: stats, isLoading, error } = useQuery<StatsData>({
+    queryKey: ["/api/stats"],
+    queryFn: async () => {
+      const response = await fetch('/api/stats', {
+        credentials: 'include',
+      });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      console.log("[FRONTEND] Raw fetch response:", data);
+      return data;
+    },
     refetchInterval: 60000, // Refetch every 60 seconds
   });
+
+  console.log("[FRONTEND] Current stats:", stats);
+  console.log("[FRONTEND] Is loading:", isLoading);
+  console.log("[FRONTEND] Error:", error);
+  
+  // Log detalhado dos stats
+  if (stats) {
+    console.log("[FRONTEND] Stats breakdown:");
+    console.log("- totalSales:", stats.totalSales);
+    console.log("- totalRevenue:", stats.totalRevenue);
+    console.log("- activeProducts:", stats.activeProducts);
+    console.log("- pendingProducts:", stats.pendingProducts);
+  }
 
   const statsCards = [
     {
       title: "Total de Vendas",
       value: stats?.totalSales || 0,
-      change: "+12% vs mês anterior",
-      changeType: "positive" as const,
+      change: `${stats?.totalSales || 0} vendas realizadas`,
+      changeType: "neutral" as const,
       icon: ShoppingCart,
       iconBg: "bg-blue-100",
       iconColor: "text-primary",
@@ -29,8 +57,8 @@ export default function StatsCards() {
     {
       title: "Receita Total",
       value: `R$ ${(stats?.totalRevenue || 0).toFixed(2)}`,
-      change: "+8% vs mês anterior",
-      changeType: "positive" as const,
+      change: "Ganhos totais do autor",
+      changeType: "neutral" as const,
       icon: DollarSign,
       iconBg: "bg-green-100",
       iconColor: "text-accent",
@@ -46,9 +74,9 @@ export default function StatsCards() {
     },
     {
       title: "Taxa de Conversão",
-      value: "3.2%",
-      change: "-2% vs mês anterior",
-      changeType: "negative" as const,
+      value: "0%",
+      change: "0% vs mês anterior",
+      changeType: "neutral" as const,
       icon: TrendingUp,
       iconBg: "bg-orange-100",
       iconColor: "text-orange-600",
@@ -87,15 +115,7 @@ export default function StatsCards() {
                 <div>
                   <p className="text-sm text-gray-600 font-medium">{card.title}</p>
                   <p className="text-3xl font-bold text-gray-900 mt-1">{card.value}</p>
-                  <p className={`text-sm mt-1 ${
-                    card.changeType === "positive" 
-                      ? "text-accent" 
-                      : card.changeType === "negative" 
-                      ? "text-red-500" 
-                      : "text-gray-500"
-                  }`}>
-                    {card.changeType === "positive" && "↑ "}
-                    {card.changeType === "negative" && "↓ "}
+                  <p className="text-sm mt-1 text-gray-500">
                     {card.change}
                   </p>
                 </div>

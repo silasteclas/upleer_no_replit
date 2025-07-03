@@ -3,6 +3,10 @@ import { Request, Response, NextFunction, RequestHandler } from "express";
 import { storage } from "./storage";
 import { z } from "zod";
 
+// Cache simples para usuários (expira em 5 minutos)
+const userCache = new Map<string, { user: any; expires: number }>();
+const CACHE_DURATION = 5 * 60 * 1000; // 5 minutos
+
 // Validation schemas
 const loginSchema = z.object({
   email: z.string().email("Email inválido"),
@@ -28,6 +32,31 @@ async function comparePassword(password: string, hash: string): Promise<boolean>
   return await bcrypt.compare(password, hash);
 }
 
+// Helper function to get user from cache or database
+async function getUserCached(userId: string) {
+  const now = Date.now();
+  const cached = userCache.get(userId);
+  
+  if (cached && cached.expires > now) {
+    console.log(`[AUTH] Cache hit for user ${userId}`);
+    return cached.user;
+  }
+  
+  console.log(`[AUTH] Cache miss for user ${userId}, fetching from DB`);
+  const user = await storage.getUser(userId);
+  
+  if (user) {
+    userCache.set(userId, { user, expires: now + CACHE_DURATION });
+  }
+  
+  return user;
+}
+
+// Clear cache for a specific user
+function clearUserCache(userId: string) {
+  userCache.delete(userId);
+}
+
 // Middleware to check if user is authenticated
 export const requireAuth: RequestHandler = (req, res, next) => {
   if (!req.session?.userId) {
@@ -38,14 +67,16 @@ export const requireAuth: RequestHandler = (req, res, next) => {
   next();
 };
 
-// Get current user
+// Get current user (optimized with cache)
 export const getCurrentUser: RequestHandler = async (req, res) => {
+  const startTime = Date.now();
+  
   if (!req.session?.userId) {
     return res.status(401).json({ message: "Não autenticado" });
   }
 
   try {
-    const user = await storage.getUser(req.session.userId);
+    const user = await getUserCached(req.session.userId);
     if (!user) {
       req.session.userId = undefined;
       return res.status(401).json({ message: "Usuário não encontrado" });
@@ -53,9 +84,13 @@ export const getCurrentUser: RequestHandler = async (req, res) => {
 
     // Return user without password
     const { password, ...userWithoutPassword } = user as any;
+    
+    const duration = Date.now() - startTime;
+    console.log(`[AUTH] getCurrentUser completed in ${duration}ms`);
+    
     res.json(userWithoutPassword);
   } catch (error) {
-    console.error("Error getting current user:", error);
+    console.error("[AUTH] Error getting current user:", error);
     res.status(500).json({ message: "Erro interno do servidor" });
   }
 };
@@ -89,6 +124,9 @@ export const registerUser: RequestHandler = async (req, res) => {
     // Create session
     req.session.userId = newUser.id;
 
+    // Cache the new user
+    userCache.set(newUser.id, { user: newUser, expires: Date.now() + CACHE_DURATION });
+
     // Return user without password
     const { password, ...userWithoutPassword } = newUser as any;
     res.status(201).json({
@@ -120,7 +158,7 @@ export const loginUser: RequestHandler = async (req, res) => {
     // Fixed login for specific users
     if (email === 'silasteclas@gmail.com' && inputPassword === '123456') {
       req.session.userId = 'user_1749155080396_7phzy7v83';
-      const user = await storage.getUser('user_1749155080396_7phzy7v83');
+      const user = await getUserCached('user_1749155080396_7phzy7v83');
       if (user) {
         const { password, ...userWithoutPassword } = user as any;
         return res.json({
@@ -145,6 +183,9 @@ export const loginUser: RequestHandler = async (req, res) => {
     // Create session
     req.session.userId = user.id;
 
+    // Cache the user
+    userCache.set(user.id, { user, expires: Date.now() + CACHE_DURATION });
+
     // Return user without password
     const { password, ...userWithoutPassword } = user as any;
     res.json({
@@ -166,11 +207,19 @@ export const loginUser: RequestHandler = async (req, res) => {
 
 // Logout user
 export const logoutUser: RequestHandler = (req, res) => {
+  const userId = req.session?.userId;
+  
   req.session.destroy((err) => {
     if (err) {
       console.error("Error destroying session:", err);
       return res.status(500).json({ message: "Erro ao fazer logout" });
     }
+    
+    // Clear cache for this user
+    if (userId) {
+      clearUserCache(userId);
+    }
+    
     res.clearCookie('connect.sid');
     res.json({ message: "Logout realizado com sucesso" });
   });

@@ -59,6 +59,12 @@ export default function UploadModal() {
   const [salePrice, setSalePrice] = useState(0);
   const [showSuccess, setShowSuccess] = useState(false);
   const [uploadedProduct, setUploadedProduct] = useState<any>(null);
+  
+  // FASE 2: Estados para dados financeiros detalhados
+  const [platformCommission, setPlatformCommission] = useState(0);
+  const [fixedFee] = useState(9.90);
+  const [printingCostPerPage] = useState(0.10);
+  const [commissionRate] = useState(30.00);
   const [productInfo, setProductInfo] = useState<ProductInfoData>({
     title: "",
     description: "",
@@ -117,6 +123,20 @@ export default function UploadModal() {
       formData.append("baseCost", baseCost.toString());
       formData.append("marginPercent", "150"); // Keep backend compatibility
       formData.append("salePrice", salePrice.toString());
+
+      // FASE 2: NOVOS CAMPOS FINANCEIROS
+      const authorEarnings = data.authorEarnings;
+      const fixedFee = 9.90;
+      const printingCostPerPage = 0.10;
+      const commissionRate = 30.00;
+      const printingCost = pageCount * printingCostPerPage;
+      const platformCommission = fixedFee + printingCost + (authorEarnings * (commissionRate / 100));
+
+      formData.append("authorEarnings", authorEarnings.toString());
+      formData.append("platformCommission", platformCommission.toString());
+      formData.append("fixedFee", fixedFee.toString());
+      formData.append("printingCostPerPage", printingCostPerPage.toString());
+      formData.append("commissionRate", commissionRate.toString());
 
       // Use fetch directly for FormData uploads since apiRequest may not handle FormData properly
       const response = await fetch("/api/products", {
@@ -190,13 +210,15 @@ export default function UploadModal() {
         // Set initial author earnings suggestion
         const suggestedEarnings = 25.00;
         pricingForm.setValue("authorEarnings", suggestedEarnings);
-        // Nova fórmula: Ganho plataforma = 9,90 + (páginas × 0,10) + (30% do ganho do autor)
-        // Preço de venda = Ganho plataforma + Ganho do autor
-        const fixedFee = 9.90;
-        const printingCost = actualPageCount * 0.10;
-        const platformCommission = suggestedEarnings * 0.30;
-        const platformGain = fixedFee + printingCost + platformCommission;
+        
+        // FASE 2: Cálculo detalhado com novos campos financeiros
+        // Fórmula: Ganho plataforma = Taxa fixa + Custo impressão + Comissão sobre ganho do autor
+        const printingCost = actualPageCount * printingCostPerPage;
+        const commissionAmount = suggestedEarnings * (commissionRate / 100);
+        const platformGain = fixedFee + printingCost + commissionAmount;
         const initialSalePrice = platformGain + suggestedEarnings;
+        
+        setPlatformCommission(platformGain);
         setSalePrice(initialSalePrice);
         
         setValidation({
@@ -239,13 +261,15 @@ export default function UploadModal() {
 
   const handleEarningsChange = (earnings: number) => {
     pricingForm.setValue("authorEarnings", earnings);
-    // Nova fórmula: Ganho plataforma = 9,90 + (páginas × 0,10) + (30% do ganho do autor)
-    // Preço de venda = Ganho plataforma + Ganho do autor
-    const fixedFee = 9.90;
-    const printingCost = pageCount * 0.10;
-    const platformCommission = earnings * 0.30;
-    const platformGain = fixedFee + printingCost + platformCommission;
+    
+    // FASE 2: Cálculo usando os novos campos financeiros
+    // Fórmula: Ganho plataforma = Taxa fixa + Custo impressão + Comissão sobre ganho do autor
+    const printingCost = pageCount * printingCostPerPage;
+    const commissionAmount = earnings * (commissionRate / 100);
+    const platformGain = fixedFee + printingCost + commissionAmount;
     const newSalePrice = platformGain + earnings;
+    
+    setPlatformCommission(platformGain);
     setSalePrice(newSalePrice);
   };
 
@@ -348,6 +372,10 @@ export default function UploadModal() {
     setSalePrice(0);
     setShowSuccess(false);
     setUploadedProduct(null);
+    
+    // FASE 2: Reset dos novos estados financeiros
+    setPlatformCommission(0);
+    
     setProductInfo({
       title: "",
       description: "",
@@ -491,7 +519,7 @@ export default function UploadModal() {
                   )}
                 </div>
                 <div>
-                  <Label className="text-sm font-medium text-gray-700 mb-2">ISBN (opcional)</Label>
+                  <Label className="text-sm font-medium text-gray-700 mb-2">ISBN (obrigatório para Amazon)</Label>
                   <Input
                     {...infoForm.register("isbn")}
                     placeholder="000-0-00-000000-0"
@@ -591,7 +619,7 @@ export default function UploadModal() {
                 <Textarea
                   {...infoForm.register("description")}
                   rows={4}
-                  placeholder="Descreva o conteúdo da apostila..."
+                  placeholder="Escreva sobre o que é o seu produto e como ele pode ajudar o seu público-alvo."
                 />
               </div>
             </div>

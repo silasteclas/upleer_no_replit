@@ -12,8 +12,8 @@ interface SalesData {
 
 export default function SalesChart() {
   const { data: salesData, isLoading } = useQuery<SalesData[]>({
-    queryKey: ["/api/analytics/sales-data"],
-    queryFn: () => fetch("/api/analytics/sales-data?months=6").then(res => res.json()),
+    queryKey: ["/api/sales-data"],
+    queryFn: () => fetch("/api/sales-data?months=6").then(res => res.json()),
   });
 
   // Transform data for chart display

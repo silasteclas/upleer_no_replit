@@ -508,9 +508,7 @@ export default function SaleDetails() {
                               </div>
                               <div>
                                 <h4 className="font-semibold text-gray-900">{item.product_name}</h4>
-                                <p className="text-sm text-gray-600">por {sale.product?.author}</p>
                                 <div className="flex items-center space-x-4 mt-2">
-                                  <span className="text-xs bg-gray-100 px-2 py-1 rounded">Produto Digital</span>
                                   <span className="text-xs text-gray-500">Quantidade: {item.quantity}</span>
                                 </div>
                               </div>
@@ -550,9 +548,7 @@ export default function SaleDetails() {
                         </div>
                         <div>
                           <h4 className="font-semibold text-gray-900">{sale.product?.title}</h4>
-                          <p className="text-sm text-gray-600">por {sale.product?.author}</p>
                           <div className="flex items-center space-x-4 mt-2">
-                            <span className="text-xs bg-gray-100 px-2 py-1 rounded">Produto Digital</span>
                             <span className="text-xs text-gray-500">Quantidade: {sale.quantity || 1}</span>
                           </div>
                         </div>
@@ -583,26 +579,9 @@ export default function SaleDetails() {
                     <span className="font-medium">R$ {parseFloat(sale.salePrice).toFixed(2)}</span>
                   </div>
                   
-                  <div className="flex justify-between items-center">
-                    <span className="text-gray-600">Frete</span>
-                    {sale.shippingCost && parseFloat(sale.shippingCost) > 0 ? (
-                      <span className="font-medium">R$ {parseFloat(sale.shippingCost).toFixed(2)}</span>
-                    ) : (
-                      <span className="font-medium text-gray-500">A calcular</span>
-                    )}
-                  </div>
+
                   
-                  <div className="flex justify-between items-center">
-                    <span className="text-gray-600">Cupom de desconto</span>
-                    {sale.discountCoupon ? (
-                      <div className="text-right">
-                        <div className="font-medium text-green-600">{sale.discountCoupon}</div>
-                        <div className="text-sm text-green-600">- R$ {parseFloat(sale.discountAmount || "0").toFixed(2)}</div>
-                      </div>
-                    ) : (
-                      <span className="font-medium text-gray-500">Não aplicado</span>
-                    )}
-                  </div>
+
                   
                   <Separator />
                   
@@ -614,8 +593,8 @@ export default function SaleDetails() {
                   <Separator />
                   
                   <div className="flex justify-between items-center">
-                    <span className="text-gray-600">Taxa da plataforma (30%)</span>
-                    <span className="font-medium text-red-600">- R$ {parseFloat(sale.commission).toFixed(2)}</span>
+                    <span className="text-gray-600">Custo do produto (Impressão + taxas/impostos):</span>
+                    <span className="font-medium">R$ {parseFloat(sale.commission).toFixed(2)}</span>
                   </div>
                   
                   <div className="flex justify-between items-center text-lg font-bold">
@@ -623,12 +602,7 @@ export default function SaleDetails() {
                     <span className="text-green-600">R$ {parseFloat(sale.authorEarnings).toFixed(2)}</span>
                   </div>
                   
-                  <div className="bg-gray-50 p-4 rounded-lg mt-4">
-                    <div className="text-sm text-gray-600 mb-2">Cronograma de repasse</div>
-                    <div className="text-sm">
-                      <span className="font-medium">Próximo repasse:</span> {format(new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), "dd 'de' MMMM", { locale: ptBR })}
-                    </div>
-                  </div>
+
                 </div>
               </CardContent>
             </Card>
@@ -640,22 +614,10 @@ export default function SaleDetails() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
+                  {/* Pedido criado - sempre existe */}
                   <div className="flex items-start space-x-4">
-                    <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
-                      <CreditCard className="w-4 h-4 text-green-600" />
-                    </div>
-                    <div className="flex-1">
-                      <div className="font-medium">Pagamento aprovado</div>
-                      <div className="text-sm text-gray-600">
-                        {format(new Date(sale.createdAt), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
-                      </div>
-                    </div>
-                  </div>
-                  
-
-                  <div className="flex items-start space-x-4">
-                    <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">
-                      <Package className="w-4 h-4 text-purple-600" />
+                    <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                      <Package className="w-4 h-4 text-blue-600" />
                     </div>
                     <div className="flex-1">
                       <div className="font-medium">Pedido criado</div>
@@ -664,6 +626,60 @@ export default function SaleDetails() {
                       </div>
                     </div>
                   </div>
+
+                  {/* Pagamento aprovado - apenas se o pagamento foi aprovado */}
+                  {(sale.paymentStatus === 'aprovado' || sale.paymentStatus === 'approved' || sale.paymentStatus === 'paid') && (
+                    <div className="flex items-start space-x-4">
+                      <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+                        <CreditCard className="w-4 h-4 text-green-600" />
+                      </div>
+                      <div className="flex-1">
+                        <div className="font-medium">Pagamento aprovado</div>
+                        <div className="text-sm text-gray-600">
+                          {sale.orderDate ? 
+                            format(new Date(sale.orderDate), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR }) :
+                            format(new Date(sale.createdAt), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })
+                          }
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Produto enviado - apenas se foi enviado */}
+                  {(sale.order?.status_envio === 'shipped' || sale.order?.status_envio === 'sent' || sale.order?.status_envio === 'dispatched') && (
+                    <div className="flex items-start space-x-4">
+                      <div className="w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center">
+                        <Truck className="w-4 h-4 text-orange-600" />
+                      </div>
+                      <div className="flex-1">
+                        <div className="font-medium">Produto enviado</div>
+                        <div className="text-sm text-gray-600">
+                          {sale.shippingDate ? 
+                            format(new Date(sale.shippingDate), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR }) :
+                            "Data não informada"
+                          }
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Produto entregue - apenas se foi entregue */}
+                  {(sale.order?.status_envio === 'delivered' || sale.order?.status_envio === 'completed') && (
+                    <div className="flex items-start space-x-4">
+                      <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+                        <Package className="w-4 h-4 text-green-600" />
+                      </div>
+                      <div className="flex-1">
+                        <div className="font-medium">Produto entregue</div>
+                        <div className="text-sm text-gray-600">
+                          {sale.deliveryDate ? 
+                            format(new Date(sale.deliveryDate), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR }) :
+                            "Data não informada"
+                          }
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </CardContent>
             </Card>
