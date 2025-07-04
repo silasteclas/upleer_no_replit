@@ -1,11 +1,14 @@
 import { createClient } from '@supabase/supabase-js'
 import 'dotenv/config'
 
-const supabaseUrl = process.env.SUPABASE_URL!
-const supabaseKey = process.env.SUPABASE_ANON_KEY!
-const bucketName = process.env.SUPABASE_BUCKET!
+const supabaseUrl = process.env.SUPABASE_URL || ''
+const supabaseKey = process.env.SUPABASE_ANON_KEY || ''
+const bucketName = process.env.SUPABASE_BUCKET || 'uploads'
 
-export const supabase = createClient(supabaseUrl, supabaseKey)
+// Only create client if both URL and key are provided
+export const supabase = (supabaseUrl && supabaseKey && !supabaseUrl.includes('placeholder')) 
+  ? createClient(supabaseUrl, supabaseKey)
+  : null
 
 /**
  * Faz upload de um arquivo para o Supabase Storage
@@ -19,6 +22,12 @@ export async function uploadFileToSupabase(
   fileName: string,
   contentType: string
 ): Promise<string | null> {
+  // Return null if Supabase is not configured
+  if (!supabase) {
+    console.log('Supabase not configured, skipping upload')
+    return null
+  }
+
   try {
     // Upload do arquivo
     const { data, error } = await supabase.storage
@@ -52,6 +61,12 @@ export async function uploadFileToSupabase(
  * @returns true se removido com sucesso, false caso contrário
  */
 export async function deleteFileFromSupabase(fileName: string): Promise<boolean> {
+  // Return false if Supabase is not configured
+  if (!supabase) {
+    console.log('Supabase not configured, skipping file deletion')
+    return false
+  }
+
   try {
     const { error } = await supabase.storage
       .from(bucketName)
