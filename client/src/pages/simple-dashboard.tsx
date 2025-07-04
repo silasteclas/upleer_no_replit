@@ -1,6 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import logoPath from "@assets/Logotipo para site upleer (1).png";
+
+const logoPath = "https://via.placeholder.com/200x100/0066CC/FFFFFF?text=UPLEER";
 
 export default function SimpleDashboard() {
   const handleLogout = () => {

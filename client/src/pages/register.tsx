@@ -9,7 +9,8 @@ import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { queryClient } from "@/lib/queryClient";
 import { Link, useLocation } from "wouter";
-import logoPath from "@assets/Logotipo para site upleer (1).png";
+
+const logoPath = "https://via.placeholder.com/200x100/0066CC/FFFFFF?text=UPLEER";
 
 const registerSchema = z.object({
   email: z.string().email("Email inválido"),

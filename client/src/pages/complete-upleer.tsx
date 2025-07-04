@@ -24,7 +24,8 @@ import {
   Download,
   Trash2
 } from "lucide-react";
-import logoPath from "@assets/Logotipo para site upleer (1).png";
+
+const logoPath = "https://via.placeholder.com/200x100/0066CC/FFFFFF?text=UPLEER";
 
 // Types
 interface StatsData {

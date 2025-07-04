@@ -1,5 +1,6 @@
 import { useState } from "react";
-import logoPath from "@assets/Logotipo para site upleer (1).png";
+
+const logoPath = "https://via.placeholder.com/200x100/0066CC/FFFFFF?text=UPLEER";
 
 export default function UpleerDemo() {
   const [showLogin, setShowLogin] = useState(true);

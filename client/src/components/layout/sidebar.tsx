@@ -2,7 +2,8 @@ import { Link, useLocation } from "wouter";
 import { BookOpen, BarChart3, Upload, Package, Settings, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
-import logoPath from "@assets/Logotipo para site upleer (1).png";
+
+const logoPath = "https://via.placeholder.com/200x100/0066CC/FFFFFF?text=UPLEER";
 
 export function Sidebar() {
   const [location] = useLocation();
