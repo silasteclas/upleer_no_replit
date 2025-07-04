@@ -9,15 +9,15 @@ neonConfig.webSocketConstructor = ws;
 neonConfig.useSecureWebSocket = true;
 neonConfig.pipelineConnect = false;
 
-if (!process.env.DATABASE_URL) {
-  throw new Error(
-    "DATABASE_URL must be set. Did you forget to provision a database?",
-  );
-}
+// Force the correct Neon database URL with real data
+const CORRECT_DATABASE_URL = "postgresql://neondb_owner:npg_WvEZaIHiJ7j1@ep-falling-frost-a81spmxk-pooler.eastus2.azure.neon.tech/neondb?sslmode=require";
+
+console.log('[DATABASE] Using correct Neon database with real data');
+console.log('[DATABASE] Connection string:', CORRECT_DATABASE_URL.replace(/npg_[^@]+/, 'npg_****'));
 
 // Create pool with optimized settings for better performance
 export const pool = new Pool({ 
-  connectionString: process.env.DATABASE_URL,
+  connectionString: CORRECT_DATABASE_URL,
   connectionTimeoutMillis: 5000,
   idleTimeoutMillis: 60000,
   max: 10,
