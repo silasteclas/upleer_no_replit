@@ -3,6 +3,8 @@ import { BookOpen, BarChart3, Upload, Package, Settings, LogOut } from "lucide-r
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 
+import Logotipo_para_site_upleer from "@assets/Logotipo para site upleer.png";
+
 const logoPath = "https://via.placeholder.com/200x100/0066CC/FFFFFF?text=UPLEER";
 
 export function Sidebar() {
@@ -26,7 +28,7 @@ export function Sidebar() {
       <div className="p-6 border-b border-gray-200">
         <div className="flex items-center justify-center">
           <img 
-            src={logoPath} 
+            src={Logotipo_para_site_upleer} 
             alt="Upleer" 
             className="h-14 w-auto object-contain"
           />
@@ -35,7 +37,6 @@ export function Sidebar() {
           <p className="text-sm text-gray-500">Painel do Autor</p>
         </div>
       </div>
-      
       <nav className="flex-1 flex flex-col">
         <div className="mt-6 px-4 space-y-2">
           {navItems.map((item) => {
