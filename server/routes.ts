@@ -350,6 +350,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/auth/user', getCurrentUser);
   app.post('/api/auth/logout', logoutUser);
 
+  // Test route for Supabase connectivity
+  app.post('/api/test-supabase', async (req, res) => {
+    try {
+      const { supabase } = await import('./supabase');
+      
+      // Test a simple list operation to verify connectivity
+      const { data, error } = await supabase.storage.listBuckets();
+      
+      if (error) {
+        console.error('[SUPABASE TEST] Error:', error);
+        return res.status(500).json({ 
+          success: false, 
+          message: 'Erro na conexão com Supabase',
+          error: error.message 
+        });
+      }
+      
+      console.log('[SUPABASE TEST] Supabase conectado com sucesso!');
+      res.json({ 
+        success: true, 
+        message: 'Supabase conectado com sucesso!',
+        buckets: data?.length || 0
+      });
+    } catch (error) {
+      console.error('[SUPABASE TEST] Exception:', error);
+      res.status(500).json({ 
+        success: false, 
+        message: 'Erro interno ao testar Supabase',
+        error: error instanceof Error ? error.message : 'Erro desconhecido'
+      });
+    }
+  });
+
   // Protected routes for authors
   app.post("/api/upload", requireAuth, upload.fields([
     { name: "pdf", maxCount: 1 },
