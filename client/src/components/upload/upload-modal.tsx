@@ -139,25 +139,34 @@ export default function UploadModal() {
       formData.append("commissionRate", commissionRate.toString());
 
       // Use fetch directly for FormData uploads since apiRequest may not handle FormData properly
-      const response = await fetch("/api/products", {
-        method: "POST",
-        body: formData,
-        credentials: "include",
-      });
+      console.log("🚀 Fazendo requisição para /api/products...");
+const response = await fetch("/api/products", {
+  method: "POST",
+  body: formData,
+  credentials: "include",
+});
 
-      if (!response.ok) {
-        const errorText = await response.text();
-        let errorMessage = errorText;
-        try {
-          const errorJson = JSON.parse(errorText);
-          errorMessage = errorJson.message || errorText;
-        } catch (e) {
-          // Keep original error text if not JSON
-        }
-        throw new Error(errorMessage);
-      }
+console.log("📡 Resposta recebida:", response.status, response.statusText);
+console.log("📋 Response headers:", Object.fromEntries(response.headers));
 
-      return response.json();
+if (!response.ok) {
+  console.log("❌ Resposta não OK, lendo erro...");
+  const errorText = await response.text();
+  console.log("🔍 Texto do erro:", errorText);
+  let errorMessage = errorText;
+  try {
+    const errorJson = JSON.parse(errorText);
+    errorMessage = errorJson.message || errorText;
+  } catch (e) {
+    // Keep original error text if not JSON
+  }
+  throw new Error(errorMessage);
+}
+
+console.log("✅ Tentando fazer response.json()...");
+const result = await response.json();
+console.log("📦 JSON result:", result);
+return result;
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["/api/products"] });
