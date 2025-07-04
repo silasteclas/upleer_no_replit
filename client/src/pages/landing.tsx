@@ -8,6 +8,7 @@ import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import Logotipo_para_site_upleer from "@assets/Logotipo para site upleer.png";
 const logoPath = "https://via.placeholder.com/200x100/0066CC/FFFFFF?text=UPLEER";
 
 export default function Landing() {
@@ -119,7 +120,7 @@ export default function Landing() {
         <div className="text-center mb-16">
           <div className="flex items-center justify-center mb-6">
             <img
-              src={logoPath}
+              src={Logotipo_para_site_upleer}
               alt="Upleer"
               className="h-20 w-auto object-contain"
             />
