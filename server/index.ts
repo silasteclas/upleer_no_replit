@@ -765,34 +765,11 @@ app.use((req, res, next) => {
     res.status(status).json({ message });
   });
 
-  // CRITICAL: In production, we need custom static serving that doesn't interfere with API routes
+  // Setup frontend serving
   if (app.get("env") === "development") {
     await setupVite(app, server);
   } else {
-    // In production, serve static files but EXCLUDE API routes
-    const distPath = path.resolve(import.meta.dirname, "..", "public");
-    
-    if (!fs.existsSync(distPath)) {
-      console.error(`[PRODUCTION] Could not find build directory: ${distPath}`);
-      // Don't throw error, just log it
-    } else {
-      // Serve static files
-      app.use(express.static(distPath));
-      
-      // IMPORTANT: Use a middleware that checks the path BEFORE serving index.html
-      app.use("*", (req, res, next) => {
-        // If this is an API route, DO NOT serve index.html
-        if (req.originalUrl.startsWith('/api/')) {
-          console.log(`[PRODUCTION] API route detected, not serving index.html: ${req.method} ${req.originalUrl}`);
-          // Return 404 for unhandled API routes
-          return res.status(404).json({ message: 'API endpoint not found' });
-        }
-        
-        // For non-API routes, serve the React app
-        console.log(`[PRODUCTION] Serving index.html for: ${req.originalUrl}`);
-        res.sendFile(path.resolve(distPath, "index.html"));
-      });
-    }
+    serveStatic(app);
   }
 
 
