@@ -1048,6 +1048,46 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Endpoint para atualizar status, status_pagamento e status_envio de um pedido
+  app.patch('/api/orders/:id/status', async (req, res) => {
+    try {
+      const { storage } = await import("./storage");
+      const orderId = req.params.id;
+      const { status, status_pagamento, status_envio } = req.body;
+
+      if (!orderId) {
+        return res.status(400).json({ message: 'ID do pedido é obrigatório' });
+      }
+
+      // Busca o pedido
+      const order = await storage.getOrder(orderId);
+      if (!order) {
+        return res.status(404).json({ message: 'Pedido não encontrado' });
+      }
+
+      // Monta objeto de atualização apenas com campos enviados
+      const updates = {};
+      if (typeof status !== 'undefined') updates.status = status;
+      if (typeof status_pagamento !== 'undefined') updates.statusPagamento = status_pagamento;
+      if (typeof status_envio !== 'undefined') updates.statusEnvio = status_envio;
+
+      if (Object.keys(updates).length === 0) {
+        return res.status(400).json({ message: 'Nenhum campo para atualizar' });
+      }
+
+      // Atualiza o pedido
+      const updatedOrder = await storage.updateOrder(orderId, updates);
+
+      res.json({
+        message: 'Status do pedido atualizado com sucesso',
+        order: updatedOrder
+      });
+    } catch (error) {
+      console.error('Erro ao atualizar status do pedido:', error);
+      res.status(500).json({ message: 'Erro interno do servidor' });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
