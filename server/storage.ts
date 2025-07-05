@@ -225,10 +225,14 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getOrder(id: string): Promise<Order | undefined> {
+    console.log(`[STORAGE] getOrder called with id: "${id}"`);
+    
     const [order] = await db
       .select()
       .from(orders)
       .where(eq(orders.id, id));
+      
+    console.log(`[STORAGE] getOrder result:`, order ? `Found order with id ${order.id}` : `No order found`);
     return order;
   }
 
@@ -236,10 +240,7 @@ export class DatabaseStorage implements IStorage {
   async updateOrder(id: string, updates: Partial<Order>): Promise<Order> {
     const [updatedOrder] = await db
       .update(orders)
-      .set({
-        ...updates,
-        updatedAt: new Date(),
-      })
+      .set(updates)
       .where(eq(orders.id, id))
       .returning();
     return updatedOrder;

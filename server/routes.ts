@@ -1050,6 +1050,70 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // PATCH /api/orders/:id/status - Atualizar status de pedido
+  app.patch("/api/orders/:id/status", requireAuth, async (req, res) => {
+    try {
+      const orderId = req.params.id;
+      const { status } = req.body;
+      
+      console.log(`[ORDER-STATUS] PATCH /api/orders/${orderId}/status - Status: ${status}`);
+      
+      if (!status) {
+        return res.status(400).json({ message: "Status é obrigatório" });
+      }
+      
+      // Verificar se o pedido existe
+      const order = await storage.getOrder(orderId);
+      if (!order) {
+        return res.status(404).json({ message: "Pedido não encontrado" });
+      }
+      
+      // Atualizar o status do pedido
+      const updatedOrder = await storage.updateOrder(orderId, { statusEnvio: status });
+      
+      console.log(`[ORDER-STATUS] Order ${orderId} status updated to: ${status}`);
+      res.json(updatedOrder);
+    } catch (error) {
+      console.error("[ORDER-STATUS] Error updating order status:", error);
+      res.status(500).json({ 
+        message: "Erro interno do servidor",
+        error: error instanceof Error ? error.message : String(error)
+      });
+    }
+  });
+
+  // ENDPOINT DE TESTE TEMPORÁRIO - SEM AUTENTICAÇÃO
+  app.patch("/api/test-orders/:id/status", async (req, res) => {
+    try {
+      const orderId = req.params.id;
+      const { status } = req.body;
+      
+      console.log(`[TEST-ORDER-STATUS] PATCH /api/test-orders/${orderId}/status - Status: ${status}`);
+      
+      if (!status) {
+        return res.status(400).json({ message: "Status é obrigatório" });
+      }
+      
+      // Verificar se o pedido existe
+      const order = await storage.getOrder(orderId);
+      if (!order) {
+        return res.status(404).json({ message: "Pedido não encontrado" });
+      }
+      
+      // Atualizar o status do pedido
+      const updatedOrder = await storage.updateOrder(orderId, { statusEnvio: status });
+      
+      console.log(`[TEST-ORDER-STATUS] Order ${orderId} status updated to: ${status}`);
+      res.json(updatedOrder);
+    } catch (error) {
+      console.error("[TEST-ORDER-STATUS] Error updating order status:", error);
+      res.status(500).json({ 
+        message: "Erro interno do servidor",
+        error: error instanceof Error ? error.message : String(error)
+      });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

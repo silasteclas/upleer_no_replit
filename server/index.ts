@@ -2,6 +2,7 @@ import 'dotenv/config';
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
+import { sql } from "drizzle-orm";
 
 // Set correct domains for the renamed project
 if (!process.env.REPLIT_DOMAINS || process.env.REPLIT_DOMAINS.includes("prompt-flow-adm64")) {
@@ -13,6 +14,37 @@ const app = express();
 app.set('trust proxy', 1);
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: false, limit: '50mb' }));
+
+// CRITICAL FIX: Handle API routes before Vite middleware can intercept them
+app.use('/api/*', (req, res, next) => {
+  // This middleware ensures API routes are handled properly
+  // and not intercepted by Vite's catch-all
+  console.log(`[API-ROUTER] Handling API route: ${req.method} ${req.originalUrl}`);
+  next();
+});
+
+// DEBUG ENDPOINT - testar consulta SQL direta
+app.get('/api/debug/orders/:id', async (req, res) => {
+  try {
+    const { db } = await import("./db");
+    const orderId = req.params.id;
+    
+    console.log(`[DEBUG] Testing direct SQL query for order: ${orderId}`);
+    
+    const { sql } = await import("drizzle-orm");
+    const result = await db.execute(sql`SELECT * FROM orders WHERE id = ${orderId}`);
+    console.log(`[DEBUG] Direct SQL query result:`, result.rows);
+    
+    res.json({
+      orderId: orderId,
+      found: result.rows.length > 0,
+      results: result.rows
+    });
+  } catch (error) {
+    console.error('[DEBUG] Error in direct SQL:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
 
 // Add webhook endpoints BEFORE any other middleware to avoid Vite interception
 // Order status update endpoint - positioned early to avoid conflicts
@@ -727,6 +759,89 @@ app.use((req, res, next) => {
   } else {
     serveStatic(app);
   }
+
+  // IMPORTANT: Add critical API endpoints AFTER Vite setup to prevent interception
+  // These endpoints were moved from the top of the file to avoid Vite catch-all
+  
+  // DEBUG ENDPOINT - testar Drizzle ORM
+  app.get('/api/debug/orders', async (req, res) => {
+    try {
+      const { storage } = await import("./storage");
+      const { db } = await import("./db");
+      const { orders } = await import("../shared/schema");
+      
+      console.log(`[DEBUG-DRIZZLE] Testing Drizzle ORM queries`);
+      
+      // Teste 1: Buscar todos os pedidos com Drizzle
+      const allOrders = await db.select().from(orders);
+      console.log(`[DEBUG-DRIZZLE] Total orders found:`, allOrders.length);
+      
+      // Teste 2: Buscar pedido específico usando method storage
+      const specificOrder = await storage.getOrder('test_order_001');
+      console.log(`[DEBUG-DRIZZLE] Specific order found:`, specificOrder ? 'YES' : 'NO');
+      
+      res.json({
+        totalOrders: allOrders.length,
+        orders: allOrders.map(o => ({ id: o.id, clienteNome: o.clienteNome })),
+        specificOrderFound: !!specificOrder,
+        specificOrder: specificOrder || null
+      });
+    } catch (error) {
+      console.error('[DEBUG-DRIZZLE] Error:', error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Order status update endpoint
+  app.patch('/api/orders/:id/status', async (req, res) => {
+    try {
+      console.log(`[ORDER-STATUS-FIXED] PATCH /api/orders/${req.params.id}/status`);
+      console.log(`[ORDER-STATUS-FIXED] Body:`, req.body);
+      
+      const orderId = req.params.id;
+      const { status, status_pagamento, status_envio } = req.body;
+
+      if (!orderId) {
+        console.log(`[ORDER-STATUS-FIXED] Missing order ID`);
+        return res.status(400).json({ message: 'ID do pedido é obrigatório' });
+      }
+
+      const { storage } = await import("./storage");
+
+      // Busca o pedido
+      const order = await storage.getOrder(orderId);
+      if (!order) {
+        console.log(`[ORDER-STATUS-FIXED] Order ${orderId} not found`);
+        return res.status(404).json({ message: 'Pedido não encontrado' });
+      }
+
+      // Monta objeto de atualização apenas com campos enviados
+      const updates: any = {};
+      if (typeof status !== 'undefined') updates.status = status;
+      if (typeof status_pagamento !== 'undefined') updates.statusPagamento = status_pagamento;
+      if (typeof status_envio !== 'undefined') updates.statusEnvio = status_envio;
+
+      if (Object.keys(updates).length === 0) {
+        console.log(`[ORDER-STATUS-FIXED] No fields to update`);
+        return res.status(400).json({ message: 'Nenhum campo para atualizar' });
+      }
+
+      console.log(`[ORDER-STATUS-FIXED] Updating order ${orderId} with:`, updates);
+
+      // Atualiza o pedido
+      const updatedOrder = await storage.updateOrder(orderId, updates);
+
+      console.log(`[ORDER-STATUS-FIXED] Order ${orderId} updated successfully`);
+
+      res.json({
+        message: 'Status do pedido atualizado com sucesso',
+        order: updatedOrder
+      });
+    } catch (error) {
+      console.error('[ORDER-STATUS-FIXED] Erro ao atualizar status do pedido:', error);
+      res.status(500).json({ message: 'Erro interno do servidor' });
+    }
+  });
 
   // Serve the app on configurable port
   // this serves both the API and the client.
