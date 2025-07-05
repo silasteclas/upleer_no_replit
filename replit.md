@@ -154,6 +154,7 @@ Required variables:
 
 ## Changelog
 
+- July 05, 2025. **API Endpoint Fixed**: Resolved critical issue with PATCH `/api/orders/:id/status` endpoint returning HTML instead of JSON. Removed duplicate endpoint definitions and fixed routing conflicts. Endpoint now works correctly with real production data from Neon database.
 - July 04, 2025. Initial setup
 
 ## User Preferences

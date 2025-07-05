@@ -12,6 +12,60 @@ if (!process.env.REPLIT_DOMAINS || process.env.REPLIT_DOMAINS.includes("prompt-f
 
 const app = express();
 app.set('trust proxy', 1);
+
+// CRITICAL: Direct handler for order status updates - MUST be first
+app.patch('/api/orders/:id/status', express.json({ limit: '50mb' }), async (req, res) => {
+  try {
+    console.log(`[DIRECT-ORDER-STATUS] PATCH /api/orders/${req.params.id}/status from ${req.get('host')}`);
+    console.log(`[DIRECT-ORDER-STATUS] Body:`, req.body);
+    
+    const orderId = req.params.id;
+    const { status, status_pagamento, status_envio } = req.body;
+
+    if (!orderId) {
+      console.log(`[DIRECT-ORDER-STATUS] Missing order ID`);
+      return res.status(400).json({ message: 'ID do pedido é obrigatório' });
+    }
+
+
+
+    const { storage } = await import("./storage");
+
+    // Busca o pedido
+    const order = await storage.getOrder(orderId);
+    if (!order) {
+      console.log(`[DIRECT-ORDER-STATUS] Order ${orderId} not found`);
+      return res.status(404).json({ message: 'Pedido não encontrado' });
+    }
+
+    // Monta objeto de atualização apenas com campos enviados
+    const updates: any = {};
+    if (typeof status !== 'undefined') updates.status = status;
+    if (typeof status_pagamento !== 'undefined') updates.statusPagamento = status_pagamento;
+    if (typeof status_envio !== 'undefined') updates.statusEnvio = status_envio;
+
+    if (Object.keys(updates).length === 0) {
+      console.log(`[DIRECT-ORDER-STATUS] No fields to update`);
+      return res.status(400).json({ message: 'Nenhum campo para atualizar' });
+    }
+
+    console.log(`[DIRECT-ORDER-STATUS] Updating order ${orderId} with:`, updates);
+
+    // Atualiza o pedido
+    const updatedOrder = await storage.updateOrder(orderId, updates);
+
+    console.log(`[DIRECT-ORDER-STATUS] Order ${orderId} updated successfully`);
+
+    res.json({
+      message: 'Status do pedido atualizado com sucesso',
+      order: updatedOrder
+    });
+  } catch (error) {
+    console.error('[DIRECT-ORDER-STATUS] Erro ao atualizar status do pedido:', error);
+    res.status(500).json({ message: 'Erro interno do servidor' });
+  }
+});
+
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: false, limit: '50mb' }));
 
@@ -19,7 +73,7 @@ app.use(express.urlencoded({ extended: false, limit: '50mb' }));
 app.use('/api/*', (req, res, next) => {
   // This middleware ensures API routes are handled properly
   // and not intercepted by Vite's catch-all
-  console.log(`[API-ROUTER] Handling API route: ${req.method} ${req.originalUrl}`);
+  console.log(`[API-ROUTER] ${req.method} ${req.originalUrl} from ${req.get('host')} - User-Agent: ${req.get('user-agent')?.substring(0, 50)}`);
   next();
 });
 
@@ -47,56 +101,8 @@ app.get('/api/debug/orders/:id', async (req, res) => {
 });
 
 // Add webhook endpoints BEFORE any other middleware to avoid Vite interception
-// Order status update endpoint - positioned early to avoid conflicts
-app.patch('/api/orders/:id/status', async (req, res) => {
-  try {
-    console.log(`[ORDER-STATUS] PATCH /api/orders/${req.params.id}/status`);
-    console.log(`[ORDER-STATUS] Body:`, req.body);
-    
-    const orderId = req.params.id;
-    const { status, status_pagamento, status_envio } = req.body;
 
-    if (!orderId) {
-      console.log(`[ORDER-STATUS] Missing order ID`);
-      return res.status(400).json({ message: 'ID do pedido é obrigatório' });
-    }
 
-    const { storage } = await import("./storage");
-
-    // Busca o pedido
-    const order = await storage.getOrder(orderId);
-    if (!order) {
-      console.log(`[ORDER-STATUS] Order ${orderId} not found`);
-      return res.status(404).json({ message: 'Pedido não encontrado' });
-    }
-
-    // Monta objeto de atualização apenas com campos enviados
-    const updates: any = {};
-    if (typeof status !== 'undefined') updates.status = status;
-    if (typeof status_pagamento !== 'undefined') updates.statusPagamento = status_pagamento;
-    if (typeof status_envio !== 'undefined') updates.statusEnvio = status_envio;
-
-    if (Object.keys(updates).length === 0) {
-      console.log(`[ORDER-STATUS] No fields to update`);
-      return res.status(400).json({ message: 'Nenhum campo para atualizar' });
-    }
-
-    console.log(`[ORDER-STATUS] Updating order ${orderId} with:`, updates);
-
-    // Atualiza o pedido
-    const updatedOrder = await storage.updateOrder(orderId, updates);
-
-    console.log(`[ORDER-STATUS] Order ${orderId} updated successfully`);
-
-    res.json({
-      message: 'Status do pedido atualizado com sucesso',
-      order: updatedOrder
-    });
-  } catch (error) {
-    console.error('[ORDER-STATUS] Erro ao atualizar status do pedido:', error);
-    res.status(500).json({ message: 'Erro interno do servidor' });
-  }
-});
 
 // Sales webhook endpoint
 app.post('/api/webhook/sales', async (req, res) => {
@@ -792,56 +798,7 @@ app.use((req, res, next) => {
     }
   });
 
-  // Order status update endpoint
-  app.patch('/api/orders/:id/status', async (req, res) => {
-    try {
-      console.log(`[ORDER-STATUS-FIXED] PATCH /api/orders/${req.params.id}/status`);
-      console.log(`[ORDER-STATUS-FIXED] Body:`, req.body);
-      
-      const orderId = req.params.id;
-      const { status, status_pagamento, status_envio } = req.body;
 
-      if (!orderId) {
-        console.log(`[ORDER-STATUS-FIXED] Missing order ID`);
-        return res.status(400).json({ message: 'ID do pedido é obrigatório' });
-      }
-
-      const { storage } = await import("./storage");
-
-      // Busca o pedido
-      const order = await storage.getOrder(orderId);
-      if (!order) {
-        console.log(`[ORDER-STATUS-FIXED] Order ${orderId} not found`);
-        return res.status(404).json({ message: 'Pedido não encontrado' });
-      }
-
-      // Monta objeto de atualização apenas com campos enviados
-      const updates: any = {};
-      if (typeof status !== 'undefined') updates.status = status;
-      if (typeof status_pagamento !== 'undefined') updates.statusPagamento = status_pagamento;
-      if (typeof status_envio !== 'undefined') updates.statusEnvio = status_envio;
-
-      if (Object.keys(updates).length === 0) {
-        console.log(`[ORDER-STATUS-FIXED] No fields to update`);
-        return res.status(400).json({ message: 'Nenhum campo para atualizar' });
-      }
-
-      console.log(`[ORDER-STATUS-FIXED] Updating order ${orderId} with:`, updates);
-
-      // Atualiza o pedido
-      const updatedOrder = await storage.updateOrder(orderId, updates);
-
-      console.log(`[ORDER-STATUS-FIXED] Order ${orderId} updated successfully`);
-
-      res.json({
-        message: 'Status do pedido atualizado com sucesso',
-        order: updatedOrder
-      });
-    } catch (error) {
-      console.error('[ORDER-STATUS-FIXED] Erro ao atualizar status do pedido:', error);
-      res.status(500).json({ message: 'Erro interno do servidor' });
-    }
-  });
 
   // Serve the app on configurable port
   // this serves both the API and the client.
