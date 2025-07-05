@@ -50,6 +50,7 @@ export interface IStorage {
   // Order operations (NOVO - FASE 3)
   createOrder(order: InsertOrder): Promise<Order>;
   getOrder(id: string): Promise<Order | undefined>;
+  updateOrder(id: string, updates: Partial<Order>): Promise<Order>;
   
   // Sales operations
   createSale(sale: InsertSale): Promise<Sale>;
@@ -229,6 +230,19 @@ export class DatabaseStorage implements IStorage {
       .from(orders)
       .where(eq(orders.id, id));
     return order;
+  }
+
+  // Atualiza campos parciais de um pedido (order)
+  async updateOrder(id: string, updates: Partial<Order>): Promise<Order> {
+    const [updatedOrder] = await db
+      .update(orders)
+      .set({
+        ...updates,
+        updatedAt: new Date(),
+      })
+      .where(eq(orders.id, id))
+      .returning();
+    return updatedOrder;
   }
 
   // Sales operations

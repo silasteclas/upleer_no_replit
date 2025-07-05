@@ -84,3 +84,36 @@ curl -X PATCH https://<host>/api/orders/123/status \
 ---
 
 **Este endpoint foi implementado conforme especificação do documento [18-batch-v4-dados-completos.md](18-batch-v4-dados-completos.md).** 
+
+---
+
+## Implementação da função `updateOrder` no storage
+
+Para que o endpoint funcione corretamente, foi implementada a função abaixo no arquivo `server/storage.ts`:
+
+```ts
+// Atualiza campos parciais de um pedido (order)
+async updateOrder(id: string, updates: Partial<Order>): Promise<Order> {
+  const [updatedOrder] = await db
+    .update(orders)
+    .set({
+      ...updates,
+      updatedAt: new Date(),
+    })
+    .where(eq(orders.id, id))
+    .returning();
+  return updatedOrder;
+}
+```
+
+**Como funciona:**
+- Recebe o `id` do pedido e um objeto `updates` contendo apenas os campos a serem atualizados.
+- Atualiza os campos informados na tabela `orders` e define o campo `updatedAt` para a data/hora atual.
+- Retorna o registro atualizado do pedido.
+
+**Exemplo de uso interno pelo endpoint:**
+```ts
+const updatedOrder = await storage.updateOrder(orderId, updates);
+```
+
+Essa função segue o padrão das funções de update já existentes para outros recursos do sistema. 
