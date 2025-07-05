@@ -116,4 +116,39 @@ async updateOrder(id: string, updates: Partial<Order>): Promise<Order> {
 const updatedOrder = await storage.updateOrder(orderId, updates);
 ```
 
-Essa função segue o padrão das funções de update já existentes para outros recursos do sistema. 
+Essa função segue o padrão das funções de update já existentes para outros recursos do sistema.
+
+## Sincronização Automática com a Tabela Sales
+
+Quando o campo `status_pagamento` é atualizado através do endpoint, o sistema **automaticamente sincroniza** todas as vendas relacionadas na tabela `sales`.
+
+**Como funciona a sincronização:**
+1. O endpoint atualiza o pedido na tabela `orders`
+2. Se o campo `status_pagamento` foi modificado, o sistema busca todas as vendas (`sales`) que pertencem ao mesmo `orderId`
+3. Atualiza o campo `paymentStatus` de todas essas vendas para o mesmo valor
+4. Registra um log da operação para auditoria
+
+**Função responsável pela sincronização:**
+```ts
+async updateSalesByOrderId(orderId: string, paymentStatus: string): Promise<void> {
+  await db
+    .update(sales)
+    .set({
+      paymentStatus: paymentStatus,
+      updatedAt: new Date(),
+    })
+    .where(eq(sales.orderId, orderId));
+}
+```
+
+**Exemplo prático:**
+- Se você atualizar `status_pagamento: "approved"` no pedido `123`
+- Todas as vendas com `orderId: "123"` terão seu `paymentStatus` atualizado para `"approved"`
+- Isso garante consistência entre as duas tabelas
+
+**Log de auditoria:**
+```
+[SYNC] Updated payment status for all sales in order 123 to: approved
+```
+
+Esta sincronização é essencial para manter a integridade dos dados no modelo marketplace, onde um pedido pode ter múltiplas vendas de diferentes autores. 

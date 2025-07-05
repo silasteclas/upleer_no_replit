@@ -51,6 +51,7 @@ export interface IStorage {
   createOrder(order: InsertOrder): Promise<Order>;
   getOrder(id: string): Promise<Order | undefined>;
   updateOrder(id: string, updates: Partial<Order>): Promise<Order>;
+  updateSalesByOrderId(orderId: string, paymentStatus: string): Promise<void>;
 
   // Sales operations
   createSale(sale: InsertSale): Promise<Sale>;
@@ -233,13 +234,34 @@ export class DatabaseStorage implements IStorage {
     return order;
   }
 
-  // Atualiza campos parciais de um pedido (order)
+  // Atualiza o status de pagamento das vendas relacionadas a um pedido
+  async updateSalesByOrderId(orderId: string, paymentStatus: string): Promise<void> {
+    await db
+      .update(sales)
+      .set({
+        paymentStatus: paymentStatus,
+        updatedAt: new Date(),
+      })
+      .where(eq(sales.orderId, orderId));
+  }
+
+  // Atualiza campos parciais de um pedido (order) e sincroniza com sales
   async updateOrder(id: string, updates: Partial<Order>): Promise<Order> {
     const [updatedOrder] = await db
       .update(orders)
-      .set(updates)
+      .set({
+        ...updates,
+        updatedAt: new Date(),
+      })
       .where(eq(orders.id, id))
       .returning();
+
+    // Se o status de pagamento foi atualizado, sincronizar com a tabela sales
+    if (updates.statusPagamento) {
+      await this.updateSalesByOrderId(id, updates.statusPagamento);
+      console.log(`[SYNC] Updated payment status for all sales in order ${id} to: ${updates.statusPagamento}`);
+    }
+
     return updatedOrder;
   }
 
