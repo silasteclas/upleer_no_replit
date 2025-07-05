@@ -13,6 +13,12 @@ if (!process.env.REPLIT_DOMAINS || process.env.REPLIT_DOMAINS.includes("prompt-f
 const app = express();
 app.set('trust proxy', 1);
 
+// Early API interceptor for debugging
+app.use('/api/*', (req, res, next) => {
+  console.log(`[API-REQUEST] ${req.method} ${req.originalUrl} from ${req.get('host')}`);
+  next();
+});
+
 // CRITICAL: Direct handler for order status updates - MUST be first
 app.patch('/api/orders/:id/status', express.json({ limit: '50mb' }), async (req, res) => {
   try {
@@ -765,6 +771,8 @@ app.use((req, res, next) => {
   } else {
     serveStatic(app);
   }
+
+
 
   // IMPORTANT: Add critical API endpoints AFTER Vite setup to prevent interception
   // These endpoints were moved from the top of the file to avoid Vite catch-all

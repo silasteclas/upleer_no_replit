@@ -154,7 +154,7 @@ Required variables:
 
 ## Changelog
 
-- July 05, 2025. **API Endpoint Fixed**: Resolved critical issue with PATCH `/api/orders/:id/status` endpoint returning HTML instead of JSON. Removed duplicate endpoint definitions and fixed routing conflicts. Endpoint now works correctly with real production data from Neon database.
+- July 05, 2025. **API Endpoint Fixed**: Resolved critical issue with PATCH `/api/orders/:id/status` endpoint returning HTML instead of JSON. Fixed by implementing direct API handler before Vite middleware, removing duplicate endpoints, and ensuring proper routing. Successfully tested with real production data from Neon database (orders: 1739993213, 1740869790, 1742229144). N8N automation can now communicate with the API correctly.
 - July 04, 2025. Initial setup
 
 ## User Preferences
