@@ -35,10 +35,10 @@ export interface IStorage {
   upsertUser(user: UpsertUser): Promise<User>;
   updateUserProfileImage(id: string, profileImageUrl: string): Promise<User>;
   updateUserProfile(id: string, updates: Partial<UpsertUser>): Promise<User>;
-  
+
   // Admin operations
   getAllUsers(): Promise<User[]>;
-  
+
   // Product operations
   createProduct(product: InsertProduct): Promise<Product>;
   getProductsByAuthor(authorId: string): Promise<Product[]>;
@@ -46,12 +46,12 @@ export interface IStorage {
   getProduct(id: number): Promise<Product | undefined>;
   updateProduct(id: number, updates: Partial<InsertProduct>): Promise<Product>;
   updateProductStatus(id: number, status: string): Promise<Product>;
-  
+
   // Order operations (NOVO - FASE 3)
   createOrder(order: InsertOrder): Promise<Order>;
   getOrder(id: string): Promise<Order | undefined>;
   updateOrder(id: string, updates: Partial<Order>): Promise<Order>;
-  
+
   // Sales operations
   createSale(sale: InsertSale): Promise<Sale>;
   getSalesByAuthor(authorId: string): Promise<(Sale & { 
@@ -60,11 +60,11 @@ export interface IStorage {
     saleItems: { product_name: string; quantity: number; price: number; foto_produto: string | null }[];
   })[]>;
   getNextVendorOrderNumber(authorId: string): Promise<number>;
-  
+
   // Sale Items operations (NOVO - FASE 3)
   createSaleItem(saleItem: InsertSaleItem): Promise<SaleItem>;
   getSaleItemsBySale(saleId: number): Promise<SaleItem[]>;
-  
+
   // Analytics operations
   getAuthorStats(authorId: string): Promise<{
     totalSales: number;
@@ -77,20 +77,20 @@ export interface IStorage {
     sales: number;
     revenue: number;
   }[]>;
-  
+
   // API Integration operations
   createApiIntegration(integration: InsertApiIntegration): Promise<ApiIntegration>;
   getApiIntegrations(): Promise<ApiIntegration[]>;
   getApiIntegration(id: number): Promise<ApiIntegration | undefined>;
   updateApiIntegration(id: number, updates: Partial<InsertApiIntegration>): Promise<ApiIntegration>;
   deleteApiIntegration(id: number): Promise<void>;
-  
+
   // API Endpoint operations
   createApiEndpoint(endpoint: InsertApiEndpoint): Promise<ApiEndpoint>;
   getApiEndpoints(integrationId: number): Promise<ApiEndpoint[]>;
   updateApiEndpoint(id: number, updates: Partial<InsertApiEndpoint>): Promise<ApiEndpoint>;
   deleteApiEndpoint(id: number): Promise<void>;
-  
+
   // API Logs operations
   createApiLog(log: Partial<ApiLog>): Promise<ApiLog>;
   getApiLogs(limit?: number): Promise<ApiLog[]>;
@@ -260,7 +260,7 @@ export class DatabaseStorage implements IStorage {
       .select({ maxNumber: max(sales.vendorOrderNumber) })
       .from(sales)
       .where(eq(sales.authorId, authorId));
-    
+
     return (result.maxNumber || 0) + 1;
   }
 
@@ -301,11 +301,11 @@ export class DatabaseStorage implements IStorage {
         deliveryDays: sales.deliveryDays,
         quantity: sales.quantity,
         createdAt: sales.createdAt,
-        
+
         // Campos do produto
         productTitle: products.title,
         productAuthor: products.author,
-        
+
         // Campos do pedido
         orderClienteNome: orders.clienteNome,
         orderClienteEmail: orders.clienteEmail,
@@ -407,7 +407,7 @@ export class DatabaseStorage implements IStorage {
     pendingProducts: number;
   }> {
     console.log(`[DEBUG] Getting stats for author: ${authorId}`);
-    
+
     // FASE 4: NOVA ESTRUTURA MARKETPLACE
     // Get sales stats - agora usando authorId diretamente na tabela sales
     const [salesStats] = await db
@@ -432,7 +432,7 @@ export class DatabaseStorage implements IStorage {
     // Contar produtos published manualmente
     const publishedProducts = allProductsForAuthor.filter(p => p.status === "published");
     const pendingProducts = allProductsForAuthor.filter(p => p.status === "pending");
-    
+
     console.log(`[DEBUG] Manual count - Published: ${publishedProducts.length}, Pending: ${pendingProducts.length}`);
 
     // Get product counts usando a query original para comparar
@@ -582,7 +582,7 @@ export class DatabaseStorage implements IStorage {
           .select({ name: apiIntegrations.name })
           .from(apiIntegrations)
           .where(eq(apiIntegrations.id, log.integrationId));
-        
+
         return {
           ...log,
           integration: {

@@ -338,6 +338,55 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Order status update endpoint - positioned early to avoid conflicts
+  app.patch('/api/orders/:id/status', async (req, res) => {
+    try {
+      console.log(`[ORDER-STATUS] PATCH /api/orders/${req.params.id}/status`);
+      console.log(`[ORDER-STATUS] Body:`, req.body);
+      
+      const orderId = req.params.id;
+      const { status, status_pagamento, status_envio } = req.body;
+
+      if (!orderId) {
+        console.log(`[ORDER-STATUS] Missing order ID`);
+        return res.status(400).json({ message: 'ID do pedido é obrigatório' });
+      }
+
+      // Busca o pedido
+      const order = await storage.getOrder(orderId);
+      if (!order) {
+        console.log(`[ORDER-STATUS] Order ${orderId} not found`);
+        return res.status(404).json({ message: 'Pedido não encontrado' });
+      }
+
+      // Monta objeto de atualização apenas com campos enviados
+      const updates: any = {};
+      if (typeof status !== 'undefined') updates.status = status;
+      if (typeof status_pagamento !== 'undefined') updates.statusPagamento = status_pagamento;
+      if (typeof status_envio !== 'undefined') updates.statusEnvio = status_envio;
+
+      if (Object.keys(updates).length === 0) {
+        console.log(`[ORDER-STATUS] No fields to update`);
+        return res.status(400).json({ message: 'Nenhum campo para atualizar' });
+      }
+
+      console.log(`[ORDER-STATUS] Updating order ${orderId} with:`, updates);
+
+      // Atualiza o pedido
+      const updatedOrder = await storage.updateOrder(orderId, updates);
+
+      console.log(`[ORDER-STATUS] Order ${orderId} updated successfully`);
+
+      res.json({
+        message: 'Status do pedido atualizado com sucesso',
+        order: updatedOrder
+      });
+    } catch (error) {
+      console.error('[ORDER-STATUS] Erro ao atualizar status do pedido:', error);
+      res.status(500).json({ message: 'Erro interno do servidor' });
+    }
+  });
+
 
 
   // Setup session config for auth
@@ -1045,46 +1094,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     } catch (error) {
       res.status(500).json({ message: "Erro", error: (error as Error).message });
-    }
-  });
-
-  // Endpoint para atualizar status, status_pagamento e status_envio de um pedido
-  app.patch('/api/orders/:id/status', async (req, res) => {
-    try {
-      const { storage } = await import("./storage");
-      const orderId = req.params.id;
-      const { status, status_pagamento, status_envio } = req.body;
-
-      if (!orderId) {
-        return res.status(400).json({ message: 'ID do pedido é obrigatório' });
-      }
-
-      // Busca o pedido
-      const order = await storage.getOrder(orderId);
-      if (!order) {
-        return res.status(404).json({ message: 'Pedido não encontrado' });
-      }
-
-      // Monta objeto de atualização apenas com campos enviados
-      const updates = {};
-      if (typeof status !== 'undefined') updates.status = status;
-      if (typeof status_pagamento !== 'undefined') updates.statusPagamento = status_pagamento;
-      if (typeof status_envio !== 'undefined') updates.statusEnvio = status_envio;
-
-      if (Object.keys(updates).length === 0) {
-        return res.status(400).json({ message: 'Nenhum campo para atualizar' });
-      }
-
-      // Atualiza o pedido
-      const updatedOrder = await storage.updateOrder(orderId, updates);
-
-      res.json({
-        message: 'Status do pedido atualizado com sucesso',
-        order: updatedOrder
-      });
-    } catch (error) {
-      console.error('Erro ao atualizar status do pedido:', error);
-      res.status(500).json({ message: 'Erro interno do servidor' });
     }
   });
 
